@@ -2,9 +2,6 @@ import { useState, useEffect } from 'react';
 
 function App() {
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,11 +12,8 @@ function App() {
     try {
       const params = new URLSearchParams();
       if (query) params.append('query', query);
-      if (category) params.append('category', category);
-      if (minPrice) params.append('minPrice', minPrice);
-      if (maxPrice) params.append('maxPrice', maxPrice);
 
-      const response = await fetch(`http://localhost:5000/api/search?${params.toString()}`);
+      const response = await fetch(`/api/search?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Error en la respuesta del servidor');
       }
@@ -52,67 +46,41 @@ function App() {
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="text-center">
           <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm mb-2">
-            Buscador Avanzado
+            Buscador Sisgeko
           </h1>
           <p className="text-gray-500">Encuentra productos utilizando filtros precisos.</p>
         </header>
 
         <section className="bg-white p-6 rounded-2xl shadow-xl shadow-blue-900/5 ring-1 ring-gray-100">
-          <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-4">
-              <label className="block text-sm font-semibold mb-1 text-gray-700">Término de Búsqueda</label>
+          <form onSubmit={handleSearch} className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row w-full gap-3">
               <input 
                 type="text" 
-                className="w-full border-gray-200 border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
-                placeholder="Ej. Laptop, Smartphone..."
+                className="flex-grow border-gray-200 border rounded-xl p-4 text-gray-700 text-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                placeholder="¿Qué estás buscando? Ej. Laptop, Smartphone..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold mb-1 text-gray-700">Categoría</label>
-              <select 
-                className="w-full border-gray-200 border rounded-lg p-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                <option value="">Todas</option>
-                <option value="electronics">Electrónica</option>
-                <option value="clothing">Ropa</option>
-                <option value="home">Hogar</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold mb-1 text-gray-700">Precio Mín.</label>
-              <input 
-                type="number" 
-                className="w-full border-gray-200 border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="0"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-1 text-gray-700">Precio Máx.</label>
-              <input 
-                type="number" 
-                className="w-full border-gray-200 border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                placeholder="1000"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-end">
               <button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold p-3 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-95"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-4 rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-95 text-lg"
               >
                 Buscar
               </button>
+            </div>
+            
+            {/* Navbar de filtros (espacio para el futuro) */}
+            <div className="flex gap-3 overflow-x-auto pb-2 border-t border-gray-100 pt-5 scrollbar-hide">
+              {[1, 2, 3, 4, 5, 6].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  className="px-5 py-2 flex-shrink-0 border border-gray-200 bg-gray-50 text-gray-600 rounded-full text-sm font-medium focus:outline-none hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors whitespace-nowrap cursor-pointer"
+                  onClick={() => alert(`Filtro ${num} presionado (Lógica futura)`)}
+                >
+                  Filtro {num}
+                </button>
+              ))}
             </div>
           </form>
         </section>
