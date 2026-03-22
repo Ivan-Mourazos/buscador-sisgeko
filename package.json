@@ -1,7 +1,10 @@
 {
-  "devDependencies": {
-    "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
-    "tailwindcss": "^4.2.2"
+  "name": "buscador-sisgeko",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "node backend/server.js",
+    "dev:frontend": "npm run dev --prefix frontend"
   }
 }
