@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Database configuration
+// Configuración de la base de datos
 const dbConfig = {
     user: process.env.DB_USER || 'sa',
     password: process.env.DB_PASSWORD || 'your_password',
@@ -17,27 +17,27 @@ const dbConfig = {
     database: process.env.DB_NAME || 'your_db',
     options: {
         encrypt: true, 
-        trustServerCertificate: true // True for local dev
+        trustServerCertificate: true // True para entorno local de desarrollo
     }
 };
 
-// Check DB Connection once on start
+// Comprobar conexión a la base de datos al inicio
 sql.connect(dbConfig).then(() => {
     console.log('Conectado al servidor SQL correctamente.');
 }).catch(err => {
     console.error('La conexión a la base de datos falló. Asegúrese de que el servidor SQL esté en ejecución.', err.message);
 });
 
-// GET /api/search endpoint
+// Endpoint GET para /api/search
 app.get('/api/search', async (req, res) => {
     try {
-        // Example filter parameters from URL
+        // Parámetros de filtro de ejemplo de la URL
         const { query, category, minPrice, maxPrice } = req.query;
         
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         
-        // Base query - adjust table name as needed
+        // Consulta base - ajusta el nombre de la tabla según sea necesario
         let sqlstr = 'SELECT * FROM Products WHERE 1=1';
 
         if (query) {
