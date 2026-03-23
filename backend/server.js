@@ -23,9 +23,9 @@ const dbConfig = {
 
 // Check DB Connection once on start
 sql.connect(dbConfig).then(() => {
-    console.log('Connected to SQL Server successfully.');
+    console.log('Conectado al servidor SQL correctamente.');
 }).catch(err => {
-    console.error('Database connection failed. Ensure SQL Server is running.', err.message);
+    console.error('La conexión a la base de datos falló. Asegúrese de que el servidor SQL esté en ejecución.', err.message);
 });
 
 // GET /api/search endpoint
@@ -67,11 +67,11 @@ app.get('/api/search', async (req, res) => {
             results: result.recordset
         });
     } catch (error) {
-        console.error('API Error:', error);
-        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+        console.error('Error de API:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
+    console.log(`Servidor backend ejecutándose en el puerto ${PORT}`);
 });
