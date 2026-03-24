@@ -103,7 +103,16 @@ app.post('/api/search', async (req, res) => {
             sqlDef += ` AND rdf.id_familia IN (${buildInClause(familias)})`;
         }
         const resDefiniciones = await request.query(sqlDef);
-        const definiciones = resDefiniciones.recordset.map(d => ({ ...d, _type: 'definicion' }));
+        let definiciones = resDefiniciones.recordset.map(d => ({ ...d, _type: 'definicion' }));
+
+        // 4. APLICAR FILTRO DE ORIGEN (Global)
+        // Como articulos y definiciones son "internos", si hay un filtro de origen externo activo, 
+        // estos desaparecen de los resultados.
+        let filteredArticulos = articulos;
+        if (tipo_origen.length > 0) {
+            filteredArticulos = [];
+            definiciones = [];
+        }
 
         // FACETAS
         const allFamilias = (await pool.request().query("SELECT * FROM familias")).recordset;
@@ -113,13 +122,13 @@ app.post('/api/search', async (req, res) => {
 
         let facets = {
             familias: allFamilias.map(f => {
-                const countArts = articulos.filter(a => a.id_familia === f.id_familia).length;
+                const countArts = filteredArticulos.filter(a => a.id_familia === f.id_familia).length;
                 const countIns = insights.filter(i => i.id_familia === f.id_familia).length;
                 const countDefs = definiciones.filter(d => d.id_familia === f.id_familia).length;
                 return { ...f, count: countArts + countIns + countDefs };
             }),
             subfamilias: allSubfamilias.map(s => {
-                const countArts = articulos.filter(a => a.subfamilia === s.nombre && a.id_familia === s.id_familia).length;
+                const countArts = filteredArticulos.filter(a => a.subfamilia === s.nombre && a.id_familia === s.id_familia).length;
                 const countIns = insights.filter(i => i.subfamilia === s.nombre && i.id_familia === s.id_familia).length;
                 return { ...s, count: countArts + countIns };
             })
@@ -142,7 +151,7 @@ app.post('/api/search', async (req, res) => {
             count: insights.filter(i => i.id_tipo_origen === t.id_tipo_origen).length
         }));
 
-        const unifiedResults = [...articulos, ...insights, ...definiciones];
+        const unifiedResults = [...filteredArticulos, ...insights, ...definiciones];
 
         res.json({
             success: true,
