@@ -10,9 +10,17 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 onClick={onToggle}
             >
                 {/* Yellow Square Icon */}
-                <div className={`w-3 h-3 rounded-[2px] flex-shrink-0 transition-colors ${
-                    isSelected ? 'bg-orange-400' : 'bg-orange-100 group-hover:bg-orange-200'
-                }`} />
+                <div className={`w-3.5 h-3.5 rounded-[3px] border-2 flex-shrink-0 transition-all ${
+                    isSelected 
+                    ? 'bg-yellow-500 border-yellow-500 shadow-sm' 
+                    : 'bg-white border-gray-200 group-hover:border-yellow-300'
+                }`}>
+                    {isSelected && (
+                        <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    )}
+                </div>
                 
                 <span className={`text-[13px] leading-tight transition-colors ${
                     isSelected ? 'text-gray-900 font-bold' : 'text-gray-600 group-hover:text-gray-900'
@@ -21,8 +29,8 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 </span>
 
                 {count > 0 && level === 0 && (
-                    <span className="text-[10px] text-gray-300 font-medium ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                        ({count})
+                    <span className="text-[10px] text-gray-400 font-bold ml-auto opacity-0 group-hover:opacity-100 transition-opacity bg-gray-100 px-1.5 py-0.5 rounded">
+                        {count}
                     </span>
                 )}
             </div>
@@ -71,7 +79,20 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
     return (
         <div className="w-full bg-white py-4 pr-4 sticky top-8">
             <div className="mb-10">
-                <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-6">Filtros</h3>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">Filtros</h3>
+                    {hasActiveFilters && (
+                        <button 
+                            onClick={() => {
+                                onClearAll();
+                                setExpandedFamilies({});
+                            }}
+                            className="text-[10px] font-bold text-yellow-600 hover:text-yellow-700 uppercase tracking-wider flex items-center gap-1 transition-colors"
+                        >
+                            Limpiar
+                        </button>
+                    )}
+                </div>
                 
                 <div className="mb-4">
                     <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
@@ -151,7 +172,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                         onClearAll();
                         setExpandedFamilies({});
                     }}
-                    className="mt-4 text-[11px] font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest flex items-center gap-2 transition-colors"
+                    className="mt-4 w-full py-2.5 px-4 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-100 transition-all duration-200"
                 >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

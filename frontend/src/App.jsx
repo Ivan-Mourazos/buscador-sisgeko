@@ -87,29 +87,29 @@ function App() {
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans selection:bg-orange-100">
+    <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100">
       {/* HEADER MOCKUP STYLE */}
-      <header className="bg-white border-b border-gray-50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row gap-8 items-center justify-between">
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer group">
              <img 
                src="/Logosisgekotgm.svg" 
                alt="SISGEKO" 
-               className="h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-300"
+               className="h-11 w-auto object-contain transition-transform group-hover:scale-105 duration-300"
              />
           </div>
 
           <form onSubmit={handleSearch} className="w-full md:w-[32rem] relative group">
             <input 
               type="text" 
-              className="w-full pl-6 pr-14 py-3 bg-gray-100/80 border-transparent rounded-full focus:bg-white focus:ring-4 focus:ring-orange-50 focus:border-orange-200 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-inner group-hover:bg-gray-100"
+              className="w-full pl-6 pr-14 py-3.5 bg-white border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:border-gray-300 group-hover:shadow-md"
               placeholder="Procurar termo..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             <button 
               type="submit" 
-              className="absolute right-1.5 top-1.5 p-2 bg-orange-400 rounded-full text-white shadow-lg shadow-orange-500/20 hover:bg-orange-500 active:scale-90 transition-all"
+              className="absolute right-1.5 top-1.5 p-2.5 bg-yellow-500 rounded-full text-white shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -136,10 +136,11 @@ function App() {
 
         {/* LISTA DE RESULTADOS */}
         <section className="flex-grow w-full">
-          <div className="mb-8">
-            <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-4">
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">
               Resultados
             </h2>
+            <div className="h-px flex-grow ml-4 bg-gray-100" />
           </div>
 
           {loading && results.length === 0 ? (
