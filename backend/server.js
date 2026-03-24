@@ -177,6 +177,15 @@ app.get('/api/details', async (req, res) => {
                 ORDER BY v.orden
             `);
             details.caracteristicas = valRes.recordset;
+
+            // También buscamos imágenes en los insights relacionados
+            const imgRes = await request.query(`
+                SELECT DISTINCT i.imagen
+                FROM insights i
+                JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight
+                WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''
+            `);
+            details.imagenes = imgRes.recordset.map(r => r.imagen);
         } else if (type === 'insight') {
             const intRes = await request.query(`
                 SELECT it.intencion
