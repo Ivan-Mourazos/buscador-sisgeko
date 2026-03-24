@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, children }) => {
     return (
@@ -58,23 +58,33 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
         onFilterChange({ ...filters, [category]: newSelected });
     };
 
-    // Agrupar subfamilias por familia (con normalización de tipos)
-    const subfamiliasByFamilia = facets.subfamilias.reduce((acc, sub) => {
-        // FALLBACK: Si sub.id_familia es undefined, intentamos encontrarlo en los resultados
-        let fid = sub.id_familia;
-        if ((fid === undefined || fid === null) && results) {
-            // Buscamos algún artículo en los resultados que tenga esta subfamilia y un id_familia definido
-            const match = results.find(r => r.subfamilia === sub.nombre && r.id_familia !== undefined);
-            if (match) fid = match.id_familia;
+    // Optimizamos la agrupación de subfamilias usando useMemo y un mapa de búsqueda rápida
+    const subfamiliasByFamilia = useMemo(() => {
+        // 1. Crear un mapa rápido de subfamilia -> id_familia a partir de los resultados
+        const subToFamMap = {};
+        if (results) {
+            results.forEach(r => {
+                if (r.subfamilia && r.id_familia !== undefined) {
+                    subToFamMap[r.subfamilia] = r.id_familia;
+                }
+            });
         }
-        
-        const fidStr = String(fid);
-        if (fidStr !== "undefined" && fidStr !== "null") {
-            if (!acc[fidStr]) acc[fidStr] = [];
-            acc[fidStr].push(sub);
-        }
-        return acc;
-    }, {});
+
+        // 2. Agrupar subfamilias
+        return facets.subfamilias.reduce((acc, sub) => {
+            let fid = sub.id_familia;
+            if ((fid === undefined || fid === null)) {
+                fid = subToFamMap[sub.nombre];
+            }
+            
+            const fidStr = String(fid);
+            if (fidStr !== "undefined" && fidStr !== "null") {
+                if (!acc[fidStr]) acc[fidStr] = [];
+                acc[fidStr].push(sub);
+            }
+            return acc;
+        }, {});
+    }, [facets.subfamilias, results]);
 
     return (
         <div className="w-full bg-white py-4 pr-4 sticky top-8">
@@ -146,7 +156,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
 
                 {facets.tipo_origen && facets.tipo_origen.length > 0 && (
                     <div className="mt-8 border-t border-gray-50 pt-6">
-                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Origen</h4>
+                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
                         <div className="space-y-1">
                             {facets.tipo_origen.map(tipo => {
                                 const isSelected = filters.tipo_origen.includes(tipo.id_tipo_origen);

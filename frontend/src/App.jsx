@@ -43,16 +43,14 @@ function App() {
     }
   }, []);
 
-  // Efecto de debouncing: buscar 300ms después de que el usuario deje de tipear o cambie un filtro
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchResults(query, filters);
-    }, 300);
+    }, 200); // Reducido de 300ms a 200ms para mayor agilidad
 
     return () => clearTimeout(timeoutId);
   }, [query, filters, fetchResults]);
 
-  // Búsqueda inmediata al pulsar enter
   const handleSearch = (e) => {
     e.preventDefault();
     fetchResults(query, filters);
@@ -86,9 +84,17 @@ function App() {
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
 
+  // Filtrado local para asegurar consistencia (especialmente si el backend no ha reiniciado)
+  const displayResults = results.filter(item => {
+    if (filters.tipo_origen && filters.tipo_origen.length > 0) {
+      if (item._type !== 'insight') return false;
+      return filters.tipo_origen.includes(item.id_tipo_origen);
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100">
-      {/* HEADER MOCKUP STYLE */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer group">
@@ -119,10 +125,7 @@ function App() {
         </div>
       </header>
 
-      {/* CONTENIDO PRINCIPAL */}
       <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start">
-        
-        {/* SIDEBAR */}
         <aside className="w-full lg:w-72 flex-shrink-0">
           <SidebarFilters 
             facets={facets} 
@@ -134,7 +137,6 @@ function App() {
           />
         </aside>
 
-        {/* LISTA DE RESULTADOS */}
         <section className="flex-grow w-full">
           <div className="mb-8 flex items-center justify-between">
             <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">
@@ -143,32 +145,35 @@ function App() {
             <div className="h-px flex-grow ml-4 bg-gray-100" />
           </div>
 
-          {loading && results.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-b-blue-600 border-r-indigo-600"></div>
-              <p className="text-gray-400 font-medium">Analizando base de datos...</p>
+          {loading && displayResults.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 opacity-40">
+              <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4" />
+              <p className="text-gray-500 font-medium">Procurando información...</p>
             </div>
-          ) : results.length > 0 ? (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {results.map((item, index) => (
-                <ResultCard key={index} item={item} onClick={() => openDetails(item)} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white p-16 rounded-3xl border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
-              <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          ) : displayResults.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200 shadow-sm">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">No se encontraron resultados</h3>
-              <p className="text-gray-500 max-w-sm">Prueba ajustando los filtros laterales o utiliza otros términos de búsqueda.</p>
+              <p className="text-gray-500 text-lg">Non se atoparon resultados para esta combinación.</p>
+              <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+              {displayResults.map((item, idx) => (
+                <ResultCard 
+                  key={`${item._type}-${idx}`} 
+                  item={item} 
+                  onClick={() => openDetails(item)} 
+                />
+              ))}
             </div>
           )}
         </section>
       </main>
 
-      {/* MODAL DE DETALLES */}
       <DetailsModal 
         item={selectedItem} 
         details={itemDetails} 
