@@ -1,63 +1,46 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const FilterSection = ({ title, items, selectedItems, onChange, itemKey, itemLabel }) => {
-    if (!items || items.length === 0) return null;
-
+const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, children }) => {
     return (
-        <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wider mb-3">{title}</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                {items.map(item => {
-                    const id = item[itemKey];
-                    const label = item[itemLabel];
-                    const count = item.count;
-                    const isSelected = selectedItems.includes(id);
-                    const isDisabled = count === 0 && !isSelected;
+        <div className="select-none">
+            <div 
+                className={`flex items-center gap-2 py-1.5 cursor-pointer group transition-all ${
+                    level === 0 ? 'mt-2' : 'ml-6'
+                }`}
+                onClick={onToggle}
+            >
+                {/* Yellow Square Icon */}
+                <div className={`w-3 h-3 rounded-[2px] flex-shrink-0 transition-colors ${
+                    isSelected ? 'bg-orange-400' : 'bg-orange-100 group-hover:bg-orange-200'
+                }`} />
+                
+                <span className={`text-[13px] leading-tight transition-colors ${
+                    isSelected ? 'text-gray-900 font-bold' : 'text-gray-600 group-hover:text-gray-900'
+                }`}>
+                    {label}
+                </span>
 
-                    return (
-                        <label 
-                            key={id} 
-                            className={`flex items-center justify-between group cursor-pointer p-2 rounded-lg transition-all duration-200 ${
-                                isDisabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-50'
-                            }`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-all duration-200 ${
-                                    isSelected 
-                                    ? 'bg-blue-600 border-blue-600' 
-                                    : 'border-gray-300 bg-white group-hover:border-blue-400'
-                                }`}>
-                                    {isSelected && (
-                                        <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    )}
-                                </div>
-                                <span className={`text-sm ${isSelected ? 'font-medium text-blue-900' : 'text-gray-600 group-hover:text-gray-900'}`}>
-                                    {label}
-                                </span>
-                            </div>
-                            <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                                {count}
-                            </span>
-                            <input 
-                                type="checkbox" 
-                                className="hidden"
-                                checked={isSelected}
-                                disabled={isDisabled}
-                                onChange={() => {
-                                    if (!isDisabled) onChange(id);
-                                }}
-                            />
-                        </label>
-                    );
-                })}
+                {count > 0 && level === 0 && (
+                    <span className="text-[10px] text-gray-300 font-medium ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                        ({count})
+                    </span>
+                )}
             </div>
+            {children}
         </div>
     );
 };
 
-const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActiveFilters }) => {
+const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActiveFilters, results }) => {
+    const [expandedFamilies, setExpandedFamilies] = useState({});
+
+    const toggleFamily = (id) => {
+        setExpandedFamilies(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
     const toggleFilter = (category, value) => {
         const currentSelected = filters[category] || [];
         const newSelected = currentSelected.includes(value)
@@ -67,76 +50,115 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
         onFilterChange({ ...filters, [category]: newSelected });
     };
 
+    // Agrupar subfamilias por familia (con normalización de tipos)
+    const subfamiliasByFamilia = facets.subfamilias.reduce((acc, sub) => {
+        // FALLBACK: Si sub.id_familia es undefined, intentamos encontrarlo en los resultados
+        let fid = sub.id_familia;
+        if ((fid === undefined || fid === null) && results) {
+            // Buscamos algún artículo en los resultados que tenga esta subfamilia y un id_familia definido
+            const match = results.find(r => r.subfamilia === sub.nombre && r.id_familia !== undefined);
+            if (match) fid = match.id_familia;
+        }
+        
+        const fidStr = String(fid);
+        if (fidStr !== "undefined" && fidStr !== "null") {
+            if (!acc[fidStr]) acc[fidStr] = [];
+            acc[fidStr].push(sub);
+        }
+        return acc;
+    }, {});
+
     return (
-        <div className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl shadow-blue-900/5 rounded-2xl p-6 sticky top-8">
-            <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
-                <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700 flex items-center gap-2">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filtros
-                </h2>
+        <div className="w-full bg-white py-4 pr-4 sticky top-8">
+            <div className="mb-10">
+                <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-6">Filtros</h3>
                 
+                <div className="mb-4">
+                    <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
+                    
+                    <div className="space-y-1">
+                        {facets.familias.map(familia => {
+                            const fidStr = String(familia.id_familia);
+                            const isSelected = filters.familias.map(String).includes(fidStr);
+                            const isExpanded = !!expandedFamilies[fidStr] || isSelected;
+                            const subfamilias = subfamiliasByFamilia[fidStr] || [];
+
+                            // OCULTAR FAMILIA SI: count es 0 Y no está seleccionada
+                            if (familia.count === 0 && !isSelected) return null;
+                            
+                            return (
+                                <TreeItem 
+                                    key={fidStr}
+                                    label={familia.codigo}
+                                    count={familia.count}
+                                    isSelected={isSelected}
+                                    onToggle={() => {
+                                        toggleFilter('familias', familia.id_familia);
+                                        toggleFamily(fidStr);
+                                    }}
+                                >
+                                    {(isExpanded) && subfamilias.length > 0 && (
+                                        <div className="mb-2">
+                                            {subfamilias.map(sub => {
+                                                const isSubSelected = filters.subfamilias.includes(sub.nombre);
+                                                
+                                                // OCULTAR SUBFAMILIA SI: count es 0 Y no está seleccionada
+                                                if (sub.count === 0 && !isSubSelected) return null;
+
+                                                return (
+                                                    <TreeItem 
+                                                        key={`${fidStr}-${sub.nombre}`}
+                                                        label={sub.nombre}
+                                                        isSelected={isSubSelected}
+                                                        level={1}
+                                                        onToggle={() => toggleFilter('subfamilias', sub.nombre)}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </TreeItem>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {facets.tipo_origen && facets.tipo_origen.length > 0 && (
+                    <div className="mt-8 border-t border-gray-50 pt-6">
+                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Origen</h4>
+                        <div className="space-y-1">
+                            {facets.tipo_origen.map(tipo => {
+                                const isSelected = filters.tipo_origen.includes(tipo.id_tipo_origen);
+                                if (tipo.count === 0 && !isSelected) return null;
+
+                                return (
+                                    <TreeItem 
+                                        key={tipo.id_tipo_origen}
+                                        label={tipo.tipo_origen}
+                                        isSelected={isSelected}
+                                        onToggle={() => toggleFilter('tipo_origen', tipo.id_tipo_origen)}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {hasActiveFilters && (
                 <button 
-                    onClick={onClearAll}
-                    disabled={!hasActiveFilters}
-                    title="Limpiar Búsqueda y Filtros"
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm ${
-                        hasActiveFilters 
-                        ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 active:scale-95' 
-                        : 'bg-gray-50 border border-gray-100 text-gray-400 cursor-not-allowed opacity-0 invisible'
-                    }`}
+                    onClick={() => {
+                        onClearAll();
+                        setExpandedFamilies({});
+                    }}
+                    className="mt-4 text-[11px] font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest flex items-center gap-2 transition-colors"
                 >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    Limpiar
+                    Limpiar Filtros
                 </button>
-            </div>
-
-            <div className="space-y-2">
-                <FilterSection 
-                    title="Familias" 
-                    items={facets.familias} 
-                    selectedItems={filters.familias} 
-                    onChange={(val) => toggleFilter('familias', val)}
-                    itemKey="id_familia" 
-                    itemLabel="codigo" 
-                />
-                
-                <hr className="border-gray-100 my-4" />
-
-                <FilterSection 
-                    title="Subfamilias" 
-                    items={facets.subfamilias} 
-                    selectedItems={filters.subfamilias} 
-                    onChange={(val) => toggleFilter('subfamilias', val)}
-                    itemKey="nombre" 
-                    itemLabel="nombre" 
-                />
-
-                <hr className="border-gray-100 my-4" />
-
-                <FilterSection 
-                    title="Procesos" 
-                    items={facets.procesos} 
-                    selectedItems={filters.procesos} 
-                    onChange={(val) => toggleFilter('procesos', val)}
-                    itemKey="id_proceso" 
-                    itemLabel="proceso" 
-                />
-
-                <hr className="border-gray-100 my-4" />
-
-                <FilterSection 
-                    title="Tipo de Origen" 
-                    items={facets.tipo_origen} 
-                    selectedItems={filters.tipo_origen} 
-                    onChange={(val) => toggleFilter('tipo_origen', val)}
-                    itemKey="id_tipo_origen" 
-                    itemLabel="tipo_origen" 
-                />
-            </div>
+            )}
         </div>
     );
 };

@@ -87,31 +87,33 @@ function App() {
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/20 text-gray-800 font-sans">
-      {/* HEADER PúBLICO */}
-      <header className="bg-white/70 backdrop-blur-lg sticky top-0 z-50 border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-700">
-              Buscador Sisgeko
-            </h1>
-            <p className="text-sm font-medium text-gray-400 mt-1">Plataforma Inteligente de Conocimiento</p>
+    <div className="min-h-screen bg-white text-gray-800 font-sans selection:bg-orange-100">
+      {/* HEADER MOCKUP STYLE */}
+      <header className="bg-white border-b border-gray-50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row gap-8 items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer group">
+             <div className="flex flex-col -space-y-1">
+                <h1 className="text-2xl font-black italic tracking-tighter text-orange-400 group-hover:text-orange-500 transition-colors">
+                  buscador <span className="text-orange-400/90 font-extrabold uppercase ml-1">SISGEKO</span>
+                </h1>
+                <div className="h-1 w-full bg-orange-400/20 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+             </div>
           </div>
 
-          <form onSubmit={handleSearch} className="w-full md:w-[28rem] relative group">
+          <form onSubmit={handleSearch} className="w-full md:w-[32rem] relative group">
             <input 
               type="text" 
-              className="w-full pl-5 pr-14 py-3 bg-gray-100/50 border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all outline-none text-gray-700 shadow-inner group-hover:shadow-md"
-              placeholder="Encuentra artículos, procesos, definiciones..."
+              className="w-full pl-6 pr-14 py-3 bg-gray-100/80 border-transparent rounded-full focus:bg-white focus:ring-4 focus:ring-orange-50 focus:border-orange-200 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-inner group-hover:bg-gray-100"
+              placeholder="Procurar termo..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             <button 
               type="submit" 
-              className="absolute right-2 top-2 p-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full text-white shadow hover:shadow-lg hover:scale-105 active:scale-95 transition-all"
+              className="absolute right-1.5 top-1.5 p-2 bg-orange-400 rounded-full text-white shadow-lg shadow-orange-500/20 hover:bg-orange-500 active:scale-90 transition-all"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
           </form>
@@ -119,46 +121,26 @@ function App() {
       </header>
 
       {/* CONTENIDO PRINCIPAL */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8 items-start">
+      <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start">
         
         {/* SIDEBAR */}
-        <aside className="w-full lg:w-80 flex-shrink-0 relative">
+        <aside className="w-full lg:w-72 flex-shrink-0">
           <SidebarFilters 
             facets={facets} 
             filters={filters} 
             onFilterChange={setFilters} 
             onClearAll={clearAll}
             hasActiveFilters={hasActiveFilters}
+            results={results}
           />
         </aside>
 
         {/* LISTA DE RESULTADOS */}
         <section className="flex-grow w-full">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-2xl shadow-sm border border-red-100 flex items-center space-x-3 mb-6">
-              <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <div className="flex flex-col">
-                <span className="font-bold">Error de conexión</span>
-                <span className="text-sm">{error}</span>
-              </div>
-            </div>
-          )}
-
-          <div className="mb-6 flex justify-between items-end">
-            <h2 className="text-2xl font-bold text-gray-800">
+          <div className="mb-8">
+            <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-4">
               Resultados
             </h2>
-            <div className="text-sm font-semibold px-3 py-1 bg-white border border-gray-200 shadow-sm rounded-full text-gray-500">
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Buscando...
-                </span>
-              ) : (
-                <span>{results.length} coincidencias</span>
-              )}
-            </div>
           </div>
 
           {loading && results.length === 0 ? (

@@ -107,7 +107,7 @@ app.post('/api/search', async (req, res) => {
 
         // FACETAS
         const allFamilias = (await pool.request().query("SELECT * FROM familias")).recordset;
-        const allSubfamilias = (await pool.request().query("SELECT DISTINCT subfamilia as nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
+        const allSubfamilias = (await pool.request().query("SELECT DISTINCT id_familia AS id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
         const allProcesos = (await pool.request().query("SELECT * FROM procesos")).recordset;
         const allTiposOrigen = (await pool.request().query("SELECT * FROM tipo_origen")).recordset;
 
@@ -119,8 +119,8 @@ app.post('/api/search', async (req, res) => {
                 return { ...f, count: countArts + countIns + countDefs };
             }),
             subfamilias: allSubfamilias.map(s => {
-                const countArts = articulos.filter(a => a.subfamilia === s.nombre).length;
-                const countIns = insights.filter(i => i.subfamilia === s.nombre).length;
+                const countArts = articulos.filter(a => a.subfamilia === s.nombre && a.id_familia === s.id_familia).length;
+                const countIns = insights.filter(i => i.subfamilia === s.nombre && i.id_familia === s.id_familia).length;
                 return { ...s, count: countArts + countIns };
             })
         };
