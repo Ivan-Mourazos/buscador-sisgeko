@@ -92,12 +92,11 @@ function App() {
       <header className="bg-white border-b border-gray-50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row gap-8 items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer group">
-             <div className="flex flex-col -space-y-1">
-                <h1 className="text-2xl font-black italic tracking-tighter text-orange-400 group-hover:text-orange-500 transition-colors">
-                  buscador <span className="text-orange-400/90 font-extrabold uppercase ml-1">SISGEKO</span>
-                </h1>
-                <div className="h-1 w-full bg-orange-400/20 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-             </div>
+             <img 
+               src="/Logosisgekotgm.svg" 
+               alt="SISGEKO" 
+               className="h-10 w-auto object-contain transition-transform group-hover:scale-105 duration-300"
+             />
           </div>
 
           <form onSubmit={handleSearch} className="w-full md:w-[32rem] relative group">
