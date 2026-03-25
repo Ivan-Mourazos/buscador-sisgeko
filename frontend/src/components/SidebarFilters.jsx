@@ -160,7 +160,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 </div>
                 
                 {visibleFamilies.length > 0 && (
-                    <div className="mb-4">
+                    <div className="mb-4 animate-sweep-staggered" style={{ animationDelay: '400ms' }}>
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
                         <div className="space-y-1">
                             {visibleFamilies.map(familia => {
@@ -205,7 +205,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 )}
 
                 {visibleProcesos.length > 0 && (
-                    <div className="mb-4">
+                    <div className="mb-4 animate-sweep-staggered" style={{ animationDelay: '500ms' }}>
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Procesos</h4>
                         <div className="space-y-1">
                             {visibleProcesos.map(proceso => (
@@ -222,7 +222,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 )}
 
                 {visibleOrigins.length > 0 && (
-                    <div className="mt-8 border-t border-gray-50 pt-6">
+                    <div className="mt-8 border-t border-gray-50 pt-6 animate-sweep-staggered" style={{ animationDelay: '600ms' }}>
                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
                         <div className="space-y-1">
                             {visibleOrigins.map(tipo => (

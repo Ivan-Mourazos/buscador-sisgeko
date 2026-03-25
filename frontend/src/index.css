@@ -18,8 +18,8 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes sweepIn {
-  from { transform: translateX(-50px); opacity: 0; }
+@keyframes sweepInRight {
+  from { transform: translateX(-20px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
 
@@ -33,4 +33,9 @@ body {
 
 .animate-sweep-in {
   animation: sweepIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-sweep-staggered {
+  opacity: 0;
+  animation: sweepInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
