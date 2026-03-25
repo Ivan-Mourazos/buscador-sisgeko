@@ -66,13 +66,16 @@ app.post('/api/search', async (req, res) => {
         const articulos = resArticulos.recordset.map(a => ({ ...a, _type: 'articulo' }));
         const matchedArticuloIds = articulos.map(a => a.id_articulo);
 
-        // 2. BUSCAR INSIGHTS (Incluímos nomes dos procesos relacionados)
+        // 2. BUSCAR INSIGHTS (Incluímos nomes dos procesos relacionados) - Fallback para SQL 2014
         let sqlIns = `
             SELECT DISTINCT i.*, t.tipo_origen as tipo_origen_nombre, a.id_familia, a.subfamilia,
-            (SELECT STRING_AGG(p.proceso, ', ') 
-             FROM rel_Insight_Proceso rip2 
-             JOIN procesos p ON rip2.id_proceso = p.id_proceso 
-             WHERE rip2.id_insight = i.id_insight) as procesos_lista
+            STUFF((
+                SELECT ', ' + p.proceso 
+                FROM rel_Insight_Proceso rip2 
+                JOIN procesos p ON rip2.id_proceso = p.id_proceso 
+                WHERE rip2.id_insight = i.id_insight 
+                FOR XML PATH(''), TYPE
+            ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') as procesos_lista
             FROM insights i
             LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
             LEFT JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight
@@ -209,10 +212,13 @@ app.get('/api/details', async (req, res) => {
         } else if (type === 'insight') {
             const basicRes = await request.query(`
                 SELECT i.*, t.tipo_origen as tipo_origen_nombre,
-                (SELECT STRING_AGG(p.proceso, ', ') 
-                 FROM rel_Insight_Proceso rip2 
-                 JOIN procesos p ON rip2.id_proceso = p.id_proceso 
-                 WHERE rip2.id_insight = i.id_insight) as procesos_lista
+                STUFF((
+                    SELECT ', ' + p.proceso 
+                    FROM rel_Insight_Proceso rip2 
+                    JOIN procesos p ON rip2.id_proceso = p.id_proceso 
+                    WHERE rip2.id_insight = i.id_insight 
+                    FOR XML PATH(''), TYPE
+                ).value('.', 'NVARCHAR(MAX)'), 1, 2, '') as procesos_lista
                 FROM insights i 
                 LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
                 WHERE i.id_insight = @id
