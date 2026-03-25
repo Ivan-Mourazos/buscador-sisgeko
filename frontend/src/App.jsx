@@ -139,10 +139,27 @@ function App() {
       if (!filters.categories.includes(item._type)) return false;
     }
 
-    if (filters.tipo_origen && filters.tipo_origen.length > 0) {
+    // Se hai filtros específicos de Insight (Orixe ou Proceso) activos,
+    // ocultamos Artigos e Definicións para evitar confusión
+    const isSpecificFilterActive = (filters.tipo_origen?.length > 0) || (filters.procesos?.length > 0);
+    
+    if (isSpecificFilterActive) {
       if (item._type !== 'insight') return false;
-      return filters.tipo_origen.includes(item.id_tipo_origen);
+      
+      // Filtro de Orixe (se hai selección)
+      if (filters.tipo_origen?.length > 0) {
+        if (!filters.tipo_origen.includes(item.id_tipo_origen)) return false;
+      }
+      
+      // Filtro de Proceso (se hai selección)
+      // Nota: O backend xa fai este filtro, pero facémolo aquí por seguridade
+      if (filters.procesos?.length > 0) {
+        // Como o backend xa filtra os insights polo proceso, aquí só deixamos pasar os de tipo insight
+        // (que se devolveron é porque coinciden no backend)
+        return true; 
+      }
     }
+
     return true;
   });
 

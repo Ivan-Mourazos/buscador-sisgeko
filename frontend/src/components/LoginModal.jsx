@@ -12,8 +12,8 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
         e.preventDefault();
         setError('');
         
-        // Credenciales de prueba: admin / sisgeko2024
-        if (username === 'admin' && password === 'sisgeko2024') {
+        // Credenciais de proba: admin / admin
+        if (username === 'admin' && password === 'admin') {
             onLogin({ name: 'Administrador', role: 'admin' });
             onClose();
         } else {
@@ -73,7 +73,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
                         <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                             <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
                                 <span className="font-bold uppercase mr-1">Proba:</span> 
-                                usuario: <code className="bg-blue-100 px-1 rounded">admin</code> / contrasinal: <code className="bg-blue-100 px-1 rounded">sisgeko2024</code>
+                                usuario: <code className="bg-blue-100 px-1 rounded">admin</code> / contrasinal: <code className="bg-blue-100 px-1 rounded">admin</code>
                             </p>
                         </div>
 

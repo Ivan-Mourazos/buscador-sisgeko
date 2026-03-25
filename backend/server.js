@@ -28,14 +28,19 @@ sql.connect(dbConfig).then(() => {
     console.error('La conexión a la base de datos falló.', err.message);
 });
 
-// Helper seguro para el IN
-const buildInClause = (arr) => arr.map(x => typeof x === 'number' ? x : `'${x.replace(/'/g, "''")}'`).join(',');
+// Helper seguro para el IN (soporta números e strings)
+const buildInClause = (arr) => arr.map(x => {
+    const num = Number(x);
+    return !isNaN(num) ? num : `'${String(x).replace(/'/g, "''")}'`;
+}).join(',');
 
 // Nuevo Endpoint Avanzado POST /api/search
 app.post('/api/search', async (req, res) => {
     try {
         const { query = "", filters = {} } = req.body;
         const { familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
+        
+        console.log(`[Busca] Termo: "${query}", Filtros:`, JSON.stringify(filters));
 
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
@@ -86,6 +91,8 @@ app.post('/api/search', async (req, res) => {
         if (procesos.length > 0) sqlIns += ` AND rip.id_proceso IN (${buildInClause(procesos)})`;
         if (tipo_origen.length > 0) sqlIns += ` AND i.id_tipo_origen IN (${buildInClause(tipo_origen)})`;
 
+        console.log(`[Query Insights] SQL:`, sqlIns);
+        
         const resInsights = await request.query(sqlIns);
         const insights = resInsights.recordset.map(i => ({ ...i, _type: 'insight' }));
 

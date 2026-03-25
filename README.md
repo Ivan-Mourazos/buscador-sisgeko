@@ -12,7 +12,7 @@ O **Buscador Sisgeko** é unha plataforma administrativa e de consulta deseñada
 *   **Resultados Intelixentes**: Tarxetas con información contextual e acceso a detalles expandidos.
 
 ### 2. Panel de Administración (Gated)
-*   **Acceso Protexido**: Interface administrativa accesible mediante login (`admin` / `sisgeko2024`).
+*   **Acceso Protexido**: Interface administrativa accesible mediante login (`admin` / `admin`).
 *   **Xestión de Contidos**: Crear, editar ou eliminar calquera rexistro da base de datos de forma visual.
 *   **Editor Multistep**: Proceso guiado para a creación de novos elementos con formularios específicos por tipo de dato.
 
@@ -35,7 +35,7 @@ O **Buscador Sisgeko** é unha plataforma administrativa e de consulta deseñada
 ## 🚀 Instalación e Configuración
 
 ### 1. Requisitos Previos
-*   [Node.js](https://nodejs.org/) (v18 recomendada).
+*   [Node.js](https://nodejs.org/) (v20 recomendada).
 *   Conexión á VPN ou rede local de Toldos Gómez (necesario para SQL Server e imaxes).
 
 ### 2. Configuración Inicial
@@ -77,4 +77,4 @@ O buscador estará accesible en `http://localhost:5173/` (Vite redirecciona as c
 
 ---
 
-*Proxecto desenvolvido para Toldos Gómez - 2024/2025*
+*Proxecto desenvolvido por Iván Sánchez - 2026*
