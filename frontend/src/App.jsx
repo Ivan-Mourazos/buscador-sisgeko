@@ -125,7 +125,13 @@ function App() {
   };
 
   const handleCategorySelect = (categoryId) => {
-    setFilters(prev => ({ ...prev, categories: [categoryId] }));
+    setFilters({ 
+      familias: [], 
+      subfamilias: [], 
+      procesos: [], 
+      tipo_origen: [], 
+      categories: [categoryId] 
+    });
   };
 
   const goHome = () => {
