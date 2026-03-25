@@ -4,6 +4,7 @@ import { ResultCard } from './components/ResultCard';
 import DetailsModal from './components/DetailsModal';
 import LoginModal from './components/LoginModal';
 import CreateItemModal from './components/CreateItemModal';
+import CategorySelector from './components/CategorySelector';
 
 function App() {
   const [query, setQuery] = useState('');
@@ -64,6 +65,9 @@ function App() {
   };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
+    // Evitar peticiones si no hay categorías (Hero Screen)
+    if (currentFilters.categories.length === 0) return;
+
     setLoading(true);
     setError(null);
     try {
@@ -94,7 +98,7 @@ function App() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchResults(query, filters);
-    }, 200); // Reducido de 300ms a 200ms para mayor agilidad
+    }, 200);
 
     return () => clearTimeout(timeoutId);
   }, [query, filters, fetchResults]);
@@ -107,6 +111,14 @@ function App() {
   const clearAll = () => {
     setQuery('');
     setFilters({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
+  };
+
+  const handleCategorySelect = (categoryId) => {
+    setFilters(prev => ({ ...prev, categories: [categoryId] }));
+  };
+
+  const goHome = () => {
+    clearAll();
   };
 
   const openDetails = async (item) => {
@@ -131,35 +143,18 @@ function App() {
   };
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
+  const showHero = filters.categories.length === 0;
 
   // Filtrado local para asegurar consistencia
   const displayResults = results.filter(item => {
-    // Check categories first
     if (filters.categories && filters.categories.length > 0) {
       if (!filters.categories.includes(item._type)) return false;
     }
-
-    // Se hai filtros específicos de Insight (Orixe ou Proceso) activos,
-    // ocultamos Artigos e Definicións para evitar confusión
     const isSpecificFilterActive = (filters.tipo_origen?.length > 0) || (filters.procesos?.length > 0);
-    
     if (isSpecificFilterActive) {
       if (item._type !== 'insight') return false;
-      
-      // Filtro de Orixe (se hai selección)
-      if (filters.tipo_origen?.length > 0) {
-        if (!filters.tipo_origen.includes(item.id_tipo_origen)) return false;
-      }
-      
-      // Filtro de Proceso (se hai selección)
-      // Nota: O backend xa fai este filtro, pero facémolo aquí por seguridade
-      if (filters.procesos?.length > 0) {
-        // Como o backend xa filtra os insights polo proceso, aquí só deixamos pasar os de tipo insight
-        // (que se devolveron é porque coinciden no backend)
-        return true; 
-      }
+      if (filters.tipo_origen?.length > 0 && !filters.tipo_origen.includes(item.id_tipo_origen)) return false;
     }
-
     return true;
   });
 
@@ -167,7 +162,7 @@ function App() {
     <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer group">
+          <div onClick={goHome} className="flex items-center gap-2 cursor-pointer group">
              <img 
                src="/Logosisgekotgm.svg" 
                alt="SISGEKO" 
@@ -175,7 +170,7 @@ function App() {
              />
           </div>
 
-          <form onSubmit={handleSearch} className="w-full md:w-[32rem] relative group">
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] relative group transition-all duration-500 ${showHero ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
             <input 
               type="text" 
               className="w-full pl-6 pr-14 py-3.5 bg-white border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:border-gray-300 group-hover:shadow-md"
@@ -239,54 +234,58 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start">
-        <aside className="w-full lg:w-72 flex-shrink-0">
-          <SidebarFilters 
-            facets={facets} 
-            filters={filters} 
-            onFilterChange={setFilters} 
-            onClearAll={clearAll}
-            hasActiveFilters={hasActiveFilters}
-            results={results}
-          />
-        </aside>
+      {showHero ? (
+        <CategorySelector onSelect={handleCategorySelect} />
+      ) : (
+        <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start animate-sweep-in">
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <SidebarFilters 
+              facets={facets} 
+              filters={filters} 
+              onFilterChange={setFilters} 
+              onClearAll={clearAll}
+              hasActiveFilters={hasActiveFilters}
+              results={results}
+            />
+          </aside>
 
-        <section className="flex-grow w-full">
-          <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-              Resultados
-            </h2>
-            <div className="h-px flex-grow ml-4 bg-gray-100" />
-          </div>
-
-          {loading && displayResults.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 opacity-40">
-              <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4" />
-              <p className="text-gray-500 font-medium">Procurando información...</p>
+          <section className="flex-grow w-full">
+            <div className="mb-8 flex items-center justify-between">
+              <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                Resultados
+              </h2>
+              <div className="h-px flex-grow ml-4 bg-gray-100" />
             </div>
-          ) : displayResults.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200 shadow-sm">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+
+            {loading && displayResults.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 opacity-40">
+                <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4" />
+                <p className="text-gray-500 font-medium">Procurando información...</p>
               </div>
-              <p className="text-gray-500 text-lg">Non se atoparon resultados para esta combinación.</p>
-              <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-              {displayResults.map((item, idx) => (
-                <ResultCard 
-                  key={`${item._type}-${idx}`} 
-                  item={item} 
-                  onClick={() => openDetails(item)} 
-                />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+            ) : displayResults.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200 shadow-sm animate-fade-in">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">Non se atoparon resultados para esta combinación.</p>
+                <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                {displayResults.map((item, idx) => (
+                  <ResultCard 
+                    key={`${item._type}-${idx}`} 
+                    item={item} 
+                    onClick={() => openDetails(item)} 
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      )}
 
       <DetailsModal 
         isOpen={!!selectedItem} 
