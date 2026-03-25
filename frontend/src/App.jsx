@@ -194,7 +194,7 @@ function App() {
             />
             <button 
               type="submit" 
-              className="absolute right-1.5 top-1.5 p-2.5 bg-yellow-500 rounded-full text-white shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all"
+              className="absolute right-1.5 top-1.5 p-2.5 bg-yellow-500 rounded-full text-white shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -209,7 +209,7 @@ function App() {
                   setEditingItem(null);
                   setIsCreateModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full text-[13px] font-bold hover:bg-black hover:shadow-lg transition-all active:scale-95"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full text-[13px] font-bold hover:bg-black hover:shadow-lg transition-all active:scale-95 cursor-pointer"
               >
                 <svg className="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
@@ -227,7 +227,7 @@ function App() {
                   <span className="text-[13px] font-bold text-gray-800 leading-tight">{user.name}</span>
                   <button 
                     onClick={handleLogout}
-                    className="text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase tracking-wider transition-colors text-left"
+                    className="text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase tracking-wider transition-colors text-left cursor-pointer"
                   >
                     Saír
                   </button>
@@ -236,7 +236,7 @@ function App() {
             ) : (
               <button 
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-600 hover:border-yellow-500 hover:text-yellow-600 hover:shadow-md transition-all active:scale-95"
+                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-600 hover:border-yellow-500 hover:text-yellow-600 hover:shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -254,6 +254,7 @@ function App() {
           query={query}
           onQueryChange={setQuery}
           onSearch={handleSearch}
+          facets={facets}
         />
       ) : (
         <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start animate-sweep-in">
@@ -289,7 +290,7 @@ function App() {
                   </svg>
                 </div>
                 <p className="text-gray-500 text-lg">Non se atoparon resultados para esta combinación.</p>
-                <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
+                <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline cursor-pointer">Limpar filtros</button>
               </div>
             ) : (
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity duration-300 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>

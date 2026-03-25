@@ -4,7 +4,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
     return (
         <div className="select-none">
             <div 
-                className={`flex items-center gap-2 py-1.5 cursor-pointer group transition-all ${
+                className={`flex items-center gap-2 py-1.5 ${onToggle ? 'cursor-pointer' : 'cursor-default'} group transition-all ${
                     level === 0 ? 'mt-2' : 'ml-6'
                 }`}
                 onClick={onToggle}
@@ -29,7 +29,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 </span>
 
                 {count > 0 && (
-                    <span className="text-[10px] text-gray-400 font-bold ml-auto opacity-0 group-hover:opacity-100 transition-opacity bg-gray-100 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] text-amber-600 font-bold ml-auto bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100/50 transition-all group-hover:bg-amber-100">
                         {count}
                     </span>
                 )}
@@ -115,7 +115,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                                 onClearAll();
                                 setExpandedFamilies({});
                             }}
-                            className="text-[10px] font-bold text-yellow-600 hover:text-yellow-700 uppercase tracking-wider flex items-center gap-1 transition-colors"
+                            className="text-[10px] font-bold text-yellow-600 hover:text-yellow-700 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
                         >
                             Limpiar
                         </button>
@@ -128,7 +128,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                         {filters.categories?.length > 0 && (
                             <button 
                                 onClick={onClearAll}
-                                className="text-[10px] font-bold text-gray-400 hover:text-red-500 uppercase tracking-tight transition-colors"
+                                className="text-[10px] font-bold text-gray-400 hover:text-red-500 uppercase tracking-tight transition-colors cursor-pointer"
                             >
                                 Cambiar
                             </button>
@@ -238,7 +238,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                         onClearAll();
                         setExpandedFamilies({});
                     }}
-                    className="mt-4 w-full py-2.5 px-4 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-100 transition-all duration-200"
+                    className="mt-4 w-full py-2.5 px-4 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-100 transition-all duration-200 cursor-pointer"
                 >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

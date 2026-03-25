@@ -78,39 +78,51 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {categories.map((cat, idx) => (
-          <button
-            key={cat.id}
-            onClick={() => onSelect(cat.id)}
-            style={{ animationDelay: `${idx * 150}ms` }}
-            className="group relative bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-transparent transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col items-center text-center animate-slide-up"
-          >
-            {/* Background Gradient on Hover */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            
-            {/* Icon Circle */}
-            <div className={`relative z-10 w-24 h-24 ${cat.bgLight} rounded-3xl flex items-center justify-center ${cat.textColor} mb-8 group-hover:bg-white/20 group-hover:text-white transition-all duration-500 transform group-hover:rotate-6 shadow-sm`}>
-              {cat.icon}
-            </div>
-
-            <h3 className="relative z-10 text-2xl font-black text-gray-800 mb-4 group-hover:text-white transition-colors duration-500">
-              {cat.title}
-            </h3>
-            
-            <p className="relative z-10 text-gray-500 font-medium leading-relaxed group-hover:text-white/80 transition-colors duration-500">
-              {cat.description}
-            </p>
-
-            {/* Bottom Arrow Indicator */}
-            <div className="relative z-10 mt-8 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+        {categories.map((cat, idx) => {
+          const catFacet = facets?.categories?.find(c => c.id === cat.id);
+          const count = catFacet?.count || 0;
+          
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelect(cat.id)}
+              style={{ animationDelay: `${idx * 150}ms` }}
+              className="group relative bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 hover:border-transparent transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-col items-center text-center animate-slide-up cursor-pointer"
+            >
+              {/* Background Gradient on Hover */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+              
+              {/* Count Badge - Always Visible */}
+              <div className="absolute top-6 right-8 z-20">
+                <div className={`px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100 ${cat.textColor} text-[11px] font-black group-hover:bg-white group-hover:scale-110 transition-all duration-300`}>
+                  {count} resultados
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
+
+              {/* Icon Circle */}
+              <div className={`relative z-10 w-24 h-24 ${cat.bgLight} rounded-3xl flex items-center justify-center ${cat.textColor} mb-8 group-hover:bg-white/20 group-hover:text-white transition-all duration-500 transform group-hover:rotate-6 shadow-sm`}>
+                {cat.icon}
+              </div>
+
+              <h3 className="relative z-10 text-2xl font-black text-gray-800 mb-4 group-hover:text-white transition-colors duration-500">
+                {cat.title}
+              </h3>
+              
+              <p className="relative z-10 text-gray-500 font-medium leading-relaxed group-hover:text-white/80 transition-colors duration-500">
+                {cat.description}
+              </p>
+
+              {/* Bottom Arrow Indicator */}
+              <div className="relative z-10 mt-8 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
       
       <div className="mt-20 text-center opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
