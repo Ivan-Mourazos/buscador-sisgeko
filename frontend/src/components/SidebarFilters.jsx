@@ -55,7 +55,15 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
             ? currentSelected.filter(v => v !== value)
             : [...currentSelected, value];
             
-        onFilterChange({ ...filters, [category]: newSelected });
+        let updatedFilters = { ...filters, [category]: newSelected };
+        
+        // Si desactivamos 'insight', limpiar filtros que dependen de él
+        if (category === 'categories' && !newSelected.includes('insight')) {
+            updatedFilters.procesos = [];
+            updatedFilters.tipo_origen = [];
+        }
+
+        onFilterChange(updatedFilters);
     };
 
     // Optimizamos la agrupación de subfamilias usando useMemo y un mapa de búsqueda rápida
