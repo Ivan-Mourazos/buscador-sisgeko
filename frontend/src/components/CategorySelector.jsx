@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CategorySelector = ({ onSelect, query, onQueryChange, onSearch }) => {
+const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) => {
   const categories = [
     {
       id: 'insight',
