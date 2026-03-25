@@ -39,14 +39,30 @@ npm run build
 ```
 Esto creará la carpeta `frontend/dist`.
 
-## 4. Ejecución del Servidor
-La aplicación funciona ahora bajo un **único proceso** (el backend).
+## 4. Ejecución Permanente (Sin Consola Activa)
+Para que la aplicación no se cierre al salir de la sesión SSH o cerrar la consola, existen dos opciones recomendadas:
+
+### Opción A: Usar PM2 (Recomendado para Node.js)
+PM2 es un gestor de procesos que mantiene la app viva en segundo plano y la reinicia si falla.
 
 ```powershell
+# Instalar PM2 globalmente
+npm install -g pm2
+
+# Iniciar la aplicación
 cd /backend
-node server.js
+pm2 start server.js --name "sisgeko-search"
+
+# Ver estado
+pm2 status
+
+# Guardar para que arranque tras un reinicio del servidor
+pm2 save
 ```
-*Recomendación: usar PM2 para mantener el proceso vivo:* `pm2 start server.js --name "sisgeko-search"`.
+
+### Opción B: Como Servicio del Sistema
+- **Windows**: Pueden usar [NSSM](https://nssm.cc/) para convertir `node server.js` en un Servicio de Windows (se inicia solo, sin login).
+- **Linux**: Crear un archivo de servicio en `systemd` (`/etc/systemd/system/sisgeko.service`).
 
 ## 5. Integración con Apache/Nginx (Recomendado)
 Para usar el puerto estándar (80/443), configurar un Proxy Inverso que apunte al puerto 5000.
