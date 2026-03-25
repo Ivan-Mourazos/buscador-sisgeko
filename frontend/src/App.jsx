@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import SidebarFilters from './components/SidebarFilters';
 import { ResultCard } from './components/ResultCard';
 import DetailsModal from './components/DetailsModal';
@@ -24,6 +24,8 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
+  const searchInputRef = useRef(null);
+
   // Load session from localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem('sisgeko_user');
@@ -31,6 +33,16 @@ function App() {
       setUser(JSON.parse(savedUser));
     }
   }, []);
+
+  const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
+  const showHero = filters.categories.length === 0 && query.trim() === '';
+
+  // Focus transition logic: Cuando desaparece el Hero, enfocamos la barra del header
+  useEffect(() => {
+    if (!showHero && query.trim() !== '' && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showHero, query]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -59,14 +71,13 @@ function App() {
   };
 
   const handleEditItem = (item) => {
-    setSelectedItem(null); // Pechar o modal de detalles para abrir o de edición
+    setSelectedItem(null);
     setEditingItem(item);
     setIsCreateModalOpen(true);
   };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
-    // Evitar peticiones si no hay categorías (Hero Screen)
-    if (currentFilters.categories.length === 0) return;
+    if (currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
 
     setLoading(true);
     setError(null);
@@ -104,7 +115,7 @@ function App() {
   }, [query, filters, fetchResults]);
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     fetchResults(query, filters);
   };
 
@@ -142,10 +153,6 @@ function App() {
     }
   };
 
-  const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
-  const showHero = filters.categories.length === 0 && query.trim() === '';
-
-  // Filtrado local para asegurar consistencia
   const displayResults = results.filter(item => {
     if (filters.categories && filters.categories.length > 0) {
       if (!filters.categories.includes(item._type)) return false;
@@ -159,7 +166,7 @@ function App() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100">
+    <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100 overflow-x-hidden">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
           <div onClick={goHome} className="flex items-center gap-2 cursor-pointer group">
@@ -170,8 +177,9 @@ function App() {
              />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] relative group transition-all duration-500 ${showHero ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] relative group transition-all duration-700 ${showHero ? 'opacity-0 scale-95 pointer-events-none -translate-y-2' : 'opacity-100 scale-100 translate-y-0'}`}>
             <input 
+              ref={searchInputRef}
               type="text" 
               className="w-full pl-6 pr-14 py-3.5 bg-white border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:border-gray-300 group-hover:shadow-md"
               placeholder="Procurar termo..."
