@@ -143,7 +143,7 @@ function App() {
   };
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
-  const showHero = filters.categories.length === 0;
+  const showHero = filters.categories.length === 0 && query.trim() === '';
 
   // Filtrado local para asegurar consistencia
   const displayResults = results.filter(item => {
@@ -235,7 +235,12 @@ function App() {
       </header>
 
       {showHero ? (
-        <CategorySelector onSelect={handleCategorySelect} />
+        <CategorySelector 
+          onSelect={handleCategorySelect} 
+          query={query}
+          onQueryChange={setQuery}
+          onSearch={handleSearch}
+        />
       ) : (
         <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start animate-sweep-in">
           <aside className="w-full lg:w-72 flex-shrink-0">

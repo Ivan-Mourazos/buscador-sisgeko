@@ -1,7 +1,8 @@
 import React from 'react';
 
-const CategorySelector = ({ onSelect }) => {
+const CategorySelector = ({ onSelect, query, onQueryChange, onSearch }) => {
   const categories = [
+    // ... existing categories
     {
       id: 'insight',
       title: 'Insights',
@@ -45,13 +46,35 @@ const CategorySelector = ({ onSelect }) => {
 
   return (
     <div className="max-w-6xl mx-auto px-8 py-20 animate-fade-in">
-      <div className="text-center mb-16">
+      <div className="text-center mb-10">
         <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">
           Benvido ao <span className="text-yellow-500">Buscador Sisgeko</span>
         </h1>
         <p className="text-lg text-gray-500 max-w-2xl mx-auto font-medium">
-          Selecciona unha categoría para comezar a túa busca técnica.
+          Selecciona unha categoría para comezar ou busca directamente.
         </p>
+      </div>
+
+      {/* Google-style Search Bar */}
+      <div className="max-w-3xl mx-auto mb-20 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <form onSubmit={onSearch} className="relative group">
+          <input 
+            type="text" 
+            placeholder="Que estás a buscar hoxe?"
+            className="w-full pl-8 pr-32 py-5 bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-200/60 focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 focus:shadow-yellow-100/50 transition-all outline-none text-xl font-medium placeholder:text-gray-300 group-hover:border-gray-200"
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+          />
+          <button 
+            type="submit"
+            className="absolute right-2.5 top-2.5 bottom-2.5 px-8 bg-yellow-500 rounded-[1.5rem] text-white font-black shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 transition-all flex items-center gap-2 active:scale-95"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Buscar
+          </button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
