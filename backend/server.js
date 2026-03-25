@@ -68,43 +68,45 @@ app.post('/api/search', async (req, res) => {
 
         // 2. BUSCAR INSIGHTS (Incluímos nomes dos procesos relacionados) - Fallback para SQL 2014
         let sqlIns = `
-            SELECT DISTINCT i.*, t.tipo_origen as tipo_origen_nombre, a.id_familia, a.subfamilia,
-            STUFF((
+            SELECT i.*, 
+            (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
+            ISNULL(STUFF((
                 SELECT ', ' + p.proceso 
                 FROM rel_Insight_Proceso rip2 
                 JOIN procesos p ON rip2.id_proceso = p.id_proceso 
                 WHERE rip2.id_insight = i.id_insight 
                 FOR XML PATH('')
-            ), 1, 2, '') as procesos_lista
+            ), 1, 2, ''), '') as procesos_lista
             FROM insights i
-            LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
-            LEFT JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight
-            LEFT JOIN articulos a ON ria.id_articulo = a.id_articulo
-            LEFT JOIN rel_Insight_Proceso rip ON i.id_insight = rip.id_insight
             WHERE 1=1
         `;
         words.forEach((_, i) => {
             sqlIns += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`;
         });
-        
-        if (familias.length > 0 || subfamilias.length > 0) {
-            if (matchedArticuloIds.length > 0) {
-                sqlIns += ` AND ria.id_articulo IN (${buildInClause(matchedArticuloIds)})`;
-            } else {
-                sqlIns += ` AND 1=0`;
-            }
-        }
-        
-        if (procesos.length > 0) sqlIns += ` AND rip.id_proceso IN (${buildInClause(procesos)})`;
-        if (tipo_origen.length > 0) sqlIns += ` AND i.id_tipo_origen IN (${buildInClause(tipo_origen)})`;
 
-        console.log(`[Query Insights] SQL:`, sqlIns);
-        
-        const resInsights = await request.query(sqlIns);
-        const insights = resInsights.recordset.map(i => ({ ...i, _type: 'insight' }));
-        if (insights.length > 0) {
-            console.log(`[DEBUG] Primeiro insight (ID: ${insights[0].id_insight}):`, JSON.stringify(insights[0], null, 2));
+        // Joins necesarios solo para filtros específicos si existen
+        if (familias.length > 0 || subfamilias.length > 0) {
+            sqlIns += ` AND i.id_insight IN (SELECT id_insight FROM rel_Insight_articulo ria JOIN articulos a ON ria.id_articulo = a.id_articulo WHERE 1=1 `;
+            if (familias.length > 0) sqlIns += ` AND a.id_familia IN (${buildInClause(familias)})`;
+            if (subfamilias.length > 0) sqlIns += ` AND a.subfamilia IN (${buildInClause(subfamilias)})`;
+            sqlIns += `)`;
         }
+        
+        if (procesos.length > 0) {
+            sqlIns += ` AND i.id_insight IN (SELECT id_insight FROM rel_Insight_Proceso WHERE id_proceso IN (${buildInClause(procesos)}))`;
+        }
+        
+        if (tipo_origen.length > 0) {
+            sqlIns += ` AND i.id_tipo_origen IN (${buildInClause(tipo_origen)})`;
+        }
+
+        const resInsights = await request.query(sqlIns);
+        const insights = resInsights.recordset.map(i => ({ 
+            ...i, 
+            _type: 'insight',
+            procesos_lista: i.procesos_lista || 'DB_NULL' 
+        }));
+        console.log(`[DEBUG] Respuesta ID ${insights[0]?.id_insight}:`, insights[0]?.procesos_lista);
 
         // 3. BUSCAR DEFINICIONES
         let sqlDef = `
@@ -227,7 +229,11 @@ app.get('/api/details', async (req, res) => {
                 WHERE i.id_insight = @id
             `);
             if (basicRes.recordset.length > 0) {
-                Object.assign(details, basicRes.recordset[0]);
+                const itemData = basicRes.recordset[0];
+                Object.assign(details, {
+                    ...itemData,
+                    procesos_lista: itemData.procesos_lista || 'DB_NULL'
+                });
             }
 
             const intRes = await request.query(`
