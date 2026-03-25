@@ -101,12 +101,7 @@ app.post('/api/search', async (req, res) => {
         }
 
         const resInsights = await request.query(sqlIns);
-        const insights = resInsights.recordset.map(i => ({ 
-            ...i, 
-            _type: 'insight',
-            procesos_lista: i.procesos_lista || 'DB_NULL' 
-        }));
-        console.log(`[DEBUG] Respuesta ID ${insights[0]?.id_insight}:`, insights[0]?.procesos_lista);
+        const insights = resInsights.recordset.map(i => ({ ...i, _type: 'insight' }));
 
         // 3. BUSCAR DEFINICIONES
         let sqlDef = `
@@ -229,11 +224,7 @@ app.get('/api/details', async (req, res) => {
                 WHERE i.id_insight = @id
             `);
             if (basicRes.recordset.length > 0) {
-                const itemData = basicRes.recordset[0];
-                Object.assign(details, {
-                    ...itemData,
-                    procesos_lista: itemData.procesos_lista || 'DB_NULL'
-                });
+                Object.assign(details, basicRes.recordset[0]);
             }
 
             const intRes = await request.query(`
