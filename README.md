@@ -77,4 +77,4 @@ O buscador estará accesible en `http://localhost:5173/` (Vite redirecciona as c
 
 ---
 
-*Proxecto desenvolvido por Iván Sánchez - 2026*
+*Proxecto desenvolvido por Iván Sánchez para Toldos Gómez - 2026*

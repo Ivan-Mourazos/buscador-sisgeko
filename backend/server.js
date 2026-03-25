@@ -66,9 +66,13 @@ app.post('/api/search', async (req, res) => {
         const articulos = resArticulos.recordset.map(a => ({ ...a, _type: 'articulo' }));
         const matchedArticuloIds = articulos.map(a => a.id_articulo);
 
-        // 2. BUSCAR INSIGHTS
+        // 2. BUSCAR INSIGHTS (Incluímos nomes dos procesos relacionados)
         let sqlIns = `
-            SELECT DISTINCT i.*, t.tipo_origen as tipo_origen_nombre, a.id_familia, a.subfamilia
+            SELECT DISTINCT i.*, t.tipo_origen as tipo_origen_nombre, a.id_familia, a.subfamilia,
+            (SELECT STRING_AGG(p.proceso, ', ') 
+             FROM rel_Insight_Proceso rip2 
+             JOIN procesos p ON rip2.id_proceso = p.id_proceso 
+             WHERE rip2.id_insight = i.id_insight) as procesos_lista
             FROM insights i
             LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
             LEFT JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight
