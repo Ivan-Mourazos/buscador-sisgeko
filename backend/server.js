@@ -207,7 +207,7 @@ app.get('/api/details', async (req, res) => {
             `);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
         } else if (type === 'insight') {
-            const basicRes = await pool.request().query(`
+            const basicRes = await request.query(`
                 SELECT i.*, t.tipo_origen as tipo_origen_nombre,
                 (SELECT STRING_AGG(p.proceso, ', ') 
                  FROM rel_Insight_Proceso rip2 
