@@ -77,7 +77,8 @@ function App() {
   };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
-    if (currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
+    // Permitimos el fetch si estamos en el Hero (para cargar contadores) o si hay algo que buscar
+    if (!showHero && currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
 
     setLoading(true);
     setError(null);
