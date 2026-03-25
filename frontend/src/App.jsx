@@ -9,7 +9,7 @@ import CategorySelector from './components/CategorySelector';
 function App() {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
-  const [facets, setFacets] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
+  const [facets, setFacets] = useState({ categories: [], familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);

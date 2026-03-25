@@ -81,7 +81,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
             });
         }
 
-        return facets.subfamilias.reduce((acc, sub) => {
+        return (facets.subfamilias ?? []).reduce((acc, sub) => {
             let fid = sub.id_familia ?? subToFamMap[sub.nombre];
             const fidStr = String(fid);
             if (fidStr !== "undefined" && fidStr !== "null") {
@@ -94,17 +94,17 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
 
     // Filtrado preventivo de facetas visibles para optimizar renderizado
     const visibleFamilies = useMemo(() => {
-        return facets.familias.filter(f => f.count > 0 || filters.familias.map(String).includes(String(f.id_familia)));
+        return (facets.familias ?? []).filter(f => f.count > 0 || (filters.familias ?? []).map(String).includes(String(f.id_familia)));
     }, [facets.familias, filters.familias]);
 
     const visibleProcesos = useMemo(() => {
         if (!filters.categories?.includes('insight')) return [];
-        return (facets.procesos || []).filter(p => p.count > 0 || filters.procesos.includes(p.id_proceso));
+        return (facets.procesos ?? []).filter(p => p.count > 0 || filters.procesos.includes(p.id_proceso));
     }, [facets.procesos, filters.categories, filters.procesos]);
 
     const visibleOrigins = useMemo(() => {
         if (!filters.categories?.includes('insight')) return [];
-        return (facets.tipo_origen || []).filter(o => o.count > 0 || filters.tipo_origen.includes(o.id_tipo_origen));
+        return (facets.tipo_origen ?? []).filter(o => o.count > 0 || filters.tipo_origen.includes(o.id_tipo_origen));
     }, [facets.tipo_origen, filters.categories, filters.tipo_origen]);
 
     return (
