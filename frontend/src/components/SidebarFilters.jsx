@@ -175,6 +175,28 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                     </div>
                 </div>
 
+                {facets.procesos && facets.procesos.length > 0 && (
+                    <div className="mb-4">
+                        <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Procesos</h4>
+                        <div className="space-y-1">
+                            {facets.procesos.map(proceso => {
+                                const isSelected = filters.procesos.includes(proceso.id_proceso);
+                                if (proceso.count === 0 && !isSelected) return null;
+
+                                return (
+                                    <TreeItem 
+                                        key={proceso.id_proceso}
+                                        label={proceso.proceso}
+                                        count={proceso.count}
+                                        isSelected={isSelected}
+                                        onToggle={() => toggleFilter('procesos', proceso.id_proceso)}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 {facets.tipo_origen && facets.tipo_origen.length > 0 && (
                     <div className="mt-8 border-t border-gray-50 pt-6">
                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
