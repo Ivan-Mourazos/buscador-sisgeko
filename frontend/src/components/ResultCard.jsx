@@ -47,8 +47,8 @@ export const ResultCard = ({ item, onClick }) => {
                     <div className="mt-2 flex flex-wrap gap-2 items-center">
                         {item.tipo_origen_nombre && <Badge colorClass="bg-emerald-50 text-emerald-700 border-emerald-100">Orixe: {item.tipo_origen_nombre}</Badge>}
                         {item.procesos_lista && <Badge colorClass="bg-purple-50 text-purple-700 border-purple-100">P: {item.procesos_lista}</Badge>}
-                        {item.procesos_lista && <Badge colorClass="bg-purple-50 text-purple-700 border-purple-100">P: {item.procesos_lista}</Badge>}
                         {item.origen_informacion && <span className="text-xs text-gray-400 mt-1 italic line-clamp-2 flex-grow overflow-hidden">{item.origen_informacion}</span>}
+                        {/* {console.log('Item:', item)} */}
                     </div>
                 </div>
             );
