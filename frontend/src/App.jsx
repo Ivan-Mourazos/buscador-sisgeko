@@ -23,6 +23,7 @@ function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const searchInputRef = useRef(null);
 
@@ -32,6 +33,13 @@ function App() {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
@@ -334,6 +342,18 @@ function App() {
         onDelete={handleDeleteItem}
         initialData={editingItem}
       />
+
+      {/* Botón Volver Arriba */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl shadow-yellow-500/40 transition-all duration-500 transform z-[60] hover:bg-yellow-600 hover:-translate-y-1 active:scale-90 cursor-pointer ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
     </div>
   );
 }
