@@ -316,6 +316,21 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     }
 });
 
+// Servir archivos estáticos del frontend (Producción)
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// Manejar todas las demás rutas para el cliente React (SPA)
+app.get('*', (req, res) => {
+    const indexPath = path.join(frontendDistPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        // Si no existe (en desarrollo), mostramos un mensaje o dejamos que maneje Express
+        res.status(404).json({ success: false, message: 'Interface non compilada. Use npm run build en /frontend' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor backend ejecutándose en el puerto ${PORT}`);
 });
