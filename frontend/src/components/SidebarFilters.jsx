@@ -28,7 +28,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                     {label}
                 </span>
 
-                {count > 0 && level === 0 && (
+                {count > 0 && (
                     <span className="text-[10px] text-gray-400 font-bold ml-auto opacity-0 group-hover:opacity-100 transition-opacity bg-gray-100 px-1.5 py-0.5 rounded">
                         {count}
                     </span>
@@ -148,7 +148,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                                     label={cat.nombre}
                                     count={cat.count}
                                     isSelected={isSelected}
-                                    onToggle={() => toggleFilter('categories', cat.id)}
+                                    onToggle={filters.categories?.length > 0 ? null : () => toggleFilter('categories', cat.id)}
                                 />
                             );
                         })}
@@ -183,6 +183,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                                                     <TreeItem 
                                                         key={`${fidStr}-${sub.nombre}`}
                                                         label={sub.nombre}
+                                                        count={sub.count}
                                                         isSelected={isSubSelected}
                                                         level={1}
                                                         onToggle={() => toggleFilter('subfamilias', sub.nombre)}
