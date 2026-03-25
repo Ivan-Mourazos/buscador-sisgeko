@@ -66,9 +66,8 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
         onFilterChange(updatedFilters);
     };
 
-    // Optimizamos la agrupación de subfamilias usando useMemo y un mapa de búsqueda rápida
+    // Optimizamos la agrupación de subfamilias
     const subfamiliasByFamilia = useMemo(() => {
-        // 1. Crear un mapa rápido de subfamilia -> id_familia a partir de los resultados
         const subToFamMap = {};
         if (results) {
             results.forEach(r => {
@@ -78,13 +77,8 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
             });
         }
 
-        // 2. Agrupar subfamilias
         return facets.subfamilias.reduce((acc, sub) => {
-            let fid = sub.id_familia;
-            if ((fid === undefined || fid === null)) {
-                fid = subToFamMap[sub.nombre];
-            }
-            
+            let fid = sub.id_familia ?? subToFamMap[sub.nombre];
             const fidStr = String(fid);
             if (fidStr !== "undefined" && fidStr !== "null") {
                 if (!acc[fidStr]) acc[fidStr] = [];
@@ -94,9 +88,25 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
         }, {});
     }, [facets.subfamilias, results]);
 
+    // Filtrado preventivo de facetas visibles para optimizar renderizado
+    const visibleFamilies = useMemo(() => {
+        return facets.familias.filter(f => f.count > 0 || filters.familias.map(String).includes(String(f.id_familia)));
+    }, [facets.familias, filters.familias]);
+
+    const visibleProcesos = useMemo(() => {
+        if (!filters.categories?.includes('insight')) return [];
+        return (facets.procesos || []).filter(p => p.count > 0 || filters.procesos.includes(p.id_proceso));
+    }, [facets.procesos, filters.categories, filters.procesos]);
+
+    const visibleOrigins = useMemo(() => {
+        if (!filters.categories?.includes('insight')) return [];
+        return (facets.tipo_origen || []).filter(o => o.count > 0 || filters.tipo_origen.includes(o.id_tipo_origen));
+    }, [facets.tipo_origen, filters.categories, filters.tipo_origen]);
+
     return (
         <div className="w-full bg-transparent py-4 pr-4 sticky top-8">
             <div className="mb-10">
+                {/* ... Header ... */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">Filtros</h3>
                     {hasActiveFilters && (
@@ -131,10 +141,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                             { id: 'articulo', nombre: 'Artigos' }
                         ]).map(cat => {
                             const isSelected = filters.categories?.includes(cat.id);
-                            
-                            // Si hay selección de categorías, ocultamos las NO seleccionadas para compactar
                             if (filters.categories?.length > 0 && !isSelected) return null;
-
                             return (
                                 <TreeItem 
                                     key={cat.id}
@@ -150,16 +157,12 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 
                 <div className="mb-4">
                     <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
-                    
                     <div className="space-y-1">
-                        {facets.familias.map(familia => {
+                        {visibleFamilies.map(familia => {
                             const fidStr = String(familia.id_familia);
                             const isSelected = filters.familias.map(String).includes(fidStr);
                             const isExpanded = !!expandedFamilies[fidStr] || isSelected;
-                            const subfamilias = subfamiliasByFamilia[fidStr] || [];
-
-                            // OCULTAR FAMILIA SI: count es 0 Y no está seleccionada
-                            if (familia.count === 0 && !isSelected) return null;
+                            const subfamilias = (subfamiliasByFamilia[fidStr] || []).filter(s => s.count > 0 || filters.subfamilias.includes(s.nombre));
                             
                             return (
                                 <TreeItem 
@@ -176,10 +179,6 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                                         <div className="mb-2">
                                             {subfamilias.map(sub => {
                                                 const isSubSelected = filters.subfamilias.includes(sub.nombre);
-                                                
-                                                // OCULTAR SUBFAMILIA SI: count es 0 Y no está seleccionada
-                                                if (sub.count === 0 && !isSubSelected) return null;
-
                                                 return (
                                                     <TreeItem 
                                                         key={`${fidStr}-${sub.nombre}`}
@@ -198,45 +197,35 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                     </div>
                 </div>
 
-                {facets.procesos && facets.procesos.length > 0 && filters.categories?.includes('insight') && (
+                {visibleProcesos.length > 0 && (
                     <div className="mb-4">
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Procesos</h4>
                         <div className="space-y-1">
-                            {facets.procesos.map(proceso => {
-                                const isSelected = filters.procesos.includes(proceso.id_proceso);
-                                if (proceso.count === 0 && !isSelected) return null;
-
-                                return (
-                                    <TreeItem 
-                                        key={proceso.id_proceso}
-                                        label={proceso.proceso}
-                                        count={proceso.count}
-                                        isSelected={isSelected}
-                                        onToggle={() => toggleFilter('procesos', proceso.id_proceso)}
-                                    />
-                                );
-                            })}
+                            {visibleProcesos.map(proceso => (
+                                <TreeItem 
+                                    key={proceso.id_proceso}
+                                    label={proceso.proceso}
+                                    count={proceso.count}
+                                    isSelected={filters.procesos.includes(proceso.id_proceso)}
+                                    onToggle={() => toggleFilter('procesos', proceso.id_proceso)}
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
 
-                {facets.tipo_origen && facets.tipo_origen.length > 0 && filters.categories?.includes('insight') && (
+                {visibleOrigins.length > 0 && (
                     <div className="mt-8 border-t border-gray-50 pt-6">
                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
                         <div className="space-y-1">
-                            {facets.tipo_origen.map(tipo => {
-                                const isSelected = filters.tipo_origen.includes(tipo.id_tipo_origen);
-                                if (tipo.count === 0 && !isSelected) return null;
-
-                                return (
-                                    <TreeItem 
-                                        key={tipo.id_tipo_origen}
-                                        label={tipo.tipo_origen}
-                                        isSelected={isSelected}
-                                        onToggle={() => toggleFilter('tipo_origen', tipo.id_tipo_origen)}
-                                    />
-                                );
-                            })}
+                            {visibleOrigins.map(tipo => (
+                                <TreeItem 
+                                    key={tipo.id_tipo_origen}
+                                    label={tipo.tipo_origen}
+                                    isSelected={filters.tipo_origen.includes(tipo.id_tipo_origen)}
+                                    onToggle={() => toggleFilter('tipo_origen', tipo.id_tipo_origen)}
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
