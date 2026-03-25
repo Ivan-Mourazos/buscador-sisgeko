@@ -186,6 +186,14 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                                     {item.tipo_origen_nombre || 'Xeral'}
                                                                 </span>
                                                             </div>
+                                                            {item.procesos_lista && (
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Procesos relacionados</span>
+                                                                    <span className="inline-flex self-start bg-purple-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-md">
+                                                                        {item.procesos_lista}
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* PARTE DERECHA: RECURSOS GRÁFICOS (PARA INSIGHTS) */}

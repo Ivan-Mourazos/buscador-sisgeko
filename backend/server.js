@@ -207,6 +207,20 @@ app.get('/api/details', async (req, res) => {
             `);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
         } else if (type === 'insight') {
+            const basicRes = await pool.request().query(`
+                SELECT i.*, t.tipo_origen as tipo_origen_nombre,
+                (SELECT STRING_AGG(p.proceso, ', ') 
+                 FROM rel_Insight_Proceso rip2 
+                 JOIN procesos p ON rip2.id_proceso = p.id_proceso 
+                 WHERE rip2.id_insight = i.id_insight) as procesos_lista
+                FROM insights i 
+                LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
+                WHERE i.id_insight = @id
+            `);
+            if (basicRes.recordset.length > 0) {
+                Object.assign(details, basicRes.recordset[0]);
+            }
+
             const intRes = await request.query(`
                 SELECT it.intencion
                 FROM rel_insight_intencion rii
