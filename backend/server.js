@@ -102,6 +102,9 @@ app.post('/api/search', async (req, res) => {
         
         const resInsights = await request.query(sqlIns);
         const insights = resInsights.recordset.map(i => ({ ...i, _type: 'insight' }));
+        if (insights.length > 0) {
+            console.log(`[DEBUG] Primeiro insight (ID: ${insights[0].id_insight}):`, JSON.stringify(insights[0], null, 2));
+        }
 
         // 3. BUSCAR DEFINICIONES
         let sqlDef = `
