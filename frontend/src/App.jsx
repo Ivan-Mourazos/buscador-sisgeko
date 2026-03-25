@@ -270,10 +270,10 @@ function App() {
               <div className="h-px flex-grow ml-4 bg-gray-100" />
             </div>
 
-            {loading && displayResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-500 rounded-full animate-spin mb-4" />
-                <p className="text-gray-500 font-medium">Procurando información...</p>
+              {loading && displayResults.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 animate-fade-in opacity-50">
+                <div className="w-10 h-10 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin mb-4" />
+                <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">Actualizando resultados...</p>
               </div>
             ) : displayResults.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200 shadow-sm animate-fade-in">
@@ -286,10 +286,10 @@ function App() {
                 <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-                {displayResults.map((item, idx) => (
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity duration-300 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                {displayResults.slice(0, 50).map((item, idx) => (
                   <ResultCard 
-                    key={`${item._type}-${idx}`} 
+                    key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} 
                     item={item} 
                     onClick={() => openDetails(item)} 
                   />

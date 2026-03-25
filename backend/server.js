@@ -114,43 +114,55 @@ app.post('/api/search', async (req, res) => {
 
         const allItems = [...allMatchArts, ...allMatchIns, ...allMatchDefs];
 
+        // --- 2. CÁLCULO DE FACETAS DINÁMICAS OPTIMIZADO ---
+        
+        // 2a. Categorías: Dependen de familias, subfamilias, procesos y origen
+        const itemsForCats = allItems.filter(item => checkMatch(item, [], familias, subfamilias, procesos, tipo_origen));
+        const catCounts = { articulo: 0, insight: 0, definicion: 0 };
+        itemsForCats.forEach(item => { catCounts[item._type]++; });
+
+        // 2b. Familias: Dependen de categorías, procesos y origen (no de familias/subs)
+        const itemsForFams = allItems.filter(item => checkMatch(item, categories, [], [], procesos, tipo_origen));
+        const famCounts = {};
+        itemsForFams.forEach(item => { famCounts[item.id_familia] = (famCounts[item.id_familia] || 0) + 1; });
+
+        // 2c. Subfamilias: Dependen de categorías, familia, procesos y origen (independientes de otras subs)
+        const itemsForSubs = allItems.filter(item => checkMatch(item, categories, familias, [], procesos, tipo_origen));
+        const subCounts = {}; // Key: "id_familia-nombre"
+        itemsForSubs.forEach(item => {
+            if (item.subfamilia) {
+                const key = `${item.id_familia}-${item.subfamilia}`;
+                subCounts[key] = (subCounts[key] || 0) + 1;
+            }
+        });
+
+        // 2d. Procesos: Dependen de categorías, familias, subfamilias y origen
+        const itemsForProcs = allMatchIns.filter(item => checkMatch(item, categories, familias, subfamilias, [], tipo_origen));
+        const procCounts = {};
+        itemsForProcs.forEach(item => {
+            const iProcs = insProcesosMap[item.id_insight] || [];
+            iProcs.forEach(pid => { procCounts[pid] = (procCounts[pid] || 0) + 1; });
+        });
+
+        // 2e. Origen: Dependen de categorías, familias, subfamilias y procesos
+        const itemsForOrigins = allMatchIns.filter(item => checkMatch(item, categories, familias, subfamilias, procesos, []));
+        const originCounts = {};
+        itemsForOrigins.forEach(item => {
+            if (item.id_tipo_origen) {
+                originCounts[item.id_tipo_origen] = (originCounts[item.id_tipo_origen] || 0) + 1;
+            }
+        });
+
         const facets = {
             categories: [
-                { id: 'articulo', nombre: 'Artigos', count: allItems.filter(item => item._type === 'articulo' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length },
-                { id: 'insight', nombre: 'Insights', count: allItems.filter(item => item._type === 'insight' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length },
-                { id: 'definicion', nombre: 'Definicións', count: allItems.filter(item => item._type === 'definicion' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length }
+                { id: 'articulo', nombre: 'Artigos', count: catCounts.articulo || 0 },
+                { id: 'insight', nombre: 'Insights', count: catCounts.insight || 0 },
+                { id: 'definicion', nombre: 'Definicións', count: catCounts.definicion || 0 }
             ],
-            familias: allFamilias.map(f => {
-                // Para familias, respetamos Categoría, Procesos y Origen (ignora familias/subs)
-                const count = allItems.filter(item => 
-                    item.id_familia === f.id_familia && 
-                    checkMatch(item, categories, [], [], procesos, tipo_origen)
-                ).length;
-                return { ...f, count };
-            }),
-            subfamilias: allSubfamilias.map(s => {
-                // Para subfamilias respetamos Categoría, Familia, Procesos y Origen (independiente de otras subs)
-                const count = allItems.filter(item => 
-                    item.id_familia === s.id_familia && 
-                    item.subfamilia === s.nombre && 
-                    checkMatch(item, categories, familias, [], procesos, tipo_origen)
-                ).length;
-                return { ...s, count };
-            }),
-            procesos: allProcesos.map(p => {
-                const count = allMatchIns.filter(item => {
-                    const iProcs = insProcesosMap[item.id_insight] || [];
-                    return iProcs.includes(p.id_proceso) && checkMatch(item, categories, familias, subfamilias, [], tipo_origen);
-                }).length;
-                return { ...p, count };
-            }),
-            tipo_origen: allTiposOrigen.map(t => {
-                const count = allMatchIns.filter(item => 
-                    item.id_tipo_origen === t.id_tipo_origen && 
-                    checkMatch(item, categories, familias, subfamilias, procesos, [])
-                ).length;
-                return { ...t, count };
-            })
+            familias: allFamilias.map(f => ({ ...f, count: famCounts[f.id_familia] || 0 })),
+            subfamilias: allSubfamilias.map(s => ({ ...s, count: subCounts[`${s.id_familia}-${s.nombre}`] || 0 })),
+            procesos: allProcesos.map(p => ({ ...p, count: procCounts[p.id_proceso] || 0 })),
+            tipo_origen: allTiposOrigen.map(t => ({ ...t, count: originCounts[t.id_tipo_origen] || 0 }))
         };
 
         // --- 3. RESULTADOS FINALES (Filtrados por TODO) ---
