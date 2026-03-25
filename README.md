@@ -1,33 +1,59 @@
-# Buscador Sisgeko
+# 🔍 Buscador Sisgeko
 
-Aplicación web con un frontend en React (Vite + Tailwind CSS v4) y un backend en Node.js (Express) que conecta a una base de datos SQL Server.
+O **Buscador Sisgeko** é unha plataforma administrativa e de consulta deseñada para xestionar eficazmente o coñecemento técnico e a información de produtos. Combina un potente motor de busca en tempo real cun panel de administración completo para a xestión de contidos.
 
-## 🚀 Requisitos Previos
+---
 
-- [Node.js](https://nodejs.org/) instalado (recomendado v18 o superior).
-- Acceso a la VPN o red local si usas una base de datos interna.
+## ✨ Características Principais
 
-## 🛠️ Configuración Inicial (Primera vez)
+### 1. Motor de Busca Unificado
+*   **Consulta Global**: Busca simultánea en tres categorías: **Artigos (Fichas Técnicas)**, **Insights (Leccións Aprendidas)** e **Definicións (Conceptos)**.
+*   **Filtros Dinámicos**: Sistema de filtrado por Familias, Subfamilias, Procesos e Orixe da información.
+*   **Resultados Intelixentes**: Tarxetas con información contextual e acceso a detalles expandidos.
 
-1. **Clonar repositorio:**
-   Una vez hayas clonado este proyecto en tu equipo de trabajo, navega hasta la carpeta raíz del proyecto.
+### 2. Panel de Administración (Gated)
+*   **Acceso Protexido**: Interface administrativa accesible mediante login (`admin` / `sisgeko2024`).
+*   **Xestión de Contidos**: Crear, editar ou eliminar calquera rexistro da base de datos de forma visual.
+*   **Editor Multistep**: Proceso guiado para a creación de novos elementos con formularios específicos por tipo de dato.
 
-2. **Instalar todas las dependencias:**
-   Desde la carpeta raíz, ejecuta este comando para instalar las librerías del backend y frontend de una sola vez:
-   ```bash
-   npm run install:all
-   ```
+### 3. Xestión Avanzada de Imaxes
+*   **Dobre Fluxo**: Soporta tanto a referencia a imaxes xa existentes no servidor como a **subida directa** de novos ficheiros desde o navegador.
+*   **Infraestrutura de Rede**: Sincronización automática coa carpeta de rede compartida (`\\192.168.0.128\Sisgeko`).
+*   **Previsualización en Vivo**: Comprobación instantánea das imaxes antes de gardar os cambios.
 
-3. **Configurar Variables de Entorno (Backend):**
-   - Ve a la carpeta `backend/`.
-   - Haz una copia del archivo `.env.example` y nómbrala `.env`.
-   - Rellena el archivo `.env` con las credenciales reales de la base de datos (IP, Usuario, Contraseña).
+---
 
-## ▶️ Ejecución en Desarrollo
+## 🛠️ Stack Tecnolóxico
 
-Para trabajar en el proyecto, necesitas levantar tanto el servidor de React como el de la API de Node.js. 
+*   **Frontend**: React + Vite + Tailwind CSS v4.
+*   **Backend**: Node.js + Express.
+*   **Base de Datos**: Microsoft SQL Server (MSSQL).
+*   **Almacenamento**: Multer (para a xestión de ficheiros en rede local).
 
-Abre **dos terminales** diferentes en la raíz del proyecto y ejecuta:
+---
+
+## 🚀 Instalación e Configuración
+
+### 1. Requisitos Previos
+*   [Node.js](https://nodejs.org/) (v18 recomendada).
+*   Conexión á VPN ou rede local de Toldos Gómez (necesario para SQL Server e imaxes).
+
+### 2. Configuración Inicial
+Desde a raíz do proxecto, instala todas as dependencias necesarias:
+```bash
+npm run install:all
+```
+
+### 3. Variables de Contorno
+Crea un ficheiro `.env` na carpeta `backend/` baseándote no `.env.example` con:
+*   Credenciais de SQL Server (IP, Usuario, Contrasinal).
+*   Configuración do porto (por defecto `5000`).
+
+---
+
+## ▶️ Execución
+
+Abre **dúas terminais** e executa os seguintes comandos:
 
 **Terminal 1 (Backend):**
 ```bash
@@ -39,6 +65,16 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
-El frontend estará disponible en tu navegador en la URL que muestre Vite (por ejemplo: `http://localhost:5173/`).
+O buscador estará accesible en `http://localhost:5173/` (Vite redirecciona as chamadas de API automaticamente ao porto `5000`).
 
-*Nota: Durante el desarrollo, Vite está configurado para redirigir automáticamente todas las peticiones a `/api` hacia `http://localhost:5000`, evitando así problemas de CORS sin tener que cambiar la URL manualmente en el código.*
+---
+
+## 📂 Estrutura do Proxecto
+
+*   `/frontend`: Aplicación React e compoñentes de UI.
+*   `/backend`: API Express e controladores de base de datos.
+*   `/knowledge`: Historio de cambios e documentación técnica adicional.
+
+---
+
+*Proxecto desenvolvido para Toldos Gómez - 2024/2025*
