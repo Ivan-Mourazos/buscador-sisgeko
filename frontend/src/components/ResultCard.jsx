@@ -38,7 +38,6 @@ export const ResultCard = ({ item, onClick }) => {
                     <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
                             <Badge colorClass="bg-blue-50 text-blue-800 border-blue-100">Insight</Badge>
-                            <Badge colorClass="bg-red-500 text-white border-red-600">TEST</Badge>
                             {item.procesos_lista && <Badge colorClass="bg-purple-50 text-purple-700 border-purple-100">P: {item.procesos_lista}</Badge>}
                         </div>
                         <span className="text-[11px] font-medium text-gray-400">ID: {item.id_insight}</span>
