@@ -159,48 +159,50 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                     </div>
                 </div>
                 
-                <div className="mb-4">
-                    <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
-                    <div className="space-y-1">
-                        {visibleFamilies.map(familia => {
-                            const fidStr = String(familia.id_familia);
-                            const isSelected = filters.familias.map(String).includes(fidStr);
-                            const isExpanded = !!expandedFamilies[fidStr] || isSelected;
-                            const subfamilias = (subfamiliasByFamilia[fidStr] || []).filter(s => s.count > 0 || filters.subfamilias.includes(s.nombre));
-                            
-                            return (
-                                <TreeItem 
-                                    key={fidStr}
-                                    label={familia.codigo}
-                                    count={familia.count}
-                                    isSelected={isSelected}
-                                    onToggle={() => {
-                                        toggleFilter('familias', familia.id_familia);
-                                        toggleFamily(fidStr);
-                                    }}
-                                >
-                                    {(isExpanded) && subfamilias.length > 0 && (
-                                        <div className="mb-2">
-                                            {subfamilias.map(sub => {
-                                                const isSubSelected = filters.subfamilias.includes(sub.nombre);
-                                                return (
-                                                    <TreeItem 
-                                                        key={`${fidStr}-${sub.nombre}`}
-                                                        label={sub.nombre}
-                                                        count={sub.count}
-                                                        isSelected={isSubSelected}
-                                                        level={1}
-                                                        onToggle={() => toggleFilter('subfamilias', sub.nombre)}
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </TreeItem>
-                            );
-                        })}
+                {visibleFamilies.length > 0 && (
+                    <div className="mb-4">
+                        <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
+                        <div className="space-y-1">
+                            {visibleFamilies.map(familia => {
+                                const fidStr = String(familia.id_familia);
+                                const isSelected = (filters.familias || []).map(String).includes(fidStr);
+                                const isExpanded = !!expandedFamilies[fidStr] || isSelected;
+                                const subfamilias = (subfamiliasByFamilia[fidStr] || []).filter(s => s.count > 0 || filters.subfamilias.includes(s.nombre));
+                                
+                                return (
+                                    <TreeItem 
+                                        key={fidStr}
+                                        label={familia.codigo}
+                                        count={familia.count}
+                                        isSelected={isSelected}
+                                        onToggle={() => {
+                                            toggleFilter('familias', familia.id_familia);
+                                            toggleFamily(fidStr);
+                                        }}
+                                    >
+                                        {(isExpanded) && subfamilias.length > 0 && (
+                                            <div className="mb-2">
+                                                {subfamilias.map(sub => {
+                                                    const isSubSelected = filters.subfamilias.includes(sub.nombre);
+                                                    return (
+                                                        <TreeItem 
+                                                            key={`${fidStr}-${sub.nombre}`}
+                                                            label={sub.nombre}
+                                                            count={sub.count}
+                                                            isSelected={isSubSelected}
+                                                            level={1}
+                                                            onToggle={() => toggleFilter('subfamilias', sub.nombre)}
+                                                        />
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </TreeItem>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {visibleProcesos.length > 0 && (
                     <div className="mb-4">
