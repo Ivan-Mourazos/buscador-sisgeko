@@ -2,15 +2,15 @@ import React, { useState, useMemo } from 'react';
 
 const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, children }) => {
     return (
-        <div className="select-none">
+        <div className={`select-none ${level > 0 ? 'ml-4 border-l border-gray-100 pl-4' : ''}`}>
             <div 
-                className={`flex items-center gap-2 py-1.5 ${onToggle ? 'cursor-pointer' : 'cursor-default'} group transition-all ${
-                    level === 0 ? 'mt-2' : 'ml-6'
-                }`}
+                className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-all ${
+                    onToggle ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+                } group ${level === 0 ? 'mt-2' : 'mt-0.5'}`}
                 onClick={onToggle}
             >
                 {/* Yellow Square Icon */}
-                <div className={`w-3.5 h-3.5 rounded-[3px] border-2 flex-shrink-0 transition-all ${
+                <div className={`w-4 h-4 rounded-[4px] border-2 flex-shrink-0 transition-all ${
                     isSelected 
                     ? 'bg-yellow-500 border-yellow-500 shadow-sm' 
                     : 'bg-white border-gray-200 group-hover:border-yellow-300'
@@ -22,14 +22,18 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                     )}
                 </div>
                 
-                <span className={`text-[13px] leading-tight transition-colors ${
-                    isSelected ? 'text-gray-900 font-bold' : 'text-gray-600 group-hover:text-gray-900'
+                <span className={`text-[13px] leading-tight transition-colors flex-grow ${
+                    isSelected ? 'text-gray-900 font-black' : 'text-gray-600 font-medium group-hover:text-gray-900'
                 }`}>
                     {label}
                 </span>
 
                 {count > 0 && (
-                    <span className="text-[10px] text-amber-600 font-bold ml-auto bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-100/50 transition-all group-hover:bg-amber-100">
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border transition-all ${
+                        isSelected 
+                        ? 'bg-yellow-50 text-yellow-700 border-yellow-100' 
+                        : 'bg-gray-50 text-gray-500 border-gray-100 group-hover:bg-amber-50 group-hover:text-amber-600 group-hover:border-amber-100'
+                    }`}>
                         {count}
                     </span>
                 )}
