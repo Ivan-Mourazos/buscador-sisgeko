@@ -42,7 +42,13 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                             }`}>
                                 {item._type === 'articulo' ? 'Artigo' : item._type}
                             </span>
+                            {item.procesos_lista && (
+                                <span className="px-2.5 py-1 text-[11px] font-black uppercase rounded-lg tracking-widest shadow-sm bg-purple-600 text-white">
+                                    P: {item.procesos_lista}
+                                </span>
+                            )}
                             {item.id_articulo && <span className="text-xs font-mono text-gray-400 font-bold">Ref: #{item.id_articulo}</span>}
+                            {item.id_insight && <span className="text-xs font-mono text-gray-400 font-bold">ID: #{item.id_insight}</span>}
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 leading-tight">
                             {item._type === 'articulo' ? item.descripcion : item.titulo}
@@ -186,14 +192,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                                     {item.tipo_origen_nombre || 'Xeral'}
                                                                 </span>
                                                             </div>
-                                                            {item.procesos_lista && (
-                                                                <div className="flex flex-col gap-2">
-                                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Procesos relacionados</span>
-                                                                    <span className="inline-flex self-start bg-purple-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-md">
-                                                                        {item.procesos_lista}
-                                                                    </span>
-                                                                </div>
-                                                            )}
+                                                            {/* Procesos movidos arriba */}
                                                         </div>
 
                                                         {/* PARTE DERECHA: RECURSOS GRÁFICOS (PARA INSIGHTS) */}
