@@ -45,6 +45,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
         };
     }, [isOpen, initialData]);
 
+    // Bloquear scroll ao abrir o modal
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const resetAndClose = () => {

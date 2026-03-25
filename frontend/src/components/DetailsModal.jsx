@@ -3,10 +3,16 @@ import React, { useState, useEffect } from 'react';
 const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onEdit }) => {
     const [activeImage, setActiveImage] = useState(null);
 
-    // Resetear imagen si cambiamos de item
+    // Resetear imagen si cambiamos de item y bloquear scroll
     useEffect(() => {
         setActiveImage(null);
-    }, [item]);
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [item, isOpen]);
 
     if (!isOpen || !item) return null;
 
