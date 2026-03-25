@@ -321,7 +321,7 @@ const frontendDistPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendDistPath));
 
 // Manejar todas las demás rutas para el cliente React (SPA)
-app.get('*', (req, res) => {
+app.get('*catchall', (req, res) => {
     const indexPath = path.join(frontendDistPath, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
