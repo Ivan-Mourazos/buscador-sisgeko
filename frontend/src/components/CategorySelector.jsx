@@ -2,7 +2,6 @@ import React from 'react';
 
 const CategorySelector = ({ onSelect, query, onQueryChange, onSearch }) => {
   const categories = [
-    // ... existing categories
     {
       id: 'insight',
       title: 'Insights',
@@ -60,6 +59,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch }) => {
         <form onSubmit={onSearch} className="relative group">
           <input 
             type="text" 
+            autoFocus
             placeholder="Que estás a buscar hoxe?"
             className="w-full pl-8 pr-32 py-5 bg-white border border-gray-100 rounded-[2rem] shadow-2xl shadow-gray-200/60 focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 focus:shadow-yellow-100/50 transition-all outline-none text-xl font-medium placeholder:text-gray-300 group-hover:border-gray-200"
             value={query}
