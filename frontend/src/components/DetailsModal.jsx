@@ -1,32 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
-const DetailsModal = ({ item, details, loading, onClose }) => {
+const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onEdit }) => {
     const [activeImage, setActiveImage] = useState(null);
-
-    // Bloquear scroll del fondo SOLAMENTE cuando el modal está activo (tiene un item)
-    useEffect(() => {
-        if (item) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [item]);
 
     // Resetear imagen si cambiamos de item
     useEffect(() => {
         setActiveImage(null);
     }, [item]);
 
-    if (!item) return null;
+    if (!isOpen || !item) return null;
 
     // Detenemos propagación del click exterior
     const handleModalClick = (e) => e.stopPropagation();
 
     // Helper para construir la URL de la imagen
-    const getImgUrl = (path) => `http://localhost:5000/api/images?imgPath=${encodeURIComponent(path)}`;
+    const getImgUrl = (path) => `http://${window.location.hostname}:5000/api/images?imgPath=${encodeURIComponent(path)}`;
 
     return (
         <div 
@@ -73,14 +61,27 @@ const DetailsModal = ({ item, details, loading, onClose }) => {
                         )}
                     </div>
 
-                    <button 
-                        onClick={onClose}
-                        className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group shrink-0"
-                    >
-                        <svg className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {isEditable && (
+                            <button 
+                                onClick={() => onEdit(item)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-2xl text-[13px] font-bold hover:bg-black hover:shadow-lg transition-all active:scale-95"
+                            >
+                                <svg className="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                                <span>Editar</span>
+                            </button>
+                        )}
+                        <button 
+                            onClick={onClose}
+                            className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group shrink-0"
+                        >
+                            <svg className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Body - Mejorado con Scroll y Grids Claros */}

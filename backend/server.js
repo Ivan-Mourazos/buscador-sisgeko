@@ -221,7 +221,11 @@ app.get('/api/details', async (req, res) => {
 const fs = require('fs');
 const path = require('path');
 
-// Endpoint para servir las imágenes
+// Configuración de Multer para subida de imaxes
+const multer = require('multer');
+const networkBase = '\\\\192.168.0.128\\Sisgeko';
+
+// Endpoint para servir las imágenes (Lectura)
 app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
     if (!imgPath) return res.status(400).send('Falta ruta de imagen');
@@ -235,15 +239,46 @@ app.get('/api/images', (req, res) => {
     }
 
     // 2. Leer las fotos directamente de la carpeta de RED local (UNC Windows)
-    // El Node.js alojado en Windows es capaz de entrar a los discos SMB de la empresa
-    const networkBase = '\\\\192.168.0.128\\Sisgeko';
-    // Combinamos la ruta de red con lo que viene de la BD (ej. AMBARBOX\foto.jpg)
     const fullPath = path.join(networkBase, imgPath);
 
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
         res.status(404).send('Imagen no encontrada en servidor de red: ' + fullPath);
+    }
+});
+
+// Configuración de almacenamiento para Subidas (Escritura)
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        if (!fs.existsSync(networkBase)) {
+            return cb(new Error('Servidor de rede non accesible: ' + networkBase));
+        }
+        cb(null, networkBase);
+    },
+    filename: (req, file, cb) => {
+        // Mantemos o nome orixinal pero saneamos espazos
+        const cleanName = file.originalname.replace(/\s+/g, '_');
+        cb(null, cleanName);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Endpoint para subir imaxes
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Non se recibiu ningún ficheiro' });
+        }
+        res.json({ 
+            success: true, 
+            message: 'Imaxe subida correctamente',
+            filename: req.file.filename 
+        });
+    } catch (error) {
+        console.error('Error na subida:', error);
+        res.status(500).json({ success: false, message: 'Error ao gardar a imaxe', error: error.message });
     }
 });
 

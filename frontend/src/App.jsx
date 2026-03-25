@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import SidebarFilters from './components/SidebarFilters';
 import { ResultCard } from './components/ResultCard';
 import DetailsModal from './components/DetailsModal';
+import LoginModal from './components/LoginModal';
+import CreateItemModal from './components/CreateItemModal';
 
 function App() {
   const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
+  const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
   const [facets, setFacets] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +16,52 @@ function App() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemDetails, setItemDetails] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+
+  // Auth State
+  const [user, setUser] = useState(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+
+  // Load session from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem('sisgeko_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('sisgeko_user', JSON.stringify(userData));
+    setIsLoginModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('sisgeko_user');
+  };
+
+  const handleSaveNewItem = (newItem) => {
+    console.log("Gardando elemento:", newItem);
+    const action = editingItem ? "actualizado" : "gardado";
+    alert(`Elemento ${action} localmente (Simulación). En breve estará dispoñible na base de datos.`);
+    setEditingItem(null);
+    setIsCreateModalOpen(false);
+  };
+
+  const handleDeleteItem = (item) => {
+    console.log("Eliminando elemento:", item);
+    alert("Elemento eliminado localmente (Simulación).");
+    setEditingItem(null);
+    setIsCreateModalOpen(false);
+  };
+
+  const handleEditItem = (item) => {
+    setSelectedItem(null); // Pechar o modal de detalles para abrir o de edición
+    setEditingItem(item);
+    setIsCreateModalOpen(true);
+  };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
     setLoading(true);
@@ -58,7 +106,7 @@ function App() {
 
   const clearAll = () => {
     setQuery('');
-    setFilters({ familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
+    setFilters({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
   };
 
   const openDetails = async (item) => {
@@ -70,7 +118,7 @@ function App() {
       const id = item.id_articulo || item.id_insight || item.id_definicion;
       if (!id) throw new Error("ID no encontrado");
       
-      const res = await fetch(`http://localhost:5000/api/details?type=${item._type}&id=${id}`);
+      const res = await fetch(`http://${window.location.hostname}:5000/api/details?type=${item._type}&id=${id}`);
       const data = await res.json();
       if (data.success) {
         setItemDetails(data.details);
@@ -84,8 +132,13 @@ function App() {
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
 
-  // Filtrado local para asegurar consistencia (especialmente si el backend no ha reiniciado)
+  // Filtrado local para asegurar consistencia
   const displayResults = results.filter(item => {
+    // Check categories first
+    if (filters.categories && filters.categories.length > 0) {
+      if (!filters.categories.includes(item._type)) return false;
+    }
+
     if (filters.tipo_origen && filters.tipo_origen.length > 0) {
       if (item._type !== 'insight') return false;
       return filters.tipo_origen.includes(item.id_tipo_origen);
@@ -122,6 +175,50 @@ function App() {
               </svg>
             </button>
           </form>
+
+          <div className="flex items-center gap-4">
+            {user && (
+              <button 
+                onClick={() => {
+                  setEditingItem(null);
+                  setIsCreateModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full text-[13px] font-bold hover:bg-black hover:shadow-lg transition-all active:scale-95"
+              >
+                <svg className="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                </svg>
+                Novo
+              </button>
+            )}
+            
+            {user ? (
+              <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 py-1.5 pl-1.5 pr-4 rounded-full shadow-sm">
+                <div className="w-9 h-9 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[13px] font-bold text-gray-800 leading-tight">{user.name}</span>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase tracking-wider transition-colors text-left"
+                  >
+                    Saír
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setIsLoginModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-600 hover:border-yellow-500 hover:text-yellow-600 hover:shadow-md transition-all active:scale-95"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Acceder
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -175,10 +272,30 @@ function App() {
       </main>
 
       <DetailsModal 
-        item={selectedItem} 
+        isOpen={!!selectedItem} 
+        onClose={() => setSelectedItem(null)} 
+        item={selectedItem}
         details={itemDetails} 
         loading={detailsLoading} 
-        onClose={() => setSelectedItem(null)} 
+        isEditable={user?.role === 'admin'}
+        onEdit={() => handleEditItem({ ...selectedItem, ...itemDetails })}
+      />
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onLogin={handleLogin}
+      />
+
+      <CreateItemModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingItem(null);
+        }} 
+        onSave={handleSaveNewItem}
+        onDelete={handleDeleteItem}
+        initialData={editingItem}
       />
     </div>
   );

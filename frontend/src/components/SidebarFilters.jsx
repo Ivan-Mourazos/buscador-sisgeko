@@ -87,7 +87,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
     }, [facets.subfamilias, results]);
 
     return (
-        <div className="w-full bg-white py-4 pr-4 sticky top-8">
+        <div className="w-full bg-transparent py-4 pr-4 sticky top-8">
             <div className="mb-10">
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">Filtros</h3>
@@ -102,6 +102,27 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                             Limpiar
                         </button>
                     )}
+                </div>
+
+                <div className="mb-8">
+                    <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Categoría</h4>
+                    <div className="space-y-1">
+                        {[
+                            { id: 'insight', label: 'Insights' },
+                            { id: 'definicion', label: 'Definicións' },
+                            { id: 'articulo', label: 'Artigos' }
+                        ].map(cat => {
+                            const isSelected = filters.categories?.includes(cat.id);
+                            return (
+                                <TreeItem 
+                                    key={cat.id}
+                                    label={cat.label}
+                                    isSelected={isSelected}
+                                    onToggle={() => toggleFilter('categories', cat.id)}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
                 
                 <div className="mb-4">
