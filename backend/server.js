@@ -157,7 +157,7 @@ app.post('/api/search', async (req, res) => {
 
         facets.procesos = allProcesos.map(p => ({
             ...p,
-            count: insightCountByProceso[p.id_proceso] || 0
+            count: insightCountByProceso[p.id_proceso]
         }));
 
         facets.tipo_origen = allTiposOrigen.map(t => ({
