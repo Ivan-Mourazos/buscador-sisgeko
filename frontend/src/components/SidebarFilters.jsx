@@ -175,7 +175,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                     </div>
                 </div>
 
-                {facets.procesos && facets.procesos.length > 0 && (
+                {facets.procesos && facets.procesos.length > 0 && filters.categories?.includes('insight') && (
                     <div className="mb-4">
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Procesos</h4>
                         <div className="space-y-1">
@@ -197,7 +197,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                     </div>
                 )}
 
-                {facets.tipo_origen && facets.tipo_origen.length > 0 && (
+                {facets.tipo_origen && facets.tipo_origen.length > 0 && filters.categories?.includes('insight') && (
                     <div className="mt-8 border-t border-gray-50 pt-6">
                         <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
                         <div className="space-y-1">
