@@ -38,7 +38,7 @@ const buildInClause = (arr) => arr.map(x => {
 app.post('/api/search', async (req, res) => {
     try {
         const { query = "", filters = {} } = req.body;
-        const { familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
+        const { categories = [], familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
         
         // console.log(`[Busca] Termo: "${query}", Filtros:`, JSON.stringify(filters));
 
@@ -49,123 +49,114 @@ app.post('/api/search', async (req, res) => {
         const words = query.trim().split(/\s+/).filter(w => w.length > 0);
         words.forEach((w, i) => request.input(`q${i}`, sql.NVarChar, `%${w}%`));
 
-        // 1. BUSCAR ARTICULOS
-        let sqlArt = `
-            SELECT a.*, f.codigo as familia_nombre 
-            FROM articulos a
-            LEFT JOIN familias f ON a.id_familia = f.id_familia
-            WHERE 1=1
-        `;
-        words.forEach((_, i) => {
-            sqlArt += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`;
-        });
-        if (familias.length > 0) sqlArt += ` AND a.id_familia IN (${buildInClause(familias)})`;
-        if (subfamilias.length > 0) sqlArt += ` AND a.subfamilia IN (${buildInClause(subfamilias)})`;
+        // --- 1. BUSCAR TODAS LAS POSIBLES COINCIDENCIAS POR TEXTO (Base para facetas) ---
         
-        const resArticulos = await request.query(sqlArt);
-        const articulos = resArticulos.recordset.map(a => ({ ...a, _type: 'articulo' }));
-        const matchedArticuloIds = articulos.map(a => a.id_articulo);
+        // Articulos Base
+        let sqlArtBase = `SELECT a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
+        words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`; });
+        const allMatchArts = (await request.query(sqlArtBase)).recordset.map(a => ({ ...a, _type: 'articulo' }));
 
-        // 2. BUSCAR INSIGHTS (Incluímos nomes dos procesos relacionados) - Fallback para SQL 2014
-        let sqlIns = `
-            SELECT i.*, 
-            (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
-            ISNULL(STUFF((
-                SELECT ', ' + p.proceso 
-                FROM rel_Insight_Proceso rip2 
-                JOIN procesos p ON rip2.id_proceso = p.id_proceso 
-                WHERE rip2.id_insight = i.id_insight 
-                FOR XML PATH('')
-            ), 1, 2, ''), '') as procesos_lista
-            FROM insights i
-            WHERE 1=1
-        `;
-        words.forEach((_, i) => {
-            sqlIns += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`;
-        });
+        // Insights Base
+        let sqlInsBase = `
+            SELECT i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
+            ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
+            FROM insights i WHERE 1=1 `;
+        words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
+        const allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
-        // Joins necesarios solo para filtros específicos si existen
-        if (familias.length > 0 || subfamilias.length > 0) {
-            sqlIns += ` AND i.id_insight IN (SELECT id_insight FROM rel_Insight_articulo ria JOIN articulos a ON ria.id_articulo = a.id_articulo WHERE 1=1 `;
-            if (familias.length > 0) sqlIns += ` AND a.id_familia IN (${buildInClause(familias)})`;
-            if (subfamilias.length > 0) sqlIns += ` AND a.subfamilia IN (${buildInClause(subfamilias)})`;
-            sqlIns += `)`;
-        }
+        // Definiciones Base
+        let sqlDefBase = `SELECT DISTINCT d.*, rdf.id_familia FROM definiciones d LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion WHERE 1=1 `;
+        words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
+        const allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
+
+        // --- 2. CÁLCULO DE FACETAS DINÁMICAS ---
         
-        if (procesos.length > 0) {
-            sqlIns += ` AND i.id_insight IN (SELECT id_insight FROM rel_Insight_Proceso WHERE id_proceso IN (${buildInClause(procesos)}))`;
-        }
-        
-        if (tipo_origen.length > 0) {
-            sqlIns += ` AND i.id_tipo_origen IN (${buildInClause(tipo_origen)})`;
-        }
-
-        const resInsights = await request.query(sqlIns);
-        const insights = resInsights.recordset.map(i => ({ ...i, _type: 'insight' }));
-
-        // 3. BUSCAR DEFINICIONES
-        let sqlDef = `
-            SELECT DISTINCT d.*, rdf.id_familia
-            FROM definiciones d
-            LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion
-            WHERE 1=1
-        `;
-        words.forEach((_, i) => {
-            sqlDef += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`;
-        });
-        if (familias.length > 0) {
-            sqlDef += ` AND rdf.id_familia IN (${buildInClause(familias)})`;
-        }
-        const resDefiniciones = await request.query(sqlDef);
-        let definiciones = resDefiniciones.recordset.map(d => ({ ...d, _type: 'definicion' }));
-
-        // 4. APLICAR FILTRO DE ORIGEN (Global)
-        // Como articulos y definiciones son "internos", si hay un filtro de origen externo activo, 
-        // estos desaparecen de los resultados.
-        let filteredArticulos = articulos;
-        if (tipo_origen.length > 0) {
-            filteredArticulos = [];
-            definiciones = [];
-        }
-
-        // FACETAS
         const allFamilias = (await pool.request().query("SELECT * FROM familias")).recordset;
-        const allSubfamilias = (await pool.request().query("SELECT DISTINCT id_familia AS id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
+        const allSubfamilias = (await pool.request().query("SELECT DISTINCT id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
         const allProcesos = (await pool.request().query("SELECT * FROM procesos")).recordset;
         const allTiposOrigen = (await pool.request().query("SELECT * FROM tipo_origen")).recordset;
 
-        let facets = {
+        // Necesitamos saber qué insights tienen qué procesos (Mapa para velocidad)
+        const matchInsIds = allMatchIns.map(i => i.id_insight);
+        let insProcesosMap = {}; // { id_insight: [id_proceso, ...] }
+        if (matchInsIds.length > 0) {
+            const ripData = await pool.request().query(`SELECT id_insight, id_proceso FROM rel_Insight_Proceso WHERE id_insight IN (${buildInClause(matchInsIds)})`);
+            ripData.recordset.forEach(r => {
+                if (!insProcesosMap[r.id_insight]) insProcesosMap[r.id_insight] = [];
+                insProcesosMap[r.id_insight].push(r.id_proceso);
+            });
+        }
+          // Función de filtrado local para facetas
+        const checkMatch = (item, activeCats, activeFams, activeSubs, activeProcs, activeOrigins) => {
+            // Categoría
+            if (activeCats.length > 0 && !activeCats.includes(item._type)) return false;
+            // Familia
+            if (activeFams.length > 0) {
+                if (String(item.id_familia) === "undefined") return false;
+                if (!activeFams.map(String).includes(String(item.id_familia))) return false;
+            }
+            // Subfamilia
+            if (activeSubs.length > 0) {
+                if (!item.subfamilia || !activeSubs.includes(item.subfamilia)) return false;
+            }
+            // Procesos (Solo insights)
+            if (activeProcs.length > 0) {
+                if (item._type !== 'insight') return false;
+                const iProcs = insProcesosMap[item.id_insight] || [];
+                if (!activeProcs.some(p => iProcs.includes(p))) return false;
+            }
+            // Origen (Solo insights)
+            if (activeOrigins.length > 0) {
+                if (item._type !== 'insight' || !activeOrigins.includes(item.id_tipo_origen)) return false;
+            }
+            return true;
+        };
+
+        const allItems = [...allMatchArts, ...allMatchIns, ...allMatchDefs];
+
+        const facets = {
+            categories: [
+                { id: 'articulo', nombre: 'Artigos', count: allItems.filter(item => item._type === 'articulo' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length },
+                { id: 'insight', nombre: 'Insights', count: allItems.filter(item => item._type === 'insight' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length },
+                { id: 'definicion', nombre: 'Definicións', count: allItems.filter(item => item._type === 'definicion' && checkMatch(item, [], familias, subfamilias, procesos, tipo_origen)).length }
+            ],
             familias: allFamilias.map(f => {
-                const countArts = filteredArticulos.filter(a => a.id_familia === f.id_familia).length;
-                const countIns = insights.filter(i => i.id_familia === f.id_familia).length;
-                const countDefs = definiciones.filter(d => d.id_familia === f.id_familia).length;
-                return { ...f, count: countArts + countIns + countDefs };
+                // Para familias, respetamos Categoría, Procesos y Origen (ignora familias/subs)
+                const count = allItems.filter(item => 
+                    item.id_familia === f.id_familia && 
+                    checkMatch(item, categories, [], [], procesos, tipo_origen)
+                ).length;
+                return { ...f, count };
             }),
             subfamilias: allSubfamilias.map(s => {
-                const countArts = filteredArticulos.filter(a => a.subfamilia === s.nombre && a.id_familia === s.id_familia).length;
-                const countIns = insights.filter(i => i.subfamilia === s.nombre && i.id_familia === s.id_familia).length;
-                return { ...s, count: countArts + countIns };
+                // Para subfamilias respetamos Categoría, Familia, Procesos y Origen (independiente de otras subs)
+                const count = allItems.filter(item => 
+                    item.id_familia === s.id_familia && 
+                    item.subfamilia === s.nombre && 
+                    checkMatch(item, categories, familias, [], procesos, tipo_origen)
+                ).length;
+                return { ...s, count };
+            }),
+            procesos: allProcesos.map(p => {
+                const count = allMatchIns.filter(item => {
+                    const iProcs = insProcesosMap[item.id_insight] || [];
+                    return iProcs.includes(p.id_proceso) && checkMatch(item, categories, familias, subfamilias, [], tipo_origen);
+                }).length;
+                return { ...p, count };
+            }),
+            tipo_origen: allTiposOrigen.map(t => {
+                const count = allMatchIns.filter(item => 
+                    item.id_tipo_origen === t.id_tipo_origen && 
+                    checkMatch(item, categories, familias, subfamilias, procesos, [])
+                ).length;
+                return { ...t, count };
             })
         };
 
-        const matchedInsightIds = insights.map(i => i.id_insight);
-        let insightCountByProceso = {};
-        if(matchedInsightIds.length > 0) {
-            const ripData = await pool.request().query(`SELECT id_proceso, count(id_insight) as cnt FROM rel_Insight_Proceso WHERE id_insight IN (${buildInClause(matchedInsightIds)}) GROUP BY id_proceso`);
-            ripData.recordset.forEach(r => insightCountByProceso[r.id_proceso] = r.cnt);
-        }
-
-        facets.procesos = allProcesos.map(p => ({
-            ...p,
-            count: insightCountByProceso[p.id_proceso]
-        }));
-
-        facets.tipo_origen = allTiposOrigen.map(t => ({
-            ...t,
-            count: insights.filter(i => i.id_tipo_origen === t.id_tipo_origen).length
-        }));
-
-        const unifiedResults = [...filteredArticulos, ...insights, ...definiciones];
+        // --- 3. RESULTADOS FINALES (Filtrados por TODO) ---
+        const unifiedResults = allItems.filter(item => 
+            checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen)
+        );
 
         res.json({
             success: true,

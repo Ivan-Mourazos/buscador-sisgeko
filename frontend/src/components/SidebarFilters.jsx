@@ -115,16 +115,17 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 <div className="mb-8">
                     <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Categoría</h4>
                     <div className="space-y-1">
-                        {[
-                            { id: 'insight', label: 'Insights' },
-                            { id: 'definicion', label: 'Definicións' },
-                            { id: 'articulo', label: 'Artigos' }
-                        ].map(cat => {
+                        {(facets.categories || [
+                            { id: 'insight', nombre: 'Insights' },
+                            { id: 'definicion', nombre: 'Definicións' },
+                            { id: 'articulo', nombre: 'Artigos' }
+                        ]).map(cat => {
                             const isSelected = filters.categories?.includes(cat.id);
                             return (
                                 <TreeItem 
                                     key={cat.id}
-                                    label={cat.label}
+                                    label={cat.nombre}
+                                    count={cat.count}
                                     isSelected={isSelected}
                                     onToggle={() => toggleFilter('categories', cat.id)}
                                 />
