@@ -23,7 +23,7 @@ const dbConfig = {
 
 // Comprobar conexión
 sql.connect(dbConfig).then(() => {
-    console.log('Conectado al servidor SQL correctamente.');
+    // console.log('Conectado al servidor SQL correctamente.');
 }).catch(err => {
     console.error('La conexión a la base de datos falló.', err.message);
 });
@@ -40,7 +40,7 @@ app.post('/api/search', async (req, res) => {
         const { query = "", filters = {} } = req.body;
         const { familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
         
-        console.log(`[Busca] Termo: "${query}", Filtros:`, JSON.stringify(filters));
+        // console.log(`[Busca] Termo: "${query}", Filtros:`, JSON.stringify(filters));
 
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
