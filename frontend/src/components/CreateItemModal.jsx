@@ -1,5 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+const InputField = ({ label, name, placeholder, type = "text", required = false, value, onChange }) => (
+    <div className="space-y-1.5 flex-grow">
+        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <input 
+            type={type}
+            name={name}
+            value={value || ''}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300"
+        />
+    </div>
+);
+
+const TextAreaField = ({ label, name, placeholder, required = false, value, onChange }) => (
+    <div className="space-y-1.5">
+        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <textarea 
+            name={name}
+            value={value || ''}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            rows={3}
+            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300 resize-none"
+        />
+    </div>
+);
+
 const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
     const [step, setStep] = useState(1); // 1: Selection, 2: Form
     const [type, setType] = useState(null); // 'articulo' | 'insight'
@@ -14,35 +44,23 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     // Helper para previsualización (mesmo que DetailsModal)
     const getImgUrl = (path) => `/api/images?imgPath=${encodeURIComponent(path)}`;
 
-    // Bloquear scroll de la página principal
+    // Inicializar data solo una vez al abrir o cuando cambia initialData externamente
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-            
-            // Si hay datos iniciales, saltamos directamente al paso 2
-            if (initialData) {
-                setStep(2);
-                setType(initialData._type);
-                // Aseguramos que imagenes sexa un array se é un artigo
-                const data = { ...initialData };
-                if (data._type === 'articulo' && !data.imagenes) {
-                    data.imagenes = [];
-                }
-                setFormData(data);
+        if (!isOpen) return;
+        
+        if (initialData) {
+            setStep(2);
+            setType(initialData._type);
+            const data = { ...initialData };
+            if (data._type === 'articulo' && !data.imagenes) {
+                data.imagenes = [];
             }
+            setFormData(data);
         } else {
-            document.body.style.overflow = 'unset';
+            setFormData({});
+            setStep(1);
+            setType(null);
         }
-        return () => {
-            document.body.style.overflow = 'unset';
-            if (!isOpen) {
-                setStep(1);
-                setType(null);
-                setFormData({});
-                setShowDeleteConfirm(false);
-                setNewImageUrl('');
-            }
-        };
     }, [isOpen, initialData]);
 
     // Bloquear scroll ao abrir o modal
@@ -138,35 +156,6 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
         resetAndClose();
     };
 
-    const InputField = ({ label, name, placeholder, type = "text", required = false }) => (
-        <div className="space-y-1.5 flex-grow">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-            <input 
-                type={type}
-                name={name}
-                value={formData[name] || ''}
-                onChange={handleChange}
-                placeholder={placeholder}
-                required={required}
-                className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300"
-            />
-        </div>
-    );
-
-    const TextAreaField = ({ label, name, placeholder, required = false }) => (
-        <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-            <textarea 
-                name={name}
-                value={formData[name] || ''}
-                onChange={handleChange}
-                placeholder={placeholder}
-                required={required}
-                rows={3}
-                className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300 resize-none"
-            />
-        </div>
-    );
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
@@ -243,14 +232,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                         <form id="create-form" onSubmit={handleSubmit} className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                             {type === 'articulo' ? (
                                 <>
-                                    <InputField label="Descrición do Artigo" name="descripcion" placeholder="Nome completo do producto" required={true} />
+                                    <InputField label="Descrición do Artigo" name="descripcion" placeholder="Nome completo do producto" required={true} value={formData.descripcion} onChange={handleChange} />
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="Código / Ref" name="codigo" placeholder="ex: 12345ABC" />
-                                        <InputField label="Proveedor" name="denominacion_proveedor" placeholder="Nome da empresa" />
+                                        <InputField label="Código / Ref" name="codigo" placeholder="ex: 12345ABC" value={formData.codigo} onChange={handleChange} />
+                                        <InputField label="Proveedor" name="denominacion_proveedor" placeholder="Nome da empresa" value={formData.denominacion_proveedor} onChange={handleChange} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField label="Familia" name="familia_nombre" placeholder="Categoría principal" />
-                                        <InputField label="Subfamilia" name="subfamilia" placeholder="Sub-categoría" />
+                                        <InputField label="Familia" name="familia_nombre" placeholder="Categoría principal" value={formData.familia_nombre} onChange={handleChange} />
+                                        <InputField label="Subfamilia" name="subfamilia" placeholder="Sub-categoría" value={formData.subfamilia} onChange={handleChange} />
                                     </div>
 
                                     <div className="p-6 bg-gray-50 rounded-[1.5rem] border border-gray-100 space-y-4">
@@ -308,15 +297,15 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                 </>
                             ) : type === 'insight' ? (
                                 <>
-                                    <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} />
-                                    <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} />
+                                    <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} value={formData.titulo} onChange={handleChange} />
+                                    <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} value={formData.insight} onChange={handleChange} />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <InputField label="Documento Fonte" name="origen_informacion" placeholder="ex: Manual de procesos V2" />
-                                        <InputField label="Tipo de Fonte" name="tipo_origen_nombre" placeholder="ex: Normativa, Estudo..." />
+                                        <InputField label="Documento Fonte" name="origen_informacion" placeholder="ex: Manual de procesos V2" value={formData.origen_informacion} onChange={handleChange} />
+                                        <InputField label="Tipo de Fonte" name="tipo_origen_nombre" placeholder="ex: Normativa, Estudo..." value={formData.tipo_origen_nombre} onChange={handleChange} />
                                     </div>
                                     <div className="flex items-end gap-3">
                                         <div className="flex-grow">
-                                            <InputField label="URL Imaxe / Icona" name="imagen" placeholder="ex: infografia_01.webp" />
+                                            <InputField label="URL Imaxe / Icona" name="imagen" placeholder="ex: infografia_01.webp" value={formData.imagen} onChange={handleChange} />
                                         </div>
                                         <button 
                                             type="button"
@@ -337,12 +326,12 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             </div>
                                         )}
                                     </div>
-                                    <TextAreaField label="Contexto adicional" name="detalle_origen_informacion" placeholder="Notas sobre a procedencia ou validez..." />
+                                    <TextAreaField label="Contexto adicional" name="detalle_origen_informacion" placeholder="Notas sobre a procedencia ou validez..." value={formData.detalle_origen_informacion} onChange={handleChange} />
                                 </>
                             ) : type === 'definicion' ? (
                                 <>
-                                    <InputField label="Termo / Concepto" name="titulo" placeholder="Nome da definición" required={true} />
-                                    <TextAreaField label="Definición" name="definicion" placeholder="Explica o concepto de forma clara..." required={true} />
+                                    <InputField label="Termo / Concepto" name="titulo" placeholder="Nome da definición" required={true} value={formData.titulo} onChange={handleChange} />
+                                    <TextAreaField label="Definición" name="definicion" placeholder="Explica o concepto de forma clara..." required={true} value={formData.definicion} onChange={handleChange} />
                                 </>
                             ) : null}
                         </form>
@@ -422,5 +411,6 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
         </div>
     );
 };
+
 
 export default CreateItemModal;
