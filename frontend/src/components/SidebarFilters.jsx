@@ -129,14 +129,6 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-2">
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Categoría</h4>
-                        {filters.categories?.length > 0 && (
-                            <button 
-                                onClick={onClearAll}
-                                className="text-[10px] font-bold text-gray-400 hover:text-red-500 uppercase tracking-tight transition-colors cursor-pointer"
-                            >
-                                Cambiar
-                            </button>
-                        )}
                     </div>
                     <div className="space-y-1">
                         {(facets.categories || [
@@ -145,14 +137,23 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                             { id: 'articulo', nombre: 'Artigos' }
                         ]).map(cat => {
                             const isSelected = filters.categories?.includes(cat.id);
-                            if (filters.categories?.length > 0 && !isSelected) return null;
                             return (
                                 <TreeItem 
                                     key={cat.id}
                                     label={cat.nombre}
                                     count={cat.count}
                                     isSelected={isSelected}
-                                    onToggle={filters.categories?.length > 0 ? null : () => toggleFilter('categories', cat.id)}
+                                    onToggle={() => {
+                                        const isCurrentlySelected = filters.categories?.includes(cat.id);
+                                        const updatedFilters = { 
+                                            familias: [], 
+                                            subfamilias: [], 
+                                            procesos: [], 
+                                            tipo_origen: [], 
+                                            categories: isCurrentlySelected ? [] : [cat.id] 
+                                        };
+                                        onFilterChange(updatedFilters);
+                                    }}
                                 />
                             );
                         })}

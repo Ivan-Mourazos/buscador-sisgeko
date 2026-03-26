@@ -24,6 +24,7 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [viewMode, setViewMode] = useState('hero');
 
   const searchInputRef = useRef(null);
 
@@ -43,7 +44,7 @@ function App() {
   }, []);
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
-  const showHero = filters.categories.length === 0 && query.trim() === '';
+  const showHero = viewMode === 'hero';
 
   // Focus transition logic: Cuando desaparece el Hero, enfocamos la barra del header
   useEffect(() => {
@@ -51,6 +52,12 @@ function App() {
       searchInputRef.current.focus();
     }
   }, [showHero, query]);
+
+  useEffect(() => {
+    if (query.trim() !== '' || filters.categories.length > 0) {
+      setViewMode('results');
+    }
+  }, [query, filters.categories]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -85,8 +92,9 @@ function App() {
   };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
-    // Permitimos el fetch si estamos en el Hero (para cargar contadores) o si hay algo que buscar
-    if (!showHero && currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
+    // Permitimos el fetch si estamos en el Hero (para cargar contadores)
+    // En modo resultados siempre fetch para reflejar cambios en filtros (incluyendo limpiar tudo)
+    if (showHero && currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
 
     setLoading(true);
     setError(null);
@@ -141,10 +149,13 @@ function App() {
       tipo_origen: [], 
       categories: [categoryId] 
     });
+    setViewMode('results');
   };
 
   const goHome = () => {
-    clearAll();
+    setQuery('');
+    setFilters({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
+    setViewMode('hero');
   };
 
   const openDetails = async (item) => {
@@ -280,8 +291,13 @@ function App() {
 
           <section className="flex-grow w-full">
             <div className="mb-8 flex items-center justify-between">
-              <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+              <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                 Resultados
+                {displayResults.length > 0 && (
+                  <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-black border border-gray-100 shadow-sm animate-fade-in">
+                    {displayResults.length}
+                  </span>
+                )}
               </h2>
               <div className="h-px flex-grow ml-4 bg-gray-100" />
             </div>

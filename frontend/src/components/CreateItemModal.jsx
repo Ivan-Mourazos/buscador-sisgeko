@@ -306,19 +306,10 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         </div>
                                     </div>
                                 </>
-                            ) : type === 'insight' || type === 'definicion' ? (
+                            ) : type === 'insight' ? (
                                 <>
-                                    {type === 'insight' ? (
-                                        <>
-                                            <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} />
-                                            <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <InputField label="Termo / Concepto" name="titulo" placeholder="Nome da definición" required={true} />
-                                            <TextAreaField label="Definición" name="definicion" placeholder="Explica o concepto de forma clara..." required={true} />
-                                        </>
-                                    )}
+                                    <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} />
+                                    <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <InputField label="Documento Fonte" name="origen_informacion" placeholder="ex: Manual de procesos V2" />
                                         <InputField label="Tipo de Fonte" name="tipo_origen_nombre" placeholder="ex: Normativa, Estudo..." />
@@ -347,6 +338,11 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         )}
                                     </div>
                                     <TextAreaField label="Contexto adicional" name="detalle_origen_informacion" placeholder="Notas sobre a procedencia ou validez..." />
+                                </>
+                            ) : type === 'definicion' ? (
+                                <>
+                                    <InputField label="Termo / Concepto" name="titulo" placeholder="Nome da definición" required={true} />
+                                    <TextAreaField label="Definición" name="definicion" placeholder="Explica o concepto de forma clara..." required={true} />
                                 </>
                             ) : null}
                         </form>
