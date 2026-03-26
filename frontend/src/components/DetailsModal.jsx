@@ -37,10 +37,10 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                         <div className="flex items-center gap-3">
                             <span className={`px-2.5 py-1 text-[11px] font-black uppercase rounded-lg tracking-widest shadow-sm ${
                                 item._type === 'articulo' ? 'bg-yellow-500 text-white' :
-                                item._type === 'insight' ? 'bg-amber-500 text-white' :
-                                'bg-yellow-600 text-white'
+                                item._type === 'insight' ? 'bg-blue-600 text-white' :
+                                'bg-purple-600 text-white'
                             }`}>
-                                {item._type === 'articulo' ? 'Artigo' : item._type}
+                                {item._type === 'articulo' ? 'Artigo' : item._type === 'insight' ? 'Insight' : 'Definición'}
                             </span>
                             {item.procesos_lista && (
                                 <span className="px-2.5 py-1 text-[11px] font-black uppercase rounded-lg tracking-widest shadow-sm bg-purple-600 text-white">
