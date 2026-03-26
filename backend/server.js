@@ -275,14 +275,10 @@ app.get('/api/images', (req, res) => {
     }
 
     const fullPath = path.normalize(path.join(networkBase, safePath));
-    
-    // LOG TEMPORAL DE DIAGNÓSTICO (Para verificar el montaje en Linux)
-    console.log(`[Imagenes] (${process.platform}) Solicitud: "${imgPath}" -> Ruta Final: "${fullPath}"`);
 
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
-        console.error(`[Imagenes] NO ENCONTRADA en ${process.platform}: "${fullPath}"`);
         res.status(404).send('Imágen no encontrada: ' + fullPath);
     }
 });
