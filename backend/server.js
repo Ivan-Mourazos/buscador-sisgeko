@@ -264,20 +264,17 @@ app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
     if (!imgPath) return res.status(400).send('Falta ruta de imagen');
     
-    // 1. Opcional a futuro: si migráis a un servidor HTTP web en vez de carpetas
-    if (process.env.IMAGE_SERVER_URL) {
-        const formattedPath = imgPath.replace(/\\/g, '/');
-        const baseUrl = process.env.IMAGE_SERVER_URL.replace(/\/$/, '');
-        const redirectUrl = `${baseUrl}/${formattedPath}`;
-        return res.redirect(redirectUrl);
-    }
+    // Normalizamos el SAP/Ruta de entrada para evitar choques de barras
+    const safeImgPath = imgPath.replace(/\//g, '\\');
+    const fullPath = path.normalize(path.join(networkBase, safeImgPath));
 
-    // 2. Leer las fotos directamente de la carpeta de RED local (UNC Windows)
-    const fullPath = path.join(networkBase, imgPath);
+    // LOG DE DIAGNÓSTICO PARA IT
+    console.log(`[Imagenes] Solicitud: "${imgPath}" -> Ruta Final: "${fullPath}"`);
 
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
+        console.error(`[Imagenes] No encontrada: "${fullPath}"`);
         res.status(404).send('Imagen no encontrada en servidor de red: ' + fullPath);
     }
 });

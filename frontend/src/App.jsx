@@ -9,7 +9,17 @@ import CategorySelector from './components/CategorySelector';
 function App() {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
-  const [facets, setFacets] = useState({ categories: [], familias: [], subfamilias: [], procesos: [], tipo_origen: [] });
+  const [facets, setFacets] = useState({ 
+    categories: [
+      { id: 'insight', nombre: 'Insights', count: 0 },
+      { id: 'definicion', nombre: 'Definicións', count: 0 },
+      { id: 'articulo', nombre: 'Artigos', count: 0 }
+    ], 
+    familias: [], 
+    subfamilias: [], 
+    procesos: [], 
+    tipo_origen: [] 
+  });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -92,10 +102,9 @@ function App() {
   };
 
   const fetchResults = useCallback(async (currentQuery, currentFilters) => {
-    // Permitimos el fetch si estamos en el Hero (para cargar contadores)
-    // En modo resultados siempre fetch para reflejar cambios en filtros (incluyendo limpiar tudo)
-    if (showHero && currentFilters.categories.length === 0 && currentQuery.trim() === '') return;
-
+    // Eliminamos la guarda restrictiva para permitir cargar contadores inicialmente
+    // y para que al limpiar filtros se refresque la lista completa
+    
     setLoading(true);
     setError(null);
     try {
@@ -180,14 +189,23 @@ function App() {
   };
 
   const displayResults = results.filter(item => {
+    // Si no hay categorías seleccionadas, mostramos todo (o respetamos otros filtros)
     if (filters.categories && filters.categories.length > 0) {
       if (!filters.categories.includes(item._type)) return false;
     }
-    const isSpecificFilterActive = (filters.tipo_origen?.length > 0) || (filters.procesos?.length > 0);
-    if (isSpecificFilterActive) {
+    
+    // Filtros específicos de Insights
+    const isInsightFilterActive = (filters.tipo_origen?.length > 0) || (filters.procesos?.length > 0);
+    if (isInsightFilterActive) {
       if (item._type !== 'insight') return false;
       if (filters.tipo_origen?.length > 0 && !filters.tipo_origen.includes(item.id_tipo_origen)) return false;
     }
+
+    // Filtros de Familia (para artículos)
+    if (filters.familias?.length > 0) {
+      if (item._type === 'articulo' && !filters.familias.map(String).includes(String(item.id_familia))) return false;
+    }
+    
     return true;
   });
 

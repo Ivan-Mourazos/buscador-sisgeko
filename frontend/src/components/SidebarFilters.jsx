@@ -131,11 +131,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                         <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Categoría</h4>
                     </div>
                     <div className="space-y-1">
-                        {(facets.categories || [
-                            { id: 'insight', nombre: 'Insights' },
-                            { id: 'definicion', nombre: 'Definicións' },
-                            { id: 'articulo', nombre: 'Artigos' }
-                        ]).map(cat => {
+                        {facets.categories.map(cat => {
                             const isSelected = filters.categories?.includes(cat.id);
                             return (
                                 <TreeItem 
