@@ -257,20 +257,32 @@ const path = require('path');
 
 // Configuración de Multer para subida de imaxes
 const multer = require('multer');
-const networkBase = '\\\\192.168.0.128\\Sisgeko';
+// GESTION DE IMAGENES (SOPORTE LINUX MOUNT + WINDOWS UNC)
+const isLinux = process.platform === 'linux';
+const networkBase = process.env.IMAGE_PATH || (isLinux ? '/mnt/sisgeko' : '\\\\192.168.0.128\\Sisgeko');
 
 // Endpoint para servir las imágenes (Lectura)
 app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
-    if (!imgPath) return res.status(400).send('Falta ruta de imagen');
+    if (!imgPath) return res.status(400).send('Falta ruta');
     
-    // Normalizamos el SAP/Ruta de entrada para evitar choques de barras
-    const safeImgPath = imgPath.replace(/\//g, '\\');
-    const fullPath = path.normalize(path.join(networkBase, safeImgPath));
+    // Normalizamos barras según el SO
+    let safePath = imgPath;
+    if (isLinux) {
+        safePath = imgPath.replace(/\\/g, '/'); // En Linux usamos slashes
+    } else {
+        safePath = imgPath.replace(/\//g, '\\'); // En Windows backslashes
+    }
+
+    const fullPath = path.normalize(path.join(networkBase, safePath));
+    
+    // LOG TEMPORAL DE DIAGNÓSTICO (Para verificar el montaje en Linux)
+    console.log(`[Imagenes] (${process.platform}) Solicitud: "${imgPath}" -> Ruta Final: "${fullPath}"`);
 
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
+        console.error(`[Imagenes] NO ENCONTRADA en ${process.platform}: "${fullPath}"`);
         res.status(404).send('Imágen no encontrada: ' + fullPath);
     }
 });
