@@ -215,9 +215,9 @@ function App() {
         <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
           <div onClick={goHome} className="flex items-center gap-2 cursor-pointer group">
              <img 
-               src="/Logosisgekotgm.svg" 
+               src="/Logosisgekotgm.png" 
                alt="SISGEKO" 
-               className="h-11 w-auto object-contain transition-transform group-hover:scale-105 duration-300"
+               className="h-14 w-auto object-contain scale-[2.2] origin-left transition-transform group-hover:scale-[2.4] duration-300"
              />
           </div>
 
