@@ -167,7 +167,7 @@ function App() {
       const id = item.id_articulo || item.id_insight || item.id_definicion;
       if (!id) throw new Error("ID no encontrado");
       
-      const res = await fetch(`http://${window.location.hostname}:5000/api/details?type=${item._type}&id=${id}`);
+      const res = await fetch(`/api/details?type=${item._type}&id=${id}`);
       const data = await res.json();
       if (data.success) {
         setItemDetails(data.details);

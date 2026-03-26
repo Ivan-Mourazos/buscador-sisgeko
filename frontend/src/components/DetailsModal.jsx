@@ -20,7 +20,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
     const handleModalClick = (e) => e.stopPropagation();
 
     // Helper para construir la URL de la imagen
-    const getImgUrl = (path) => `http://${window.location.hostname}:5000/api/images?imgPath=${encodeURIComponent(path)}`;
+    const getImgUrl = (path) => `/api/images?imgPath=${encodeURIComponent(path)}`;
 
     return (
         <div 

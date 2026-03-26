@@ -12,7 +12,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     const [newImageUrl, setNewImageUrl] = useState('');
 
     // Helper para previsualización (mesmo que DetailsModal)
-    const getImgUrl = (path) => `http://${window.location.hostname}:5000/api/images?imgPath=${encodeURIComponent(path)}`;
+    const getImgUrl = (path) => `/api/images?imgPath=${encodeURIComponent(path)}`;
 
     // Bloquear scroll de la página principal
     useEffect(() => {
@@ -85,7 +85,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
         formDataUpload.append('image', file);
 
         try {
-            const response = await fetch(`http://${window.location.hostname}:5000/api/upload`, {
+            const response = await fetch('/api/upload', {
                 method: 'POST',
                 body: formDataUpload
             });
