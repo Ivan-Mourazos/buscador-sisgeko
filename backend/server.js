@@ -268,14 +268,10 @@ app.get('/api/images', (req, res) => {
     const safeImgPath = imgPath.replace(/\//g, '\\');
     const fullPath = path.normalize(path.join(networkBase, safeImgPath));
 
-    // LOG DE DIAGNÓSTICO PARA IT
-    console.log(`[Imagenes] Solicitud: "${imgPath}" -> Ruta Final: "${fullPath}"`);
-
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
-        console.error(`[Imagenes] No encontrada: "${fullPath}"`);
-        res.status(404).send('Imagen no encontrada en servidor de red: ' + fullPath);
+        res.status(404).send('Imágen no encontrada: ' + fullPath);
     }
 });
 
