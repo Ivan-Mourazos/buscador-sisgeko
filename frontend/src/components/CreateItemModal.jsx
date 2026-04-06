@@ -159,9 +159,9 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
+            <div className="bg-white w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 flex justify-between items-start sm:items-center bg-gray-50/50 gap-2">
                     <div>
                         <h2 className="text-xl font-black text-gray-900">
                             {initialData ? `Editar ${type === 'articulo' ? 'Artigo' : type === 'insight' ? 'Insight' : 'Definición'}` : step === 1 ? 'Que queres engadir?' : `Novo ${type === 'articulo' ? 'Artigo' : type === 'insight' ? 'Insight' : 'Definición'}`}
@@ -180,7 +180,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                     </button>
                 </div>
 
-                <div className="p-8 overflow-y-auto custom-scrollbar flex-grow">
+                <div className="p-5 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     {step === 1 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6 items-stretch">
                             <button 
@@ -233,11 +233,11 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                             {type === 'articulo' ? (
                                 <>
                                     <InputField label="Descrición do Artigo" name="descripcion" placeholder="Nome completo do producto" required={true} value={formData.descripcion} onChange={handleChange} />
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <InputField label="Código / Ref" name="codigo" placeholder="ex: 12345ABC" value={formData.codigo} onChange={handleChange} />
                                         <InputField label="Proveedor" name="denominacion_proveedor" placeholder="Nome da empresa" value={formData.denominacion_proveedor} onChange={handleChange} />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <InputField label="Familia" name="familia_nombre" placeholder="Categoría principal" value={formData.familia_nombre} onChange={handleChange} />
                                         <InputField label="Subfamilia" name="subfamilia" placeholder="Sub-categoría" value={formData.subfamilia} onChange={handleChange} />
                                     </div>
@@ -268,7 +268,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             )}
                                         </div>
 
-                                        <div className="flex gap-2 pt-2">
+                                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
                                             <input 
                                                 type="text" 
                                                 value={newImageUrl}
@@ -277,21 +277,23 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 className="flex-grow px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400 transition-all"
                                                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
                                             />
-                                            <button 
-                                                type="button"
-                                                disabled={isUploading}
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="px-4 py-2 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-xl hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50"
-                                            >
-                                                {isUploading ? 'Subindo...' : 'Subir'}
-                                            </button>
-                                            <button 
-                                                type="button"
-                                                onClick={() => addImage()}
-                                                className="px-4 py-2 bg-gray-900 text-white text-[10px] font-black uppercase rounded-xl hover:bg-black transition-all active:scale-95"
-                                            >
-                                                Engadir
-                                            </button>
+                                            <div className="flex gap-2 w-full sm:w-auto">
+                                                <button 
+                                                    type="button"
+                                                    disabled={isUploading}
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-600 text-[10px] sm:text-[11px] font-black uppercase rounded-xl hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    {isUploading ? 'Subindo...' : 'Subir'}
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => addImage()}
+                                                    className="flex-1 sm:flex-none px-4 py-2 bg-gray-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-xl hover:bg-black transition-all active:scale-95"
+                                                >
+                                                    Engadir
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </>
@@ -348,8 +350,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 />
 
                 {step === 2 && (
-                    <div className="px-8 py-6 border-t border-gray-100 flex justify-between items-center bg-gray-50/30">
-                        <div className="flex items-center gap-4">
+                    <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 gap-4">
+                        <div className="flex justify-center sm:justify-start items-center gap-4">
                             {!initialData && (
                                 <button 
                                     type="button"
@@ -401,7 +403,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                         <button 
                             form="create-form"
                             type="submit"
-                            className="px-10 py-3.5 bg-yellow-500 hover:bg-yellow-600 text-white font-black rounded-2xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95"
+                            className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-3.5 bg-yellow-500 hover:bg-yellow-600 text-white font-black rounded-2xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95"
                         >
                             {initialData ? 'Actualizar Elemento' : 'Gardar Elemento'}
                         </button>

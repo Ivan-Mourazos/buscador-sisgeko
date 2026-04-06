@@ -35,6 +35,7 @@ function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [viewMode, setViewMode] = useState('hero');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const searchInputRef = useRef(null);
 
@@ -159,12 +160,14 @@ function App() {
       categories: [categoryId] 
     });
     setViewMode('results');
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const goHome = () => {
     setQuery('');
     setFilters({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
     setViewMode('hero');
+    setShowMobileFilters(false);
   };
 
   const openDetails = async (item) => {
@@ -212,60 +215,60 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100 overflow-x-hidden">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-8 py-5 flex flex-col md:flex-row gap-8 items-center justify-between">
-          <div onClick={goHome} className="flex items-center gap-2 cursor-pointer group">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
+          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 z-10 w-auto">
              <img 
                src="/Logosisgekotgm.png" 
                alt="SISGEKO" 
-               className="h-14 w-auto object-contain scale-[2.2] origin-left transition-transform group-hover:scale-[2.4] duration-300"
+               className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] origin-left transition-transform md:group-hover:scale-[2.4] duration-300 ml-4 md:ml-0"
              />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] relative group transition-all duration-700 ${showHero ? 'opacity-0 scale-95 pointer-events-none -translate-y-2' : 'opacity-100 scale-100 translate-y-0'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
               type="text" 
-              className="w-full pl-6 pr-14 py-3.5 bg-white border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:border-gray-300 group-hover:shadow-md"
+              className="w-full pl-6 pr-14 py-3 md:py-3.5 bg-white border border-gray-200 rounded-full focus:bg-white focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-[15px] text-gray-700 placeholder:text-gray-400 shadow-sm group-hover:border-gray-300 group-hover:shadow-md"
               placeholder="Procurar termo..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
             <button 
               type="submit" 
-              className="absolute right-1.5 top-1.5 p-2.5 bg-yellow-500 rounded-full text-white shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all cursor-pointer"
+              className="absolute right-1.5 md:right-1.5 top-1.5 md:top-1.5 p-2 md:p-2.5 bg-yellow-500 rounded-full text-white shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all cursor-pointer"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
           </form>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 md:gap-4 w-auto order-2 md:order-3">
             {user && (
               <button 
                 onClick={() => {
                   setEditingItem(null);
                   setIsCreateModalOpen(true);
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 text-white rounded-full text-[13px] font-bold hover:bg-black hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 md:py-2 text-[11px] md:text-[12px] font-black uppercase tracking-widest text-gray-800 hover:text-black transition-all active:scale-95 cursor-pointer group"
               >
-                <svg className="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-500 group-hover:text-yellow-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                 </svg>
-                Novo
+                <span>Novo</span>
               </button>
             )}
             
             {user ? (
-              <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 py-1.5 pl-1.5 pr-4 rounded-full shadow-sm">
-                <div className="w-9 h-9 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 py-1 pl-1 pr-3 md:py-1.5 md:pl-1.5 md:pr-4 rounded-full shadow-sm relative group/btn">
+                <div className="w-7 h-7 md:w-9 md:h-9 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-xs md:text-sm shadow-md">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-gray-800 leading-tight">{user.name}</span>
+                  <span className="text-[11px] md:text-[13px] font-bold text-gray-800 leading-tight truncate max-w-[80px] sm:max-w-[120px]">{user.name.split(' ')[0]}</span>
                   <button 
                     onClick={handleLogout}
-                    className="text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase tracking-wider transition-colors text-left cursor-pointer"
+                    className="text-[9px] md:text-[10px] text-gray-400 hover:text-red-500 font-bold uppercase tracking-wider transition-colors text-left cursor-pointer"
                   >
                     Saír
                   </button>
@@ -274,12 +277,12 @@ function App() {
             ) : (
               <button 
                 onClick={() => setIsLoginModalOpen(true)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-600 hover:border-yellow-500 hover:text-yellow-600 hover:shadow-md transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 md:px-6 py-2 md:py-2.5 bg-white border border-gray-200 rounded-full text-[11px] md:text-[13px] font-bold text-gray-600 hover:border-yellow-500 hover:text-yellow-600 hover:shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Acceder
+                <span>Acceder</span>
               </button>
             )}
           </div>
@@ -295,16 +298,35 @@ function App() {
           facets={facets}
         />
       ) : (
-        <main className="max-w-7xl mx-auto px-8 py-10 flex flex-col lg:flex-row gap-12 items-start animate-sweep-in">
+        <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-start animate-sweep-in">
           <aside className="w-full lg:w-72 flex-shrink-0">
-            <SidebarFilters 
-              facets={facets} 
-              filters={filters} 
-              onFilterChange={setFilters} 
-              onClearAll={clearAll}
-              hasActiveFilters={hasActiveFilters}
-              results={results}
-            />
+            <div className="lg:hidden mb-4">
+              <button 
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="w-full flex items-center justify-between bg-white px-5 py-3.5 rounded-[1rem] shadow-sm border border-gray-100 font-bold text-gray-700 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span>{showMobileFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}</span>
+                </div>
+                <svg className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${showMobileFilters ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className={`lg:block transition-all duration-300 animate-fade-in ${showMobileFilters ? 'block' : 'hidden'}`}>
+              <SidebarFilters 
+                facets={facets} 
+                filters={filters} 
+                onFilterChange={setFilters} 
+                onClearAll={clearAll}
+                hasActiveFilters={hasActiveFilters}
+                results={results}
+              />
+            </div>
           </aside>
 
           <section className="flex-grow w-full">
@@ -380,7 +402,7 @@ function App() {
       {/* Botón Volver Arriba */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl shadow-yellow-500/40 transition-all duration-500 transform z-[60] hover:bg-yellow-600 hover:-translate-y-1 active:scale-90 cursor-pointer ${
+        className={`fixed bottom-4 right-4 md:bottom-8 md:right-8 p-3 md:p-4 bg-yellow-500 text-white rounded-full shadow-2xl shadow-yellow-500/40 transition-all duration-500 transform z-[60] hover:bg-yellow-600 hover:-translate-y-1 active:scale-90 cursor-pointer ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
         }`}
       >

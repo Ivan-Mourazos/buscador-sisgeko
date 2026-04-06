@@ -108,7 +108,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
     }, [facets.tipo_origen, filters.categories, filters.tipo_origen]);
 
     return (
-        <div className="w-full bg-transparent py-4 pr-4 sticky top-8">
+        <div className="w-full bg-transparent py-4 pr-0 lg:pr-4 static lg:sticky top-8">
             <div className="mb-10">
                 {/* ... Header ... */}
                 <div className="flex items-center justify-between mb-6">
