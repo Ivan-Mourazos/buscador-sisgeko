@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 const InputField = ({ label, name, placeholder, type = "text", required = false, value, onChange }) => (
     <div className="space-y-1.5 flex-grow">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-        <input 
+        <input
             type={type}
             name={name}
             value={value || ''}
@@ -18,7 +18,7 @@ const InputField = ({ label, name, placeholder, type = "text", required = false,
 const TextAreaField = ({ label, name, placeholder, required = false, value, onChange }) => (
     <div className="space-y-1.5">
         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
-        <textarea 
+        <textarea
             name={name}
             value={value || ''}
             onChange={onChange}
@@ -30,16 +30,63 @@ const TextAreaField = ({ label, name, placeholder, required = false, value, onCh
     </div>
 );
 
+const SelectField = ({ label, name, value, onChange, options, required = false }) => (
+    <div className="space-y-1.5 flex-grow">
+        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <select
+            name={name}
+            value={value || ''}
+            onChange={onChange}
+            required={required}
+            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-400 appearance-none cursor-pointer"
+        >
+            <option value="" disabled>Selecciona unha opción...</option>
+            {options.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+        </select>
+    </div>
+);
+
 const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
     const [step, setStep] = useState(1); // 1: Selection, 2: Form
     const [type, setType] = useState(null); // 'articulo' | 'insight'
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
-    
+
     // Form state
     const [formData, setFormData] = useState({});
     const [newImageUrl, setNewImageUrl] = useState('');
+
+    // State for DB options
+    const [dbOptions, setDbOptions] = useState({
+        articulos: [],
+        procesos: [],
+        tipo_origen: []
+    });
+
+    const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+    // Fetch options from DB
+    const fetchOptions = async () => {
+        setIsLoadingOptions(true);
+        try {
+            const res = await fetch('/api/form-options');
+            const data = await res.json();
+            if (data.success) {
+                setDbOptions({
+                    articulos: data.articulos || [],
+                    procesos: data.procesos || [],
+                    tipo_origen: data.tipo_origen || []
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching form options:", err);
+        } finally {
+            setIsLoadingOptions(false);
+        }
+    };
 
     // Helper para previsualización (mesmo que DetailsModal)
     const getImgUrl = (path) => `/api/images?imgPath=${encodeURIComponent(path)}`;
@@ -47,7 +94,10 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     // Inicializar data solo una vez al abrir o cuando cambia initialData externamente
     useEffect(() => {
         if (!isOpen) return;
-        
+
+        // Cargar opciones al abrir para asegurar datos frescos
+        fetchOptions();
+
         if (initialData) {
             setStep(2);
             setType(initialData._type);
@@ -108,7 +158,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 body: formDataUpload
             });
             const result = await response.json();
-            
+
             if (result.success) {
                 if (type === 'articulo') {
                     addImage(result.filename);
@@ -170,7 +220,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                             {initialData ? 'Modifica os campos necesarios para actualizar a información' : 'Define un novo elemento para a base de datos'}
                         </p>
                     </div>
-                    <button 
+                    <button
                         onClick={resetAndClose}
                         className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-2xl transition-all text-gray-400"
                     >
@@ -183,7 +233,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 <div className="p-5 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     {step === 1 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6 items-stretch">
-                            <button 
+                            <button
                                 onClick={() => handleNext('articulo')}
                                 className="group p-8 bg-yellow-50/30 border-2 border-yellow-100/50 rounded-[2.5rem] hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
                             >
@@ -198,7 +248,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                 </div>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => handleNext('insight')}
                                 className="group p-8 bg-blue-50/30 border-2 border-blue-100/50 rounded-[2.5rem] hover:border-blue-400 hover:bg-blue-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
                             >
@@ -213,7 +263,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                 </div>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => handleNext('definicion')}
                                 className="group p-8 bg-purple-50/30 border-2 border-purple-100/50 rounded-[2.5rem] hover:border-purple-400 hover:bg-purple-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
                             >
@@ -247,12 +297,12 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Galeira de Imaxes (Rutas)</h4>
                                             <span className="text-[10px] font-bold text-yellow-500 bg-yellow-50 px-2 py-0.5 rounded-full">{formData.imagenes?.length || 0} Imaxes</span>
                                         </div>
-                                        
+
                                         <div className="flex flex-wrap gap-2">
                                             {formData.imagenes?.map((img, idx) => (
                                                 <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm animate-in zoom-in duration-200">
                                                     <span className="text-[11px] font-mono font-medium text-gray-600 truncate max-w-[150px]">{img}</span>
-                                                    <button 
+                                                    <button
                                                         type="button"
                                                         onClick={() => removeImage(idx)}
                                                         className="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-gray-300"
@@ -269,8 +319,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         </div>
 
                                         <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={newImageUrl}
                                                 onChange={(e) => setNewImageUrl(e.target.value)}
                                                 placeholder="ex: imaxe_nova.jpg"
@@ -278,7 +328,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
                                             />
                                             <div className="flex gap-2 w-full sm:w-auto">
-                                                <button 
+                                                <button
                                                     type="button"
                                                     disabled={isUploading}
                                                     onClick={() => fileInputRef.current?.click()}
@@ -286,7 +336,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 >
                                                     {isUploading ? 'Subindo...' : 'Subir'}
                                                 </button>
-                                                <button 
+                                                <button
                                                     type="button"
                                                     onClick={() => addImage()}
                                                     className="flex-1 sm:flex-none px-4 py-2 bg-gray-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-xl hover:bg-black transition-all active:scale-95"
@@ -302,14 +352,126 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} value={formData.titulo} onChange={handleChange} />
                                     <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} value={formData.insight} onChange={handleChange} />
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <InputField label="Documento Fonte" name="origen_informacion" placeholder="ex: Manual de procesos V2" value={formData.origen_informacion} onChange={handleChange} />
-                                        <InputField label="Tipo de Fonte" name="tipo_origen_nombre" placeholder="ex: Normativa, Estudo..." value={formData.tipo_origen_nombre} onChange={handleChange} />
+                                        <InputField label="Orixe" name="origen_informacion" placeholder="ex: Manual de procesos V2" value={formData.origen_informacion} onChange={handleChange} />
+                                        <SelectField
+                                            label="Tipo de Fonte"
+                                            name="tipo_origen_nombre"
+                                            value={formData.tipo_origen_nombre}
+                                            onChange={handleChange}
+                                            options={dbOptions.tipo_origen}
+                                            required={true}
+                                        />
+                                    </div>
+
+                                    {/* Vinculación a Artigos */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Artigos vinculados</label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {(formData.articulos_vinculados || []).map(artId => {
+                                                const art = dbOptions.articulos.find(a => a.id_articulo === artId);
+                                                return (
+                                                    <div key={artId} className="flex items-center gap-2 bg-yellow-50 px-3 py-1.5 rounded-xl border border-yellow-100 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-yellow-700">{art?.descripcion || `ID: ${artId}`}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    articulos_vinculados: (prev.articulos_vinculados || []).filter(id => id !== artId)
+                                                                }));
+                                                            }}
+                                                            className="p-1 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-colors text-yellow-400"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <select
+                                            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700"
+                                            onChange={(e) => {
+                                                const id = parseInt(e.target.value);
+                                                if (id && !(formData.articulos_vinculados || []).includes(id)) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        articulos_vinculados: [...(prev.articulos_vinculados || []), id]
+                                                    }));
+                                                }
+                                                e.target.value = "";
+                                            }}
+                                        >
+                                            <option value="">{isLoadingOptions ? "Cargando..." : "Engadir artigo..."}</option>
+                                            {dbOptions.articulos.filter(a => !(formData.articulos_vinculados || []).includes(a.id_articulo)).map(art => (
+                                                <option key={art.id_articulo} value={art.id_articulo}>{art.descripcion}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Vinculación a Procesos */}
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center px-1">
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Procesos vinculados</label>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {(formData.procesos_vinculados || []).map(procId => {
+                                                const proc = dbOptions.procesos.find(p => p.id_proceso === procId);
+                                                return (
+                                                    <div key={procId} className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-blue-700">{proc?.nombre || `ID: ${procId}`}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    procesos_vinculados: (prev.procesos_vinculados || []).filter(id => id !== procId)
+                                                                }));
+                                                            }}
+                                                            className="p-1 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-colors text-blue-400"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                                            {dbOptions.procesos.map(proc => {
+                                                const isSelected = (formData.procesos_vinculados || []).includes(proc.id_proceso);
+                                                return (
+                                                    <button
+                                                        key={proc.id_proceso}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFormData(prev => {
+                                                                const list = prev.procesos_vinculados || [];
+                                                                if (isSelected) {
+                                                                    return { ...prev, procesos_vinculados: list.filter(id => id !== proc.id_proceso) };
+                                                                } else {
+                                                                    return { ...prev, procesos_vinculados: [...list, proc.id_proceso] };
+                                                                }
+                                                            });
+                                                        }}
+                                                        className={`px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${isSelected
+                                                                ? 'bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20'
+                                                                : 'bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-500'
+                                                            }`}
+                                                    >
+                                                        {proc.nombre}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                     <div className="flex items-end gap-3">
                                         <div className="flex-grow">
                                             <InputField label="URL Imaxe / Icona" name="imagen" placeholder="ex: infografia_01.webp" value={formData.imagen} onChange={handleChange} />
                                         </div>
-                                        <button 
+                                        <button
                                             type="button"
                                             disabled={isUploading}
                                             onClick={() => fileInputRef.current?.click()}
@@ -319,9 +481,9 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         </button>
                                         {formData.imagen && (
                                             <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 bg-gray-50 flex-shrink-0 mb-1 shadow-sm">
-                                                <img 
-                                                    src={getImgUrl(formData.imagen)} 
-                                                    alt="Preview" 
+                                                <img
+                                                    src={getImgUrl(formData.imagen)}
+                                                    alt="Preview"
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                 />
@@ -341,19 +503,19 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 </div>
 
                 {/* Input de ficheiros oculto */}
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileUpload} 
-                    className="hidden" 
-                    accept="image/*" 
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept="image/*"
                 />
 
                 {step === 2 && (
                     <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 gap-4">
                         <div className="flex justify-center sm:justify-start items-center gap-4">
                             {!initialData && (
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setStep(1)}
                                     className="flex items-center gap-2 px-6 py-3 text-gray-500 font-bold hover:text-gray-900 transition-colors"
@@ -364,19 +526,19 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     Volver
                                 </button>
                             )}
-                            
+
                             {initialData && (
                                 <div className="flex items-center gap-3">
                                     {showDeleteConfirm ? (
                                         <div className="flex items-center gap-2 bg-red-50 p-1 pr-3 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-left-2 transition-all">
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={handleDelete}
                                                 className="px-5 py-2 bg-red-500 text-white text-xs font-black rounded-xl hover:bg-red-600 shadow-md shadow-red-500/20"
                                             >
                                                 Confirmar Borrado
                                             </button>
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={() => setShowDeleteConfirm(false)}
                                                 className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest px-2"
@@ -385,7 +547,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             </button>
                                         </div>
                                     ) : (
-                                        <button 
+                                        <button
                                             type="button"
                                             onClick={() => setShowDeleteConfirm(true)}
                                             className="flex items-center gap-2 px-6 py-3 text-red-400 font-bold hover:text-red-600 transition-colors"
@@ -400,7 +562,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                             )}
                         </div>
 
-                        <button 
+                        <button
                             form="create-form"
                             type="submit"
                             className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-3.5 bg-yellow-500 hover:bg-yellow-600 text-white font-black rounded-2xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95"
