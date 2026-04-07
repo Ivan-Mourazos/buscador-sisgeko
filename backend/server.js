@@ -182,6 +182,27 @@ app.post('/api/search', async (req, res) => {
     }
 });
 
+// Endpoint para obter todas as opcións de formularios (Artigos, Procesos, Tipos Orixe)
+app.get('/api/form-options', async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        
+        const arts = await pool.request().query('SELECT id_articulo, descripcion FROM articulos ORDER BY descripcion');
+        const procs = await pool.request().query('SELECT id_proceso, proceso as nombre FROM procesos ORDER BY proceso');
+        const origins = await pool.request().query('SELECT id_tipo_origen, tipo_origen as label FROM tipo_origen ORDER BY tipo_origen');
+
+        res.json({
+            success: true,
+            articulos: arts.recordset,
+            procesos: procs.recordset,
+            tipo_origen: origins.recordset.map(o => ({ value: o.label.toLowerCase(), label: o.label }))
+        });
+    } catch (error) {
+        console.error('Error fetching form options:', error);
+        res.status(500).json({ success: false, message: 'Error ao obter opcións', error: error.message });
+    }
+});
+
 // Endpoint dinamico de detalles
 app.get('/api/details', async (req, res) => {
     try {
