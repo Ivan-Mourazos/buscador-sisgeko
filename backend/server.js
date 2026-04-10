@@ -64,8 +64,17 @@ app.post('/api/search', async (req, res) => {
         words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
         const allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
-        // Definiciones Base
-        let sqlDefBase = `SELECT DISTINCT d.*, rdf.id_familia FROM definiciones d LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion WHERE 1=1 `;
+        // Definiciones Base (Solo versiones vigentes y activas)
+        let sqlDefBase = `
+            SELECT d.*, rdf.id_familia 
+            FROM definiciones d 
+            LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion 
+            WHERE d.activo = 1 AND d.eliminado = 0
+            AND d.version = (
+                SELECT MAX(version) FROM definiciones d2 
+                WHERE d2.id_definicion = d.id_definicion 
+                AND d2.activo = 1 AND d2.eliminado = 0
+            ) `;
         words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
         const allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
 
@@ -259,7 +268,13 @@ app.get('/api/details', async (req, res) => {
             `);
             details.intenciones = intRes.recordset.map(i => i.intencion);
         } else if (type === 'definicion') {
-            const defRes = await request.query(`SELECT definicion FROM definiciones WHERE id_definicion = @id`);
+            const defRes = await request.query(`
+                SELECT TOP 1 definicion 
+                FROM definiciones 
+                WHERE id_definicion = @id 
+                AND activo = 1 AND eliminado = 0 
+                ORDER BY version DESC
+            `);
             if (defRes.recordset.length > 0) {
                 details.textoCompleto = defRes.recordset[0].definicion;
             }
