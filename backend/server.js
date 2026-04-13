@@ -56,19 +56,31 @@ app.post('/api/search', async (req, res) => {
         words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`; });
         const allMatchArts = (await request.query(sqlArtBase)).recordset.map(a => ({ ...a, _type: 'articulo' }));
 
-        // Insights Base
+        // Insights Base (Solo versiones vigentes y activas)
         let sqlInsBase = `
             SELECT i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
             ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
-            FROM insights i WHERE 1=1 `;
+            FROM insights i 
+            WHERE (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
+            AND i.version = (
+                SELECT MAX(version) FROM insights i2 
+                WHERE i2.id_insight = i.id_insight 
+                AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
+            ) `;
         words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
         const allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
         // Definiciones Base (Solo versiones vigentes y activas)
         let sqlDefBase = `
-            SELECT d.*, rdf.id_familia 
+            SELECT d.*, 
+            ISNULL(STUFF((
+                SELECT ', ' + f.codigo 
+                FROM rel_definicion_familia rdf2 
+                JOIN familias f ON rdf2.id_familia = f.id_familia 
+                WHERE rdf2.id_definicion = d.id_definicion 
+                FOR XML PATH('')
+            ), 1, 2, ''), '') as familias_lista
             FROM definiciones d 
-            LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion 
             WHERE (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
             AND d.version = (
                 SELECT MAX(version) FROM definiciones d2 
@@ -199,12 +211,16 @@ app.get('/api/form-options', async (req, res) => {
         const arts = await pool.request().query('SELECT id_articulo, descripcion FROM articulos ORDER BY descripcion');
         const procs = await pool.request().query('SELECT id_proceso, proceso as nombre FROM procesos ORDER BY proceso');
         const origins = await pool.request().query('SELECT id_tipo_origen, tipo_origen as label FROM tipo_origen ORDER BY tipo_origen');
+        const fams = await pool.request().query('SELECT id_familia as value, codigo as label FROM familias ORDER BY codigo');
+        const subs = await pool.request().query('SELECT DISTINCT subfamilia FROM articulos WHERE subfamilia IS NOT NULL ORDER BY subfamilia');
 
         res.json({
             success: true,
             articulos: arts.recordset,
             procesos: procs.recordset,
-            tipo_origen: origins.recordset.map(o => ({ value: o.id_tipo_origen, label: o.label }))
+            tipo_origen: origins.recordset.map(o => ({ value: o.id_tipo_origen, label: o.label })),
+            familias: fams.recordset,
+            subfamilias: subs.recordset.map(s => ({ value: s.subfamilia, label: s.subfamilia }))
         });
     } catch (error) {
         console.error('Error fetching form options:', error);
@@ -279,15 +295,26 @@ app.get('/api/details', async (req, res) => {
             details.articulos_vinculados = artsRes.recordset.map(a => a.id_articulo);
         } else if (type === 'definicion') {
             const defRes = await request.query(`
-                SELECT TOP 1 definicion 
+                SELECT TOP 1 titulo, definicion 
                 FROM definiciones 
                 WHERE id_definicion = @id 
                 AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) 
                 ORDER BY version DESC
             `);
             if (defRes.recordset.length > 0) {
+                details.titulo = defRes.recordset[0].titulo;
                 details.textoCompleto = defRes.recordset[0].definicion;
+                details.definicion = defRes.recordset[0].definicion; // Para el modal de edición
             }
+
+            const famsRes = await request.query(`
+                SELECT f.id_familia as id, f.codigo as nombre 
+                FROM rel_definicion_familia rdf 
+                JOIN familias f ON rdf.id_familia = f.id_familia 
+                WHERE rdf.id_definicion = @id
+            `);
+            details.familias_vinculadas = famsRes.recordset.map(f => f.id);
+            details.familias_nombres = famsRes.recordset.map(f => f.nombre).join(', ');
         }
         
         
@@ -322,10 +349,23 @@ app.post('/api/definiciones', async (req, res) => {
         request.input('activo', sql.Bit, 1);
         request.input('eliminado', sql.Bit, 0);
 
-        await request.query(`
+        const insertDefRes = await request.query(`
             INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
+            OUTPUT inserted.ID
             VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
         `);
+
+        const newId = insertDefRes.recordset[0].ID;
+
+        // Vínculo con Familias
+        if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
+            for (const famId of data.familias_vinculadas) {
+                const reqFam = new sql.Request(transaction);
+                reqFam.input('id_definicion', sql.Int, newId);
+                reqFam.input('id_familia', sql.Int, famId);
+                await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
+            }
+        }
 
         // Simulamos éxito
         await transaction.rollback();
@@ -364,10 +404,23 @@ app.put('/api/definiciones/:groupId', async (req, res) => {
         request.input('activo', sql.Bit, 1);
         request.input('eliminado', sql.Bit, 0);
 
-        await request.query(`
+        const insertDefRes = await request.query(`
             INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
+            OUTPUT inserted.ID
             VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
         `);
+
+        const newId = insertDefRes.recordset[0].ID;
+
+        // Vínculo con Familias
+        if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
+            for (const famId of data.familias_vinculadas) {
+                const reqFam = new sql.Request(transaction);
+                reqFam.input('id_definicion', sql.Int, newId);
+                reqFam.input('id_familia', sql.Int, famId);
+                await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
+            }
+        }
 
         await transaction.rollback();
         res.json({ success: true, message: 'Simulación: Definición actualizada correctamente.' });
@@ -628,6 +681,107 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
     } catch (error) {
         console.error('Error na subida:', error);
         res.status(500).json({ success: false, message: 'Error ao gardar a imaxe', error: error.message });
+    }
+});
+
+// ==========================================
+// ENDPOINTS PARA ARTIGOS (CRUD CON SIMULACIÓN)
+// ==========================================
+
+app.post('/api/articulos', async (req, res) => {
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        const request = new sql.Request(transaction);
+
+        // Obtenemos el nuevo ID si no es Identity (David suele hacerlo manual en RPS)
+        const idRes = await request.query(`SELECT ISNULL(MAX(id_articulo), 0) + 1 as new_id FROM articulos`);
+        const newId = idRes.recordset[0].new_id;
+
+        request.input('id', sql.Int, newId);
+        request.input('codigo', sql.NVarChar, data.codigo ? data.codigo.toString() : null);
+        request.input('descripcion', sql.NVarChar, data.descripcion ? data.descripcion.toString() : null);
+        request.input('denominacion_proveedor', sql.NVarChar, data.denominacion_proveedor ? data.denominacion_proveedor.toString() : null);
+        request.input('subfamilia', sql.NVarChar, data.subfamilia ? data.subfamilia.toString() : null);
+        request.input('id_familia', sql.Int, data.id_familia ? parseInt(data.id_familia) : null);
+
+        await request.query(`
+            INSERT INTO articulos (id_articulo, codigo, descripcion, denominacion_proveedor, subfamilia, id_familia)
+            VALUES (@id, @codigo, @descripcion, @denominacion_proveedor, @subfamilia, @id_familia)
+        `);
+
+        // Si hay imágenes, las guardamos (si existiera tabla rel_articulo_imagen, pero parece que articulos no tiene)
+        // Por ahora, el buscador lee de la carpeta física basándose en el nombre de las imágenes
+        
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Artigo creado (ID: ' + newId + '). Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error insertando artigo:', error);
+        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
+    }
+});
+
+app.put('/api/articulos/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        const request = new sql.Request(transaction);
+
+        request.input('id', sql.Int, id);
+        request.input('codigo', sql.NVarChar, data.codigo || null);
+        request.input('descripcion', sql.NVarChar, data.descripcion || null);
+        request.input('denominacion_proveedor', sql.NVarChar, data.denominacion_proveedor || null);
+        request.input('subfamilia', sql.NVarChar, data.subfamilia || null);
+        request.input('id_familia', sql.Int, data.id_familia || null);
+
+        await request.query(`
+            UPDATE articulos 
+            SET codigo=@codigo, descripcion=@descripcion, denominacion_proveedor=@denominacion_proveedor, subfamilia=@subfamilia, id_familia=@id_familia
+            WHERE id_articulo=@id
+        `);
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Artigo actualizado correctamente. Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error actualizando artigo:', error);
+        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
+    }
+});
+
+app.delete('/api/articulos/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        const request = new sql.Request(transaction);
+        request.input('id', sql.Int, id);
+
+        // Borrado físico (Precaución: David debe confirmar si prefiere físico o si hay columna de activo)
+        await request.query(`DELETE FROM articulos WHERE id_articulo=@id`);
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Artigo borrado correctamente. Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error borrando artigo:', error);
+        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
     }
 });
 

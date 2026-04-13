@@ -63,7 +63,9 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     const [dbOptions, setDbOptions] = useState({
         articulos: [],
         procesos: [],
-        tipo_origen: []
+        tipo_origen: [],
+        familias: [],
+        subfamilias: []
     });
 
     const [isLoadingOptions, setIsLoadingOptions] = useState(false);
@@ -78,7 +80,9 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 setDbOptions({
                     articulos: data.articulos || [],
                     procesos: data.procesos || [],
-                    tipo_origen: data.tipo_origen || []
+                    tipo_origen: data.tipo_origen || [],
+                    familias: data.familias || [],
+                    subfamilias: data.subfamilias || []
                 });
             }
         } catch (err) {
@@ -288,8 +292,20 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         <InputField label="Proveedor" name="denominacion_proveedor" placeholder="Nome da empresa" value={formData.denominacion_proveedor} onChange={handleChange} />
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <InputField label="Familia" name="familia_nombre" placeholder="Categoría principal" value={formData.familia_nombre} onChange={handleChange} />
-                                        <InputField label="Subfamilia" name="subfamilia" placeholder="Sub-categoría" value={formData.subfamilia} onChange={handleChange} />
+                                        <SelectField 
+                                            label="Familia" 
+                                            name="id_familia" 
+                                            value={formData.id_familia} 
+                                            onChange={handleChange} 
+                                            options={dbOptions.familias}
+                                        />
+                                        <SelectField 
+                                            label="Subfamilia" 
+                                            name="subfamilia" 
+                                            value={formData.subfamilia} 
+                                            onChange={handleChange} 
+                                            options={dbOptions.subfamilias}
+                                        />
                                     </div>
 
                                     <div className="p-6 bg-gray-50 rounded-[1.5rem] border border-gray-100 space-y-4">
@@ -496,6 +512,53 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                 <>
                                     <InputField label="Termo / Concepto" name="titulo" placeholder="Nome da definición" required={true} value={formData.titulo} onChange={handleChange} />
                                     <TextAreaField label="Definición" name="definicion" placeholder="Explica o concepto de forma clara..." required={true} value={formData.definicion} onChange={handleChange} />
+                                    
+                                    {/* Vinculación a Familias */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Familias vinculadas</label>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {(formData.familias_vinculadas || []).map(famId => {
+                                                const fam = dbOptions.familias.find(f => f.value === famId);
+                                                return (
+                                                    <div key={famId} className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-100 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-purple-700">{fam?.label || `ID: ${famId}`}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    familias_vinculadas: (prev.familias_vinculadas || []).filter(id => id !== famId)
+                                                                }));
+                                                            }}
+                                                            className="p-1 hover:bg-purple-200 hover:text-purple-800 rounded-lg transition-colors text-purple-400"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <select
+                                            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700"
+                                            onChange={(e) => {
+                                                const id = parseInt(e.target.value);
+                                                if (id && !(formData.familias_vinculadas || []).includes(id)) {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        familias_vinculadas: [...(prev.familias_vinculadas || []), id]
+                                                    }));
+                                                }
+                                                e.target.value = "";
+                                            }}
+                                        >
+                                            <option value="">{isLoadingOptions ? "Cargando..." : "Vincular a unha familia..."}</option>
+                                            {dbOptions.familias.filter(f => !(formData.familias_vinculadas || []).includes(f.value)).map(fam => (
+                                                <option key={fam.value} value={fam.value}>{fam.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </>
                             ) : null}
                         </form>

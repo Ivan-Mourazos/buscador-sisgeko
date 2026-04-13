@@ -47,6 +47,13 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                     {item.procesos_lista}
                                 </span>
                             )}
+                            {item._type === 'definicion' && details?.familias_nombres && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    <span className="px-2 py-0.5 bg-purple-50 text-purple-600 border border-purple-100 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                        {details.familias_nombres}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight pr-4">
                             {item._type === 'articulo' ? item.descripcion : item.titulo}

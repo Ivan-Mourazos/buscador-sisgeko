@@ -67,6 +67,11 @@ export const ResultCard = ({ item, onClick }) => {
                             {item.titulo}
                         </h3>
                     </div>
+                    {item.familias_lista && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            <Badge colorClass="bg-purple-50 text-purple-700 border-purple-100">{item.familias_lista}</Badge>
+                        </div>
+                    )}
                 </div>
             );
 
