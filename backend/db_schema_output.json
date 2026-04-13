@@ -1,0 +1,496 @@
+{
+  "articulos": [
+    {
+      "table_name": "articulos",
+      "column_name": "id_articulo",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "articulos",
+      "column_name": "codigo",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "articulos",
+      "column_name": "descripcion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "articulos",
+      "column_name": "denominacion_proveedor",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "articulos",
+      "column_name": "subfamilia",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "articulos",
+      "column_name": "id_familia",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    }
+  ],
+  "cambios_definiciones": [
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "ID",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "id_definicion",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "fecha_cambio",
+      "data_type": "datetime",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "id_usuairo_cambio",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "comentario_cambio",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
+    }
+  ],
+  "caracteristicas": [
+    {
+      "table_name": "caracteristicas",
+      "column_name": "id_caracteristica",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "caracteristicas",
+      "column_name": "caracteristica",
+      "data_type": "nchar",
+      "max_length": 200,
+      "is_nullable": true
+    },
+    {
+      "table_name": "caracteristicas",
+      "column_name": "descripcion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "caracteristicas",
+      "column_name": "comentario",
+      "data_type": "nchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ],
+  "definiciones": [
+    {
+      "table_name": "definiciones",
+      "column_name": "ID",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "id_definicion",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "version",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "titulo",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "definicion",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "activo",
+      "data_type": "bit",
+      "max_length": 1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "eliminado",
+      "data_type": "bit",
+      "max_length": 1,
+      "is_nullable": true
+    }
+  ],
+  "familias": [
+    {
+      "table_name": "familias",
+      "column_name": "id_familia",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "familias",
+      "column_name": "codigo",
+      "data_type": "varchar",
+      "max_length": 50,
+      "is_nullable": true
+    },
+    {
+      "table_name": "familias",
+      "column_name": "descripcion",
+      "data_type": "varchar",
+      "max_length": 255,
+      "is_nullable": true
+    }
+  ],
+  "insights": [
+    {
+      "table_name": "insights",
+      "column_name": "id_insight",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "insights",
+      "column_name": "origen_informacion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "detalle_origen_informacion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "id_tipo_origen",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "insight",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "imagen",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "titulo",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ],
+  "intenciones": [
+    {
+      "table_name": "intenciones",
+      "column_name": "id_intencion",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "intenciones",
+      "column_name": "intencion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ],
+  "procesos": [
+    {
+      "table_name": "procesos",
+      "column_name": "id_proceso",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": false
+    },
+    {
+      "table_name": "procesos",
+      "column_name": "proceso",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "procesos",
+      "column_name": "descripcion",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ],
+  "rel_definicion_familia": [
+    {
+      "table_name": "rel_definicion_familia",
+      "column_name": "id_rel_definicion_familia",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "rel_definicion_familia",
+      "column_name": "id_definicion",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "rel_definicion_familia",
+      "column_name": "id_familia",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    }
+  ],
+  "rel_Insight_articulo": [
+    {
+      "table_name": "rel_Insight_articulo",
+      "column_name": "id_rel_insight_articulo",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "rel_Insight_articulo",
+      "column_name": "id_insight",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "rel_Insight_articulo",
+      "column_name": "id_articulo",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    }
+  ],
+  "rel_insight_intencion": [
+    {
+      "table_name": "rel_insight_intencion",
+      "column_name": "id_rel_insight_intencion",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "rel_insight_intencion",
+      "column_name": "id_insight",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "rel_insight_intencion",
+      "column_name": "id_intencion",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    }
+  ],
+  "rel_Insight_Proceso": [
+    {
+      "table_name": "rel_Insight_Proceso",
+      "column_name": "id_rel_insight_proceso",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "rel_Insight_Proceso",
+      "column_name": "id_insight",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "rel_Insight_Proceso",
+      "column_name": "id_proceso",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "rel_Insight_Proceso",
+      "column_name": "criticidad",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    }
+  ],
+  "roles": [
+    {
+      "table_name": "roles",
+      "column_name": "id_rol",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "roles",
+      "column_name": "nombre_rol",
+      "data_type": "nvarchar",
+      "max_length": 100,
+      "is_nullable": true
+    }
+  ],
+  "tipo_origen": [
+    {
+      "table_name": "tipo_origen",
+      "column_name": "id_tipo_origen",
+      "data_type": "float",
+      "max_length": 8,
+      "is_nullable": false
+    },
+    {
+      "table_name": "tipo_origen",
+      "column_name": "tipo_origen",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ],
+  "usuarios": [
+    {
+      "table_name": "usuarios",
+      "column_name": "id_usuario",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "username",
+      "data_type": "nvarchar",
+      "max_length": 200,
+      "is_nullable": true
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "password_hash",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "id_rol",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "activo",
+      "data_type": "bit",
+      "max_length": 1,
+      "is_nullable": true
+    }
+  ],
+  "valores": [
+    {
+      "table_name": "valores",
+      "column_name": "id_valor",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "valores",
+      "column_name": "id_caracteristica",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "valores",
+      "column_name": "id_articulo",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "valores",
+      "column_name": "orden",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "valores",
+      "column_name": "valor",
+      "data_type": "nvarchar",
+      "max_length": 200,
+      "is_nullable": true
+    },
+    {
+      "table_name": "valores",
+      "column_name": "norma",
+      "data_type": "nvarchar",
+      "max_length": 200,
+      "is_nullable": true
+    },
+    {
+      "table_name": "valores",
+      "column_name": "comentarios",
+      "data_type": "nvarchar",
+      "max_length": 510,
+      "is_nullable": true
+    }
+  ]
+}

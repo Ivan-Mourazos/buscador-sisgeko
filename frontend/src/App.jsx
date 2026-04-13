@@ -81,19 +81,62 @@ function App() {
     localStorage.removeItem('sisgeko_user');
   };
 
-  const handleSaveNewItem = (newItem) => {
-    console.log("Gardando elemento:", newItem);
-    const action = editingItem ? "actualizado" : "gardado";
-    alert(`Elemento ${action} localmente (Simulación). En breve estará dispoñible na base de datos.`);
-    setEditingItem(null);
-    setIsCreateModalOpen(false);
+  const handleSaveNewItem = async (newItem) => {
+    try {
+      const type = newItem._type === 'definicion' ? 'definiciones' : newItem._type + 's';
+      const idKey = newItem._type === 'definicion' ? 'id_definicion' : `id_${newItem._type}`;
+      const endpoint = editingItem ? `/api/${type}/${editingItem[idKey]}` : `/api/${type}`;
+      const method = editingItem ? 'PUT' : 'POST';
+      
+      const res = await fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+      const data = await res.json();
+      
+      if(data.success) {
+        alert(data.message || `Elemento ${editingItem ? 'actualizado' : 'gardado'} con éxito.`);
+        setEditingItem(null);
+        setIsCreateModalOpen(false);
+        // Recargar datos
+        fetchResults(query, filters);
+      } else {
+        alert("Error ao gardar: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión gardando o elemento.");
+    }
   };
 
-  const handleDeleteItem = (item) => {
-    console.log("Eliminando elemento:", item);
-    alert("Elemento eliminado localmente (Simulación).");
-    setEditingItem(null);
-    setIsCreateModalOpen(false);
+  const handleDeleteItem = async (item) => {
+    const type = item._type === 'definicion' ? 'definiciones' : item._type + 's';
+    const idKey = item._type === 'definicion' ? 'id_definicion' : `id_${item._type}`;
+    const id = item[idKey];
+    
+    if (!id) {
+      alert("Este elemento no se puede borrar de momento.");
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/${type}/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if(data.success) {
+        alert(data.message || "Elemento borrado localmente (Simulación).");
+        setEditingItem(null);
+        setIsCreateModalOpen(false);
+        fetchResults(query, filters);
+      } else {
+        alert("Error ao borrar: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión...");
+    }
   };
 
   const handleEditItem = (item) => {

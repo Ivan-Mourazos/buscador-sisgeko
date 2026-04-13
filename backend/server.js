@@ -69,11 +69,11 @@ app.post('/api/search', async (req, res) => {
             SELECT d.*, rdf.id_familia 
             FROM definiciones d 
             LEFT JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion 
-            WHERE d.activo = 1 AND d.eliminado = 0
+            WHERE (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
             AND d.version = (
                 SELECT MAX(version) FROM definiciones d2 
                 WHERE d2.id_definicion = d.id_definicion 
-                AND d2.activo = 1 AND d2.eliminado = 0
+                AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL)
             ) `;
         words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
         const allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
@@ -204,7 +204,7 @@ app.get('/api/form-options', async (req, res) => {
             success: true,
             articulos: arts.recordset,
             procesos: procs.recordset,
-            tipo_origen: origins.recordset.map(o => ({ value: o.label.toLowerCase(), label: o.label }))
+            tipo_origen: origins.recordset.map(o => ({ value: o.id_tipo_origen, label: o.label }))
         });
     } catch (error) {
         console.error('Error fetching form options:', error);
@@ -267,12 +267,22 @@ app.get('/api/details', async (req, res) => {
                 WHERE rii.id_insight = @id
             `);
             details.intenciones = intRes.recordset.map(i => i.intencion);
+
+            const procsRes = await request.query(`
+                SELECT id_proceso FROM rel_Insight_Proceso WHERE id_insight = @id
+            `);
+            details.procesos_vinculados = procsRes.recordset.map(p => p.id_proceso);
+
+            const artsRes = await request.query(`
+                SELECT id_articulo FROM rel_Insight_articulo WHERE id_insight = @id
+            `);
+            details.articulos_vinculados = artsRes.recordset.map(a => a.id_articulo);
         } else if (type === 'definicion') {
             const defRes = await request.query(`
                 SELECT TOP 1 definicion 
                 FROM definiciones 
                 WHERE id_definicion = @id 
-                AND activo = 1 AND eliminado = 0 
+                AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) 
                 ORDER BY version DESC
             `);
             if (defRes.recordset.length > 0) {
@@ -285,6 +295,274 @@ app.get('/api/details', async (req, res) => {
     } catch (error) {
         console.error('Error de API details:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
+    }
+});
+
+// ==========================================
+// ENDPOINTS DE GESTION DE DICCIONARIO (SAFE TEST)
+// ==========================================
+
+app.post('/api/definiciones', async (req, res) => {
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        const request = new sql.Request(transaction);
+
+        const groupRes = await request.query(`SELECT ISNULL(MAX(id_definicion), 0) + 1 as new_group_id FROM definiciones`);
+        const newGroupId = groupRes.recordset[0].new_group_id;
+
+        request.input('id_definicion', sql.Int, newGroupId);
+        request.input('version', sql.Int, 1);
+        request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('definicion', sql.NVarChar, data.definicion || null);
+        request.input('activo', sql.Bit, 1);
+        request.input('eliminado', sql.Bit, 0);
+
+        await request.query(`
+            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
+            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
+        `);
+
+        // Simulamos éxito
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Definición creada correctamente.' });
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error insertando definición:', error);
+        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
+    }
+});
+
+app.put('/api/definiciones/:groupId', async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        const requestVersion = new sql.Request(transaction);
+        requestVersion.input('groupId', sql.Int, groupId);
+        const verRes = await requestVersion.query(`SELECT ISNULL(MAX(version), 0) + 1 as next_ver FROM definiciones WHERE id_definicion = @groupId`);
+        const nextVer = verRes.recordset[0].next_ver;
+
+        const reqUpdate = new sql.Request(transaction);
+        reqUpdate.input('groupId', sql.Int, groupId);
+        await reqUpdate.query(`UPDATE definiciones SET activo = 0 WHERE id_definicion = @groupId`);
+
+        const request = new sql.Request(transaction);
+        request.input('id_definicion', sql.Int, groupId);
+        request.input('version', sql.Int, nextVer);
+        request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('definicion', sql.NVarChar, data.definicion || null);
+        request.input('activo', sql.Bit, 1);
+        request.input('eliminado', sql.Bit, 0);
+
+        await request.query(`
+            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
+            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
+        `);
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Definición actualizada correctamente.' });
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error actualizando definición:', error);
+        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
+    }
+});
+
+app.delete('/api/definiciones/:groupId', async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        const request = new sql.Request(transaction);
+        request.input('groupId', sql.Int, groupId);
+
+        await request.query(`UPDATE definiciones SET eliminado = 1, activo = 0 WHERE id_definicion = @groupId AND activo = 1`);
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación: Definición borrada correctamente.' });
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error borrando definición:', error);
+        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
+    }
+});
+
+// ==========================================
+// ENDPOINTS DE GESTION DE INSIGHTS (SAFE TEST)
+// ==========================================
+
+app.post('/api/insights', async (req, res) => {
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        
+        const request = new sql.Request(transaction);
+        
+        // Asumimos que "insights" funciona con versionado (ID, id_insight, version, activo, eliminado)
+        // 1. Obtener nuevo id_insight para grupo
+        const groupRes = await request.query(`SELECT ISNULL(MAX(id_insight), 0) + 1 as new_group_id FROM insights`);
+        const newGroupId = groupRes.recordset[0].new_group_id;
+
+        request.input('id_insight', sql.Int, newGroupId);
+        request.input('version', sql.Int, 1);
+        request.input('activo', sql.Bit, 1);
+        request.input('eliminado', sql.Bit, 0);
+        request.input('origen_informacion', sql.NVarChar, data.origen_informacion || null);
+        request.input('detalle_origen_informacion', sql.NVarChar, data.detalle_origen_informacion || null);
+        request.input('id_tipo_origen', sql.Float, data.id_tipo_origen || null);
+        request.input('insight', sql.NVarChar, data.insight || null);
+        request.input('imagen', sql.NVarChar, data.imagen || null);
+        request.input('titulo', sql.NVarChar, data.titulo || null);
+        
+        const insertRes = await request.query(`
+            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo)
+            OUTPUT inserted.ID
+            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo)
+        `);
+        
+        const newId = insertRes.recordset[0].ID;
+
+        // Vínculos Relacionales apuntando al ID de la versión específica
+        if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
+            for (const artId of data.articulos_vinculados) {
+                const reqArt = new sql.Request(transaction);
+                reqArt.input('id_insight', sql.Int, newId);
+                reqArt.input('id_articulo', sql.Float, artId);
+                await reqArt.query(`INSERT INTO rel_Insight_articulo (id_insight, id_articulo) VALUES (@id_insight, @id_articulo)`);
+            }
+        }
+
+        if (data.procesos_vinculados && data.procesos_vinculados.length > 0) {
+            for (const procId of data.procesos_vinculados) {
+                const reqProc = new sql.Request(transaction);
+                reqProc.input('id_insight', sql.Int, newId);
+                reqProc.input('id_proceso', sql.Float, procId);
+                await reqProc.query(`INSERT INTO rel_Insight_Proceso (id_insight, id_proceso) VALUES (@id_insight, @id_proceso)`);
+            }
+        }
+
+        // MODO SEGURO: ROLLBACK FORZADO SIEMPRE DE MOMENTO
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación de creación exitosa. Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error insertando insight:', error);
+        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
+    }
+});
+
+app.put('/api/insights/:groupId', async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    const data = req.body;
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        
+        const requestVersion = new sql.Request(transaction);
+        requestVersion.input('groupId', sql.Int, groupId);
+        
+        const verRes = await requestVersion.query(`SELECT ISNULL(MAX(version), 0) + 1 as next_ver FROM insights WHERE id_insight = @groupId`);
+        const nextVer = verRes.recordset[0].next_ver;
+
+        // Anular versiones previas
+        const reqUpdate = new sql.Request(transaction);
+        reqUpdate.input('groupId', sql.Int, groupId);
+        await reqUpdate.query(`UPDATE insights SET activo = 0 WHERE id_insight = @groupId`);
+
+        // Insertar nueva versión
+        const request = new sql.Request(transaction);
+        request.input('id_insight', sql.Int, groupId);
+        request.input('version', sql.Int, nextVer);
+        request.input('activo', sql.Bit, 1);
+        request.input('eliminado', sql.Bit, 0);
+        request.input('origen_informacion', sql.NVarChar, data.origen_informacion || null);
+        request.input('detalle_origen_informacion', sql.NVarChar, data.detalle_origen_informacion || null);
+        request.input('id_tipo_origen', sql.Float, data.id_tipo_origen || null);
+        request.input('insight', sql.NVarChar, data.insight || null);
+        request.input('imagen', sql.NVarChar, data.imagen || null);
+        request.input('titulo', sql.NVarChar, data.titulo || null);
+        
+        const insertRes = await request.query(`
+            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo)
+            OUTPUT inserted.ID
+            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo)
+        `);
+        
+        const newId = insertRes.recordset[0].ID;
+
+        // Vínculos
+        if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
+            for (const artId of data.articulos_vinculados) {
+                const reqArt = new sql.Request(transaction);
+                reqArt.input('id_insight', sql.Int, newId);
+                reqArt.input('id_articulo', sql.Float, artId);
+                await reqArt.query(`INSERT INTO rel_Insight_articulo (id_insight, id_articulo) VALUES (@id_insight, @id_articulo)`);
+            }
+        }
+
+        if (data.procesos_vinculados && data.procesos_vinculados.length > 0) {
+            for (const procId of data.procesos_vinculados) {
+                const reqProc = new sql.Request(transaction);
+                reqProc.input('id_insight', sql.Int, newId);
+                reqProc.input('id_proceso', sql.Float, procId);
+                await reqProc.query(`INSERT INTO rel_Insight_Proceso (id_insight, id_proceso) VALUES (@id_insight, @id_proceso)`);
+            }
+        }
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación de actualización exitosa. Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error actualizando insight:', error);
+        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
+    }
+});
+
+app.delete('/api/insights/:groupId', async (req, res) => {
+    const groupId = parseInt(req.params.groupId);
+    let pool;
+    let transaction;
+    try {
+        pool = await sql.connect(dbConfig);
+        transaction = new sql.Transaction(pool);
+        await transaction.begin();
+        
+        const request = new sql.Request(transaction);
+        request.input('groupId', sql.Int, groupId);
+        
+        // Soft delete de la versión actual
+        await request.query(`UPDATE insights SET eliminado = 1, activo = 0 WHERE id_insight = @groupId AND activo = 1`);
+
+        await transaction.rollback();
+        res.json({ success: true, message: 'Simulación de borrado exitosa. Rollback aplicado.' });
+
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        console.error('Error borrando insight:', error);
+        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
     }
 });
 

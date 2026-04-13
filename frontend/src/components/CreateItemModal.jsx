@@ -355,8 +355,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         <InputField label="Orixe" name="origen_informacion" placeholder="ex: Manual de procesos V2" value={formData.origen_informacion} onChange={handleChange} />
                                         <SelectField
                                             label="Tipo de Fonte"
-                                            name="tipo_origen_nombre"
-                                            value={formData.tipo_origen_nombre}
+                                            name="id_tipo_origen"
+                                            value={formData.id_tipo_origen}
                                             onChange={handleChange}
                                             options={dbOptions.tipo_origen}
                                             required={true}
