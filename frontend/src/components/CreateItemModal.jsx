@@ -109,6 +109,10 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
             if (data._type === 'articulo' && !data.imagenes) {
                 data.imagenes = [];
             }
+            // Asegurar que familias_vinculadas son IDs planos
+            if (data.familias_vinculadas) {
+                data.familias_vinculadas = data.familias_vinculadas.map(f => typeof f === 'object' ? (f.id || f.value) : f);
+            }
             setFormData(data);
         } else {
             setFormData({});
@@ -507,6 +511,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         )}
                                     </div>
                                     <TextAreaField label="Contexto adicional" name="detalle_origen_informacion" placeholder="Notas sobre a procedencia ou validez..." value={formData.detalle_origen_informacion} onChange={handleChange} />
+                                    <TextAreaField 
+                                        label="Motivo da edición (Auditoría)" 
+                                        name="resumen_edicion" 
+                                        placeholder="Por que estás editando este insight? ex: Corrección de erro en..." 
+                                        value={formData.resumen_edicion} 
+                                        onChange={handleChange} 
+                                        required={!!initialData}
+                                    />
                                 </>
                             ) : type === 'definicion' ? (
                                 <>
@@ -559,6 +571,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             ))}
                                         </select>
                                     </div>
+                                    <TextAreaField 
+                                        label="Motivo da edición (Auditoría)" 
+                                        name="resumen_edicion" 
+                                        placeholder="Por que estás editando esta definición? ex: Actualización segundo nova normativa..." 
+                                        value={formData.resumen_edicion} 
+                                        onChange={handleChange} 
+                                        required={!!initialData}
+                                    />
                                 </>
                             ) : null}
                         </form>

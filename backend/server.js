@@ -313,7 +313,7 @@ app.get('/api/details', async (req, res) => {
                 JOIN familias f ON rdf.id_familia = f.id_familia 
                 WHERE rdf.id_definicion = @id
             `);
-            details.familias_vinculadas = famsRes.recordset.map(f => f.id);
+            details.familias_vinculadas = famsRes.recordset.map(f => f.id); // Array de IDs numéricos
             details.familias_nombres = famsRes.recordset.map(f => f.nombre).join(', ');
         }
         
@@ -345,23 +345,25 @@ app.post('/api/definiciones', async (req, res) => {
         request.input('id_definicion', sql.Int, newGroupId);
         request.input('version', sql.Int, 1);
         request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
         request.input('definicion', sql.NVarChar, data.definicion || null);
         request.input('activo', sql.Bit, 1);
         request.input('eliminado', sql.Bit, 0);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
 
         const insertDefRes = await request.query(`
-            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
-            OUTPUT inserted.ID
-            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
+            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado, resumen_edicion)
+            OUTPUT inserted.id
+            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado, @resumen_edicion)
         `);
 
-        const newId = insertDefRes.recordset[0].ID;
+        const newId = insertDefRes.recordset[0].id;
 
         // Vínculo con Familias
         if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
             for (const famId of data.familias_vinculadas) {
                 const reqFam = new sql.Request(transaction);
-                reqFam.input('id_definicion', sql.Int, newId);
+                reqFam.input('id_definicion', sql.Int, newGroupId);
                 reqFam.input('id_familia', sql.Int, famId);
                 await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
             }
@@ -400,23 +402,25 @@ app.put('/api/definiciones/:groupId', async (req, res) => {
         request.input('id_definicion', sql.Int, groupId);
         request.input('version', sql.Int, nextVer);
         request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
         request.input('definicion', sql.NVarChar, data.definicion || null);
         request.input('activo', sql.Bit, 1);
         request.input('eliminado', sql.Bit, 0);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
 
         const insertDefRes = await request.query(`
-            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado)
-            OUTPUT inserted.ID
-            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado)
+            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado, resumen_edicion)
+            OUTPUT inserted.id
+            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado, @resumen_edicion)
         `);
 
-        const newId = insertDefRes.recordset[0].ID;
+        const newId = insertDefRes.recordset[0].id;
 
         // Vínculo con Familias
         if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
             for (const famId of data.familias_vinculadas) {
                 const reqFam = new sql.Request(transaction);
-                reqFam.input('id_definicion', sql.Int, newId);
+                reqFam.input('id_definicion', sql.Int, groupId);
                 reqFam.input('id_familia', sql.Int, famId);
                 await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
             }
@@ -484,14 +488,15 @@ app.post('/api/insights', async (req, res) => {
         request.input('insight', sql.NVarChar, data.insight || null);
         request.input('imagen', sql.NVarChar, data.imagen || null);
         request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
         
         const insertRes = await request.query(`
-            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo)
-            OUTPUT inserted.ID
-            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo)
+            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo, resumen_edicion)
+            OUTPUT inserted.id
+            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo, @resumen_edicion)
         `);
         
-        const newId = insertRes.recordset[0].ID;
+        const newId = insertRes.recordset[0].id;
 
         // Vínculos Relacionales apuntando al ID de la versión específica
         if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
@@ -556,14 +561,15 @@ app.put('/api/insights/:groupId', async (req, res) => {
         request.input('insight', sql.NVarChar, data.insight || null);
         request.input('imagen', sql.NVarChar, data.imagen || null);
         request.input('titulo', sql.NVarChar, data.titulo || null);
+        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
         
         const insertRes = await request.query(`
-            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo)
-            OUTPUT inserted.ID
-            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo)
+            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo, resumen_edicion)
+            OUTPUT inserted.id
+            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo, @resumen_edicion)
         `);
         
-        const newId = insertRes.recordset[0].ID;
+        const newId = insertRes.recordset[0].id;
 
         // Vínculos
         if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
@@ -709,10 +715,12 @@ app.post('/api/articulos', async (req, res) => {
         request.input('subfamilia', sql.NVarChar, data.subfamilia ? data.subfamilia.toString() : null);
         request.input('id_familia', sql.Int, data.id_familia ? parseInt(data.id_familia) : null);
 
-        await request.query(`
+        const query = `
             INSERT INTO articulos (id_articulo, codigo, descripcion, denominacion_proveedor, subfamilia, id_familia)
             VALUES (@id, @codigo, @descripcion, @denominacion_proveedor, @subfamilia, @id_familia)
-        `);
+        `;
+
+        await request.query(query);
 
         // Si hay imágenes, las guardamos (si existiera tabla rel_articulo_imagen, pero parece que articulos no tiene)
         // Por ahora, el buscador lee de la carpeta física basándose en el nombre de las imágenes
