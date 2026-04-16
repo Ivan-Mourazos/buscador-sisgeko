@@ -370,10 +370,10 @@ app.post('/api/definiciones', async (req, res) => {
         }
 
         // Simulamos éxito
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Definición creada correctamente.' });
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error insertando definición:', error);
         res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
     }
@@ -426,10 +426,10 @@ app.put('/api/definiciones/:groupId', async (req, res) => {
             }
         }
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Definición actualizada correctamente.' });
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error actualizando definición:', error);
         res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
     }
@@ -449,10 +449,10 @@ app.delete('/api/definiciones/:groupId', async (req, res) => {
 
         await request.query(`UPDATE definiciones SET eliminado = 1, activo = 0 WHERE id_definicion = @groupId AND activo = 1`);
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Definición borrada correctamente.' });
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error borrando definición:', error);
         res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
     }
@@ -518,11 +518,11 @@ app.post('/api/insights', async (req, res) => {
         }
 
         // MODO SEGURO: ROLLBACK FORZADO SIEMPRE DE MOMENTO
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación de creación exitosa. Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error insertando insight:', error);
         res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
     }
@@ -590,11 +590,11 @@ app.put('/api/insights/:groupId', async (req, res) => {
             }
         }
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación de actualización exitosa. Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error actualizando insight:', error);
         res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
     }
@@ -615,11 +615,11 @@ app.delete('/api/insights/:groupId', async (req, res) => {
         // Soft delete de la versión actual
         await request.query(`UPDATE insights SET eliminado = 1, activo = 0 WHERE id_insight = @groupId AND activo = 1`);
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación de borrado exitosa. Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error borrando insight:', error);
         res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
     }
@@ -725,11 +725,11 @@ app.post('/api/articulos', async (req, res) => {
         // Si hay imágenes, las guardamos (si existiera tabla rel_articulo_imagen, pero parece que articulos no tiene)
         // Por ahora, el buscador lee de la carpeta física basándose en el nombre de las imágenes
         
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Artigo creado (ID: ' + newId + '). Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error insertando artigo:', error);
         res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
     }
@@ -759,11 +759,11 @@ app.put('/api/articulos/:id', async (req, res) => {
             WHERE id_articulo=@id
         `);
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Artigo actualizado correctamente. Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error actualizando artigo:', error);
         res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
     }
@@ -783,11 +783,11 @@ app.delete('/api/articulos/:id', async (req, res) => {
         // Borrado físico (Precaución: David debe confirmar si prefiere físico o si hay columna de activo)
         await request.query(`DELETE FROM articulos WHERE id_articulo=@id`);
 
-        await transaction.rollback();
+        await transaction.commit();
         res.json({ success: true, message: 'Simulación: Artigo borrado correctamente. Rollback aplicado.' });
 
     } catch (error) {
-        if (transaction) await transaction.rollback();
+        if (transaction) await transaction.commit();
         console.error('Error borrando artigo:', error);
         res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
     }
@@ -797,13 +797,39 @@ app.delete('/api/articulos/:id', async (req, res) => {
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendDistPath));
 
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const pool = await sql.connect(dbConfig);
+        const result = await pool.request()
+            .input('username', sql.NVarChar, username)
+            .input('password', sql.NVarChar, password)
+            .query('SELECT u.id_usuario, u.username, r.nombre_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.username = @username AND u.password_hash = @password AND u.activo = 1');
+
+        if (result.recordset.length > 0) {
+            const user = result.recordset[0];
+            res.json({ 
+                success: true, 
+                user: { 
+                    id: user.id_usuario,
+                    name: user.username, 
+                    role: user.nombre_rol 
+                } 
+            });
+        } else {
+            res.status(401).json({ success: false, message: 'Usuario ou contrasinal incorrectos' });
+        }
+    } catch (error) {
+        console.error('Error login:', error);
+        res.status(500).json({ success: false, message: 'Error no servidor' });
+    }
+});
+
 // Manejar todas las demás rutas para el cliente React (SPA)
 app.get('*catchall', (req, res) => {
-    const indexPath = path.join(frontendDistPath, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        // Si no existe (en desarrollo), mostramos un mensaje o dejamos que maneje Express
         res.status(404).json({ success: false, message: 'Interface non compilada. Use npm run build en /frontend' });
     }
 });

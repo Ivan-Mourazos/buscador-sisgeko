@@ -210,6 +210,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        
+        // Validación estricta para edición
+        if (initialData && (type === 'insight' || type === 'definicion')) {
+            if (!formData.resumen_edicion || formData.resumen_edicion.trim().length < 5) {
+                alert("Por favor, cubre o 'Motivo da edición' (mínimo 5 caracteres) antes de gardar.");
+                // Hacer scroll al campo si es posible o simplemente parar
+                return;
+            }
+        }
+
         onSave({ ...formData, _type: type });
         resetAndClose();
     };
@@ -511,14 +521,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         )}
                                     </div>
                                     <TextAreaField label="Contexto adicional" name="detalle_origen_informacion" placeholder="Notas sobre a procedencia ou validez..." value={formData.detalle_origen_informacion} onChange={handleChange} />
-                                    <TextAreaField 
-                                        label="Motivo da edición (Auditoría)" 
-                                        name="resumen_edicion" 
-                                        placeholder="Por que estás editando este insight? ex: Corrección de erro en..." 
-                                        value={formData.resumen_edicion} 
-                                        onChange={handleChange} 
-                                        required={!!initialData}
-                                    />
+                                    {initialData && (
+                                        <TextAreaField 
+                                            label="Motivo da edición (Auditoría)" 
+                                            name="resumen_edicion" 
+                                            placeholder="Por que estás editando este insight? ex: Corrección de erro en..." 
+                                            value={formData.resumen_edicion} 
+                                            onChange={handleChange} 
+                                            required={true}
+                                        />
+                                    )}
                                 </>
                             ) : type === 'definicion' ? (
                                 <>
@@ -571,14 +583,16 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             ))}
                                         </select>
                                     </div>
-                                    <TextAreaField 
-                                        label="Motivo da edición (Auditoría)" 
-                                        name="resumen_edicion" 
-                                        placeholder="Por que estás editando esta definición? ex: Actualización segundo nova normativa..." 
-                                        value={formData.resumen_edicion} 
-                                        onChange={handleChange} 
-                                        required={!!initialData}
-                                    />
+                                    {initialData && (
+                                        <TextAreaField 
+                                            label="Motivo da edición (Auditoría)" 
+                                            name="resumen_edicion" 
+                                            placeholder="Por que estás editando esta definición? ex: Actualización segundo nova normativa..." 
+                                            value={formData.resumen_edicion} 
+                                            onChange={handleChange} 
+                                            required={true}
+                                        />
+                                    )}
                                 </>
                             ) : null}
                         </form>

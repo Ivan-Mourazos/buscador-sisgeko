@@ -18,16 +18,26 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         
-        // Credenciais de proba: admin / admin
-        if (username === 'admin' && password === 'admin') {
-            onLogin({ name: 'Administrador', role: 'admin' });
-            onClose();
-        } else {
-            setError('Usuario ou contrasinal incorrectos');
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                onLogin(data.user);
+                onClose();
+            } else {
+                setError(data.message || 'Error de acceso');
+            }
+        } catch (err) {
+            setError('Non se puido conectar co servidor');
         }
     };
 
@@ -80,10 +90,10 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
                             />
                         </div>
                         
-                        <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
-                            <p className="text-[11px] text-blue-600 font-medium leading-relaxed">
-                                <span className="font-bold uppercase mr-1">Proba:</span> 
-                                usuario: <code className="bg-blue-100 px-1 rounded">admin</code> / contrasinal: <code className="bg-blue-100 px-1 rounded">admin</code>
+                        <div className="bg-yellow-50/50 p-4 rounded-2xl border border-yellow-100/50">
+                            <p className="text-[11px] text-yellow-700 font-medium leading-relaxed">
+                                <span className="font-bold uppercase mr-1">Acesso:</span> 
+                                usuario: <code className="bg-yellow-100 px-1 rounded">angel</code> / contrasinal: <code className="bg-yellow-100 px-1 rounded">8613</code>
                             </p>
                         </div>
 
