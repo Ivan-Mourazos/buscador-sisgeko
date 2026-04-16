@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 const Badge = ({ children, colorClass }) => (
     <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border shadow-sm ${colorClass}`}>
@@ -6,12 +6,35 @@ const Badge = ({ children, colorClass }) => (
     </span>
 );
 
-export const ResultCard = ({ item, onClick }) => {
+export const ResultCard = ({ item, onClick, onPrefetch }) => {
+    const prefetchTimer = useRef(null);
+
+    const handleMouseEnter = () => {
+        if (onPrefetch) {
+            prefetchTimer.current = setTimeout(() => {
+                onPrefetch();
+            }, 100); // 100ms delay to avoid accidental triggers
+        }
+    };
+
+    const handleMouseLeave = () => {
+        if (prefetchTimer.current) {
+            clearTimeout(prefetchTimer.current);
+        }
+    };
+
+    const cardClasses = "relative cursor-pointer bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 hover:border-yellow-400 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2";
+
     // Renderizado según el tipo
     switch (item._type) {
         case 'articulo':
             return (
-                <div onClick={onClick} className="relative cursor-pointer bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 hover:border-yellow-400 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2">
+                <div 
+                    onClick={onClick} 
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    className={cardClasses}
+                >
                     <div className="flex justify-between items-start">
                         <span className="text-[11px] font-black uppercase tracking-widest text-yellow-600">Artigo</span>
                     </div>
@@ -33,7 +56,12 @@ export const ResultCard = ({ item, onClick }) => {
             
         case 'insight':
             return (
-                <div onClick={onClick} className="relative cursor-pointer bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 hover:border-yellow-400 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2">
+                <div 
+                    onClick={onClick} 
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    className={cardClasses}
+                >
                     <div className="flex justify-between items-start">
                         <div className="flex flex-col">
                             <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">Insight</span>
@@ -58,7 +86,12 @@ export const ResultCard = ({ item, onClick }) => {
  
         case 'definicion':
             return (
-                <div onClick={onClick} className="relative cursor-pointer bg-white p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 hover:border-yellow-400 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2">
+                <div 
+                    onClick={onClick} 
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
+                    className={cardClasses}
+                >
                     <div className="flex justify-between items-start">
                         <span className="text-[11px] font-black uppercase tracking-widest text-purple-600">Definición</span>
                     </div>

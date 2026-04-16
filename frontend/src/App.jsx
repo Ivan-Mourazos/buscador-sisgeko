@@ -38,6 +38,8 @@ function App() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const searchInputRef = useRef(null);
+  const detailsCache = useRef(new Map()); // Caché para prefetch de detalles
+
 
   // Load session from localStorage
   useEffect(() => {
@@ -214,23 +216,52 @@ function App() {
   };
 
   const openDetails = async (item) => {
+    const id = item.id_articulo || item.id_insight || item.id_definicion;
+    const cacheKey = `${item._type}-${id}`;
+
+    // Si ya está en caché, lo usamos directamente
+    if (detailsCache.current.has(cacheKey)) {
+      setSelectedItem(item);
+      setItemDetails(detailsCache.current.get(cacheKey));
+      setDetailsLoading(false);
+      return;
+    }
+
     setSelectedItem(item);
     setItemDetails(null);
     setDetailsLoading(true);
 
     try {
-      const id = item.id_articulo || item.id_insight || item.id_definicion;
       if (!id) throw new Error("ID no encontrado");
       
       const res = await fetch(`/api/details?type=${item._type}&id=${id}`);
       const data = await res.json();
       if (data.success) {
+        detailsCache.current.set(cacheKey, data.details);
         setItemDetails(data.details);
       }
     } catch (err) {
       console.error("Error cargando detalles:", err);
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const prefetchDetails = async (item) => {
+    const id = item.id_articulo || item.id_insight || item.id_definicion;
+    if (!id) return;
+
+    const cacheKey = `${item._type}-${id}`;
+    if (detailsCache.current.has(cacheKey)) return; // Ya en caché
+
+    try {
+      const res = await fetch(`/api/details?type=${item._type}&id=${id}`);
+      const data = await res.json();
+      if (data.success) {
+        detailsCache.current.set(cacheKey, data.details);
+      }
+    } catch (err) {
+      // Silencioso para prefetch
     }
   };
 
@@ -407,6 +438,7 @@ function App() {
                     key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} 
                     item={item} 
                     onClick={() => openDetails(item)} 
+                    onPrefetch={() => prefetchDetails(item)}
                   />
                 ))}
               </div>
