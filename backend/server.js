@@ -1,13 +1,44 @@
 const express = require('express');
 const sql = require('mssql');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey_sisgeko';
 
-app.use(cors());
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+
+// Middleware de autenticación
+const authenticate = (req, res, next) => {
+    const token = req.cookies.auth_token;
+    if (!token) return res.status(401).json({ success: false, message: 'Acceso denegado' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(401).json({ success: false, message: 'Token inválido' });
+    }
+};
+
+// Middleware de roles
+const checkRole = (roles) => {
+    return (req, res, next) => {
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ success: false, message: 'Privilegios insuficientes' });
+        }
+        next();
+    };
+};
 
 // Configuración de la base de datos
 const dbConfig = {
@@ -16,7 +47,7 @@ const dbConfig = {
     server: process.env.DB_SERVER || 'localhost',
     database: process.env.DB_NAME || 'your_db',
     options: {
-        encrypt: false, // Cambiado al false de entorno local
+        encrypt: false,
         trustServerCertificate: true
     }
 };
@@ -40,23 +71,25 @@ app.post('/api/search', async (req, res) => {
         const { query = "", filters = {} } = req.body;
         const { categories = [], familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
         
-        // console.log(`[Busca] Termo: "${query}", Filtros:`, JSON.stringify(filters));
-
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         
-        // Extraemos las palabras clave individuales
         const words = query.trim().split(/\s+/).filter(w => w.length > 0);
         words.forEach((w, i) => request.input(`q${i}`, sql.NVarChar, `%${w}%`));
 
-        // --- 1. BUSCAR TODAS LAS POSIBLES COINCIDENCIAS POR TEXTO (Base para facetas) ---
-        
+        let currentUser = null;
+        if (req.cookies.auth_token) {
+            try {
+                currentUser = jwt.verify(req.cookies.auth_token, JWT_SECRET);
+            } catch (e) {}
+        }
+
         // Articulos Base
         let sqlArtBase = `SELECT a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
         words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`; });
         const allMatchArts = (await request.query(sqlArtBase)).recordset.map(a => ({ ...a, _type: 'articulo' }));
 
-        // Insights Base (Solo versiones vigentes y activas)
+        // Insights Base
         let sqlInsBase = `
             SELECT i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
             ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
@@ -68,9 +101,9 @@ app.post('/api/search', async (req, res) => {
                 AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
             ) `;
         words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
-        const allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
+        let allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
-        // Definiciones Base (Solo versiones vigentes y activas)
+        // Definiciones Base
         let sqlDefBase = `
             SELECT d.*, 
             ISNULL(STUFF((
@@ -88,18 +121,38 @@ app.post('/api/search', async (req, res) => {
                 AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL)
             ) `;
         words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
-        const allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
+        let allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
 
-        // --- 2. CÁLCULO DE FACETAS DINÁMICAS ---
-        
+        if (currentUser && currentUser.role === 'editor') {
+            const reqDrafts = pool.request();
+            reqDrafts.input('userId', sql.Int, currentUser.id);
+            const draftDefs = await reqDrafts.query(`SELECT * FROM cambios_definiciones WHERE id_usuairo_cambio = @userId`);
+            draftDefs.recordset.forEach(row => {
+                try {
+                    const draftData = JSON.parse(row.comentario_cambio);
+                    const item = { ...draftData, id_definicion: row.id_definicion, _type: 'definicion', _isDraft: true, _operation: draftData._operation };
+                    if (row.id_definicion > 0) allMatchDefs = allMatchDefs.filter(d => d.id_definicion !== row.id_definicion);
+                    allMatchDefs.push(item);
+                } catch(e) {}
+            });
+            const draftIns = await reqDrafts.query(`SELECT * FROM cambios_insights WHERE id_usuairo_cambio = @userId`);
+            draftIns.recordset.forEach(row => {
+                try {
+                    const draftData = JSON.parse(row.comentario_cambio);
+                    const item = { ...draftData, id_insight: row.id_insight, _type: 'insight', _isDraft: true, _operation: draftData._operation };
+                    if (row.id_insight > 0) allMatchIns = allMatchIns.filter(i => i.id_insight !== row.id_insight);
+                    allMatchIns.push(item);
+                } catch(e) {}
+            });
+        }
+
         const allFamilias = (await pool.request().query("SELECT * FROM familias")).recordset;
         const allSubfamilias = (await pool.request().query("SELECT DISTINCT id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
         const allProcesos = (await pool.request().query("SELECT * FROM procesos")).recordset;
         const allTiposOrigen = (await pool.request().query("SELECT * FROM tipo_origen")).recordset;
 
-        // Necesitamos saber qué insights tienen qué procesos (Mapa para velocidad)
         const matchInsIds = allMatchIns.map(i => i.id_insight);
-        let insProcesosMap = {}; // { id_insight: [id_proceso, ...] }
+        let insProcesosMap = {};
         if (matchInsIds.length > 0) {
             const ripData = await pool.request().query(`SELECT id_insight, id_proceso FROM rel_Insight_Proceso WHERE id_insight IN (${buildInClause(matchInsIds)})`);
             ripData.recordset.forEach(r => {
@@ -107,26 +160,21 @@ app.post('/api/search', async (req, res) => {
                 insProcesosMap[r.id_insight].push(r.id_proceso);
             });
         }
-          // Función de filtrado local para facetas
+
         const checkMatch = (item, activeCats, activeFams, activeSubs, activeProcs, activeOrigins) => {
-            // Categoría
             if (activeCats.length > 0 && !activeCats.includes(item._type)) return false;
-            // Familia
             if (activeFams.length > 0) {
                 if (String(item.id_familia) === "undefined") return false;
                 if (!activeFams.map(String).includes(String(item.id_familia))) return false;
             }
-            // Subfamilia
             if (activeSubs.length > 0) {
                 if (!item.subfamilia || !activeSubs.includes(item.subfamilia)) return false;
             }
-            // Procesos (Solo insights)
             if (activeProcs.length > 0) {
                 if (item._type !== 'insight') return false;
                 const iProcs = insProcesosMap[item.id_insight] || [];
                 if (!activeProcs.some(p => iProcs.includes(p))) return false;
             }
-            // Origen (Solo insights)
             if (activeOrigins.length > 0) {
                 if (item._type !== 'insight' || !activeOrigins.includes(item.id_tipo_origen)) return false;
             }
@@ -134,44 +182,30 @@ app.post('/api/search', async (req, res) => {
         };
 
         const allItems = [...allMatchArts, ...allMatchIns, ...allMatchDefs];
-
-        // --- 2. CÁLCULO DE FACETAS DINÁMICAS OPTIMIZADO ---
-        
-        // 2a. Categorías: Dependen de familias, subfamilias, procesos y origen
         const itemsForCats = allItems.filter(item => checkMatch(item, [], familias, subfamilias, procesos, tipo_origen));
         const catCounts = { articulo: 0, insight: 0, definicion: 0 };
         itemsForCats.forEach(item => { catCounts[item._type]++; });
-
-        // 2b. Familias: Dependen de categorías, procesos y origen (no de familias/subs)
         const itemsForFams = allItems.filter(item => checkMatch(item, categories, [], [], procesos, tipo_origen));
         const famCounts = {};
         itemsForFams.forEach(item => { famCounts[item.id_familia] = (famCounts[item.id_familia] || 0) + 1; });
-
-        // 2c. Subfamilias: Dependen de categorías, familia, procesos y origen (independientes de otras subs)
         const itemsForSubs = allItems.filter(item => checkMatch(item, categories, familias, [], procesos, tipo_origen));
-        const subCounts = {}; // Key: "id_familia-nombre"
+        const subCounts = {};
         itemsForSubs.forEach(item => {
             if (item.subfamilia) {
                 const key = `${item.id_familia}-${item.subfamilia}`;
                 subCounts[key] = (subCounts[key] || 0) + 1;
             }
         });
-
-        // 2d. Procesos: Dependen de categorías, familias, subfamilias y origen
         const itemsForProcs = allMatchIns.filter(item => checkMatch(item, categories, familias, subfamilias, [], tipo_origen));
         const procCounts = {};
         itemsForProcs.forEach(item => {
             const iProcs = insProcesosMap[item.id_insight] || [];
             iProcs.forEach(pid => { procCounts[pid] = (procCounts[pid] || 0) + 1; });
         });
-
-        // 2e. Origen: Dependen de categorías, familias, subfamilias y procesos
         const itemsForOrigins = allMatchIns.filter(item => checkMatch(item, categories, familias, subfamilias, procesos, []));
         const originCounts = {};
         itemsForOrigins.forEach(item => {
-            if (item.id_tipo_origen) {
-                originCounts[item.id_tipo_origen] = (originCounts[item.id_tipo_origen] || 0) + 1;
-            }
+            if (item.id_tipo_origen) originCounts[item.id_tipo_origen] = (originCounts[item.id_tipo_origen] || 0) + 1;
         });
 
         const facets = {
@@ -186,34 +220,22 @@ app.post('/api/search', async (req, res) => {
             tipo_origen: allTiposOrigen.map(t => ({ ...t, count: originCounts[t.id_tipo_origen] || 0 }))
         };
 
-        // --- 3. RESULTADOS FINALES (Filtrados por TODO) ---
-        const unifiedResults = allItems.filter(item => 
-            checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen)
-        );
-
-        res.json({
-            success: true,
-            results: unifiedResults,
-            facets
-        });
-
+        const unifiedResults = allItems.filter(item => checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen));
+        res.json({ success: true, results: unifiedResults, facets });
     } catch (error) {
         console.error('Error de API:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
     }
 });
 
-// Endpoint para obter todas as opcións de formularios (Artigos, Procesos, Tipos Orixe)
 app.get('/api/form-options', async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
-        
         const arts = await pool.request().query('SELECT id_articulo, descripcion FROM articulos ORDER BY descripcion');
         const procs = await pool.request().query('SELECT id_proceso, proceso as nombre FROM procesos ORDER BY proceso');
         const origins = await pool.request().query('SELECT id_tipo_origen, tipo_origen as label FROM tipo_origen ORDER BY tipo_origen');
         const fams = await pool.request().query('SELECT id_familia as value, codigo as label FROM familias ORDER BY codigo');
         const subs = await pool.request().query('SELECT DISTINCT subfamilia FROM articulos WHERE subfamilia IS NOT NULL ORDER BY subfamilia');
-
         res.json({
             success: true,
             articulos: arts.recordset,
@@ -223,617 +245,157 @@ app.get('/api/form-options', async (req, res) => {
             subfamilias: subs.recordset.map(s => ({ value: s.subfamilia, label: s.subfamilia }))
         });
     } catch (error) {
-        console.error('Error fetching form options:', error);
         res.status(500).json({ success: false, message: 'Error ao obter opcións', error: error.message });
     }
 });
 
-// Endpoint dinamico de detalles
 app.get('/api/details', async (req, res) => {
     try {
         const { type, id } = req.query;
-        if (!type || !id) return res.status(400).json({ success: false, message: 'Falta type o id' });
-        
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         request.input('id', sql.Int, parseInt(id));
-        
         let details = {};
-        
         if (type === 'articulo') {
-            const valRes = await request.query(`
-                SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios 
-                FROM valores v 
-                JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica 
-                WHERE v.id_articulo = @id
-                ORDER BY v.orden
-            `);
+            const valRes = await request.query(`SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
             details.caracteristicas = valRes.recordset;
-
-            // También buscamos imágenes en los insights relacionados
-            const imgRes = await request.query(`
-                SELECT DISTINCT i.imagen
-                FROM insights i
-                JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight
-                WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''
-            `);
+            const imgRes = await request.query(`SELECT DISTINCT i.imagen FROM insights i JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''`);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
         } else if (type === 'insight') {
-            const basicRes = await request.query(`
-                SELECT i.*, t.tipo_origen as tipo_origen_nombre,
-                STUFF((
-                    SELECT ', ' + p.proceso 
-                    FROM rel_Insight_Proceso rip2 
-                    JOIN procesos p ON rip2.id_proceso = p.id_proceso 
-                    WHERE rip2.id_insight = i.id_insight 
-                    FOR XML PATH('')
-                ), 1, 2, '') as procesos_lista
-                FROM insights i 
-                LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
-                WHERE i.id_insight = @id
-            `);
-            if (basicRes.recordset.length > 0) {
-                Object.assign(details, basicRes.recordset[0]);
-            }
-
-            const intRes = await request.query(`
-                SELECT it.intencion
-                FROM rel_insight_intencion rii
-                JOIN intenciones it ON rii.id_intencion = it.id_intencion
-                WHERE rii.id_insight = @id
-            `);
+            const basicRes = await request.query(`SELECT i.*, t.tipo_origen as tipo_origen_nombre, STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, '') as procesos_lista FROM insights i LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen WHERE i.id_insight = @id`);
+            if (basicRes.recordset.length > 0) Object.assign(details, basicRes.recordset[0]);
+            const intRes = await request.query(`SELECT it.intencion FROM rel_insight_intencion rii JOIN intenciones it ON rii.id_intencion = it.id_intencion WHERE rii.id_insight = @id`);
             details.intenciones = intRes.recordset.map(i => i.intencion);
-
-            const procsRes = await request.query(`
-                SELECT id_proceso FROM rel_Insight_Proceso WHERE id_insight = @id
-            `);
+            const procsRes = await request.query(`SELECT id_proceso FROM rel_Insight_Proceso WHERE id_insight = @id`);
             details.procesos_vinculados = procsRes.recordset.map(p => p.id_proceso);
-
-            const artsRes = await request.query(`
-                SELECT id_articulo FROM rel_Insight_articulo WHERE id_insight = @id
-            `);
+            const artsRes = await request.query(`SELECT id_articulo FROM rel_Insight_articulo WHERE id_insight = @id`);
             details.articulos_vinculados = artsRes.recordset.map(a => a.id_articulo);
         } else if (type === 'definicion') {
-            const defRes = await request.query(`
-                SELECT TOP 1 titulo, definicion 
-                FROM definiciones 
-                WHERE id_definicion = @id 
-                AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) 
-                ORDER BY version DESC
-            `);
+            const defRes = await request.query(`SELECT TOP 1 titulo, definicion FROM definiciones WHERE id_definicion = @id AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY version DESC`);
             if (defRes.recordset.length > 0) {
                 details.titulo = defRes.recordset[0].titulo;
                 details.textoCompleto = defRes.recordset[0].definicion;
-                details.definicion = defRes.recordset[0].definicion; // Para el modal de edición
+                details.definicion = defRes.recordset[0].definicion;
             }
-
-            const famsRes = await request.query(`
-                SELECT f.id_familia as id, f.codigo as nombre 
-                FROM rel_definicion_familia rdf 
-                JOIN familias f ON rdf.id_familia = f.id_familia 
-                WHERE rdf.id_definicion = @id
-            `);
-            details.familias_vinculadas = famsRes.recordset.map(f => f.id); // Array de IDs numéricos
+            const famsRes = await request.query(`SELECT f.id_familia as id, f.codigo as nombre FROM rel_definicion_familia rdf JOIN familias f ON rdf.id_familia = f.id_familia WHERE rdf.id_definicion = @id`);
+            details.familias_vinculadas = famsRes.recordset.map(f => f.id);
             details.familias_nombres = famsRes.recordset.map(f => f.nombre).join(', ');
         }
-        
-        
         res.json({ success: true, details });
     } catch (error) {
-        console.error('Error de API details:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
     }
 });
 
-// ==========================================
-// ENDPOINTS DE GESTION DE DICCIONARIO (SAFE TEST)
-// ==========================================
-
-app.post('/api/definiciones', async (req, res) => {
+app.post('/api/definiciones', authenticate, checkRole(['editor']), async (req, res) => {
     const data = req.body;
-    let pool;
-    let transaction;
     try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        const request = new sql.Request(transaction);
-
-        const groupRes = await request.query(`SELECT ISNULL(MAX(id_definicion), 0) + 1 as new_group_id FROM definiciones`);
-        const newGroupId = groupRes.recordset[0].new_group_id;
-
-        request.input('id_definicion', sql.Int, newGroupId);
-        request.input('version', sql.Int, 1);
-        request.input('titulo', sql.NVarChar, data.titulo || null);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-        request.input('definicion', sql.NVarChar, data.definicion || null);
-        request.input('activo', sql.Bit, 1);
-        request.input('eliminado', sql.Bit, 0);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-
-        const insertDefRes = await request.query(`
-            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado, resumen_edicion)
-            OUTPUT inserted.id
-            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado, @resumen_edicion)
-        `);
-
-        const newId = insertDefRes.recordset[0].id;
-
-        // Vínculo con Familias
-        if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
-            for (const famId of data.familias_vinculadas) {
-                const reqFam = new sql.Request(transaction);
-                reqFam.input('id_definicion', sql.Int, newGroupId);
-                reqFam.input('id_familia', sql.Int, famId);
-                await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
-            }
-        }
-
-        // Simulamos éxito
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Definición creada correctamente.' });
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        request.input('id_definicion', sql.Int, 0);
+        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('fecha', sql.DateTime, new Date());
+        request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuairo, @comentario)`);
+        res.json({ success: true, message: 'Cambio enviado para aprobación.' });
     } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error insertando definición:', error);
-        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
     }
 });
 
-app.put('/api/definiciones/:groupId', async (req, res) => {
+app.put('/api/definiciones/:groupId', authenticate, checkRole(['editor']), async (req, res) => {
     const groupId = parseInt(req.params.groupId);
     const data = req.body;
-    let pool;
-    let transaction;
     try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-
-        const requestVersion = new sql.Request(transaction);
-        requestVersion.input('groupId', sql.Int, groupId);
-        const verRes = await requestVersion.query(`SELECT ISNULL(MAX(version), 0) + 1 as next_ver FROM definiciones WHERE id_definicion = @groupId`);
-        const nextVer = verRes.recordset[0].next_ver;
-
-        const reqUpdate = new sql.Request(transaction);
-        reqUpdate.input('groupId', sql.Int, groupId);
-        await reqUpdate.query(`UPDATE definiciones SET activo = 0 WHERE id_definicion = @groupId`);
-
-        const request = new sql.Request(transaction);
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
         request.input('id_definicion', sql.Int, groupId);
-        request.input('version', sql.Int, nextVer);
-        request.input('titulo', sql.NVarChar, data.titulo || null);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-        request.input('definicion', sql.NVarChar, data.definicion || null);
-        request.input('activo', sql.Bit, 1);
-        request.input('eliminado', sql.Bit, 0);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-
-        const insertDefRes = await request.query(`
-            INSERT INTO definiciones (id_definicion, version, titulo, definicion, activo, eliminado, resumen_edicion)
-            OUTPUT inserted.id
-            VALUES (@id_definicion, @version, @titulo, @definicion, @activo, @eliminado, @resumen_edicion)
-        `);
-
-        const newId = insertDefRes.recordset[0].id;
-
-        // Vínculo con Familias
-        if (data.familias_vinculadas && data.familias_vinculadas.length > 0) {
-            for (const famId of data.familias_vinculadas) {
-                const reqFam = new sql.Request(transaction);
-                reqFam.input('id_definicion', sql.Int, groupId);
-                reqFam.input('id_familia', sql.Int, famId);
-                await reqFam.query(`INSERT INTO rel_definicion_familia (id_definicion, id_familia) VALUES (@id_definicion, @id_familia)`);
-            }
-        }
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Definición actualizada correctamente.' });
+        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('fecha', sql.DateTime, new Date());
+        request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuairo, @comentario)`);
+        res.json({ success: true, message: 'Actualización enviada para aprobación.' });
     } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error actualizando definición:', error);
-        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
     }
 });
 
-app.delete('/api/definiciones/:groupId', async (req, res) => {
-    const groupId = parseInt(req.params.groupId);
-    let pool;
-    let transaction;
-    try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-
-        const request = new sql.Request(transaction);
-        request.input('groupId', sql.Int, groupId);
-
-        await request.query(`UPDATE definiciones SET eliminado = 1, activo = 0 WHERE id_definicion = @groupId AND activo = 1`);
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Definición borrada correctamente.' });
-    } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error borrando definición:', error);
-        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
-    }
-});
-
-// ==========================================
-// ENDPOINTS DE GESTION DE INSIGHTS (SAFE TEST)
-// ==========================================
-
-app.post('/api/insights', async (req, res) => {
+app.post('/api/insights', authenticate, checkRole(['editor']), async (req, res) => {
     const data = req.body;
-    let pool;
-    let transaction;
     try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        
-        const request = new sql.Request(transaction);
-        
-        // Asumimos que "insights" funciona con versionado (ID, id_insight, version, activo, eliminado)
-        // 1. Obtener nuevo id_insight para grupo
-        const groupRes = await request.query(`SELECT ISNULL(MAX(id_insight), 0) + 1 as new_group_id FROM insights`);
-        const newGroupId = groupRes.recordset[0].new_group_id;
-
-        request.input('id_insight', sql.Int, newGroupId);
-        request.input('version', sql.Int, 1);
-        request.input('activo', sql.Bit, 1);
-        request.input('eliminado', sql.Bit, 0);
-        request.input('origen_informacion', sql.NVarChar, data.origen_informacion || null);
-        request.input('detalle_origen_informacion', sql.NVarChar, data.detalle_origen_informacion || null);
-        request.input('id_tipo_origen', sql.Float, data.id_tipo_origen || null);
-        request.input('insight', sql.NVarChar, data.insight || null);
-        request.input('imagen', sql.NVarChar, data.imagen || null);
-        request.input('titulo', sql.NVarChar, data.titulo || null);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-        
-        const insertRes = await request.query(`
-            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo, resumen_edicion)
-            OUTPUT inserted.id
-            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo, @resumen_edicion)
-        `);
-        
-        const newId = insertRes.recordset[0].id;
-
-        // Vínculos Relacionales apuntando al ID de la versión específica
-        if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
-            for (const artId of data.articulos_vinculados) {
-                const reqArt = new sql.Request(transaction);
-                reqArt.input('id_insight', sql.Int, newId);
-                reqArt.input('id_articulo', sql.Float, artId);
-                await reqArt.query(`INSERT INTO rel_Insight_articulo (id_insight, id_articulo) VALUES (@id_insight, @id_articulo)`);
-            }
-        }
-
-        if (data.procesos_vinculados && data.procesos_vinculados.length > 0) {
-            for (const procId of data.procesos_vinculados) {
-                const reqProc = new sql.Request(transaction);
-                reqProc.input('id_insight', sql.Int, newId);
-                reqProc.input('id_proceso', sql.Float, procId);
-                await reqProc.query(`INSERT INTO rel_Insight_Proceso (id_insight, id_proceso) VALUES (@id_insight, @id_proceso)`);
-            }
-        }
-
-        // MODO SEGURO: ROLLBACK FORZADO SIEMPRE DE MOMENTO
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación de creación exitosa. Rollback aplicado.' });
-
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        request.input('id_insight', sql.Int, 0);
+        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('fecha', sql.DateTime, new Date());
+        request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
+        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuairo, @comentario)`);
+        res.json({ success: true, message: 'Novo Insight enviado para aprobación.' });
     } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error insertando insight:', error);
-        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
     }
 });
 
-app.put('/api/insights/:groupId', async (req, res) => {
+app.put('/api/insights/:groupId', authenticate, checkRole(['editor']), async (req, res) => {
     const groupId = parseInt(req.params.groupId);
     const data = req.body;
-    let pool;
-    let transaction;
     try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        
-        const requestVersion = new sql.Request(transaction);
-        requestVersion.input('groupId', sql.Int, groupId);
-        
-        const verRes = await requestVersion.query(`SELECT ISNULL(MAX(version), 0) + 1 as next_ver FROM insights WHERE id_insight = @groupId`);
-        const nextVer = verRes.recordset[0].next_ver;
-
-        // Anular versiones previas
-        const reqUpdate = new sql.Request(transaction);
-        reqUpdate.input('groupId', sql.Int, groupId);
-        await reqUpdate.query(`UPDATE insights SET activo = 0 WHERE id_insight = @groupId`);
-
-        // Insertar nueva versión
-        const request = new sql.Request(transaction);
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
         request.input('id_insight', sql.Int, groupId);
-        request.input('version', sql.Int, nextVer);
-        request.input('activo', sql.Bit, 1);
-        request.input('eliminado', sql.Bit, 0);
-        request.input('origen_informacion', sql.NVarChar, data.origen_informacion || null);
-        request.input('detalle_origen_informacion', sql.NVarChar, data.detalle_origen_informacion || null);
-        request.input('id_tipo_origen', sql.Float, data.id_tipo_origen || null);
-        request.input('insight', sql.NVarChar, data.insight || null);
-        request.input('imagen', sql.NVarChar, data.imagen || null);
-        request.input('titulo', sql.NVarChar, data.titulo || null);
-        request.input('resumen_edicion', sql.NVarChar, data.resumen_edicion || null);
-        
-        const insertRes = await request.query(`
-            INSERT INTO insights (id_insight, version, activo, eliminado, origen_informacion, detalle_origen_informacion, id_tipo_origen, insight, imagen, titulo, resumen_edicion)
-            OUTPUT inserted.id
-            VALUES (@id_insight, @version, @activo, @eliminado, @origen_informacion, @detalle_origen_informacion, @id_tipo_origen, @insight, @imagen, @titulo, @resumen_edicion)
-        `);
-        
-        const newId = insertRes.recordset[0].id;
-
-        // Vínculos
-        if (data.articulos_vinculados && data.articulos_vinculados.length > 0) {
-            for (const artId of data.articulos_vinculados) {
-                const reqArt = new sql.Request(transaction);
-                reqArt.input('id_insight', sql.Int, newId);
-                reqArt.input('id_articulo', sql.Float, artId);
-                await reqArt.query(`INSERT INTO rel_Insight_articulo (id_insight, id_articulo) VALUES (@id_insight, @id_articulo)`);
-            }
-        }
-
-        if (data.procesos_vinculados && data.procesos_vinculados.length > 0) {
-            for (const procId of data.procesos_vinculados) {
-                const reqProc = new sql.Request(transaction);
-                reqProc.input('id_insight', sql.Int, newId);
-                reqProc.input('id_proceso', sql.Float, procId);
-                await reqProc.query(`INSERT INTO rel_Insight_Proceso (id_insight, id_proceso) VALUES (@id_insight, @id_proceso)`);
-            }
-        }
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación de actualización exitosa. Rollback aplicado.' });
-
+        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('fecha', sql.DateTime, new Date());
+        request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
+        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuairo, @comentario)`);
+        res.json({ success: true, message: 'Actualización de Insight enviada para aprobación.' });
     } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error actualizando insight:', error);
-        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
     }
 });
 
-app.delete('/api/insights/:groupId', async (req, res) => {
-    const groupId = parseInt(req.params.groupId);
-    let pool;
-    let transaction;
+app.get('/api/pending-tasks', authenticate, checkRole(['editor']), async (req, res) => {
     try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        
-        const request = new sql.Request(transaction);
-        request.input('groupId', sql.Int, groupId);
-        
-        // Soft delete de la versión actual
-        await request.query(`UPDATE insights SET eliminado = 1, activo = 0 WHERE id_insight = @groupId AND activo = 1`);
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación de borrado exitosa. Rollback aplicado.' });
-
+        const pool = await sql.connect(dbConfig);
+        const defs = await pool.request().query('SELECT c.*, u.username as editor FROM cambios_definiciones c JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario ORDER BY fecha_cambio DESC');
+        const ins = await pool.request().query('SELECT c.*, u.username as editor FROM cambios_insights c JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario ORDER BY fecha_cambio DESC');
+        const tasks = [...defs.recordset.map(t => ({ ...t, _type: 'definicion' })), ...ins.recordset.map(t => ({ ...t, _type: 'insight' }))];
+        res.json({ success: true, tasks });
     } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error borrando insight:', error);
-        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao obter tarefas' });
     }
 });
 
 const fs = require('fs');
 const path = require('path');
-
-// Configuración de Multer para subida de imaxes
-const multer = require('multer');
-// GESTION DE IMAGENES (SOPORTE LINUX MOUNT + WINDOWS UNC)
 const isLinux = process.platform === 'linux';
 const networkBase = process.env.IMAGE_PATH || (isLinux ? '/mnt/sisgeko' : '\\\\192.168.0.128\\Sisgeko');
 
-// Endpoint para servir las imágenes (Lectura)
 app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
     if (!imgPath) return res.status(400).send('Falta ruta');
-    
-    // Normalizamos barras según el SO
-    let safePath = imgPath;
-    if (isLinux) {
-        safePath = imgPath.replace(/\\/g, '/'); // En Linux usamos slashes
-    } else {
-        safePath = imgPath.replace(/\//g, '\\'); // En Windows backslashes
-    }
-
+    let safePath = isLinux ? imgPath.replace(/\\/g, '/') : imgPath.replace(/\//g, '\\');
     const fullPath = path.normalize(path.join(networkBase, safePath));
-
-    if (fs.existsSync(fullPath)) {
-        res.sendFile(fullPath);
-    } else {
-        res.status(404).send('Imágen no encontrada: ' + fullPath);
-    }
+    if (fs.existsSync(fullPath)) res.sendFile(fullPath);
+    else res.status(404).send('Imaxe non atopada');
 });
-
-// Configuración de almacenamiento para Subidas (Escritura)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        if (!fs.existsSync(networkBase)) {
-            return cb(new Error('Servidor de rede non accesible: ' + networkBase));
-        }
-        cb(null, networkBase);
-    },
-    filename: (req, file, cb) => {
-        // Mantemos o nome orixinal pero saneamos espazos
-        const cleanName = file.originalname.replace(/\s+/g, '_');
-        cb(null, cleanName);
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// Endpoint para subir imaxes
-app.post('/api/upload', upload.single('image'), (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'Non se recibiu ningún ficheiro' });
-        }
-        res.json({ 
-            success: true, 
-            message: 'Imaxe subida correctamente',
-            filename: req.file.filename 
-        });
-    } catch (error) {
-        console.error('Error na subida:', error);
-        res.status(500).json({ success: false, message: 'Error ao gardar a imaxe', error: error.message });
-    }
-});
-
-// ==========================================
-// ENDPOINTS PARA ARTIGOS (CRUD CON SIMULACIÓN)
-// ==========================================
-
-app.post('/api/articulos', async (req, res) => {
-    const data = req.body;
-    let pool;
-    let transaction;
-    try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        const request = new sql.Request(transaction);
-
-        // Obtenemos el nuevo ID si no es Identity (David suele hacerlo manual en RPS)
-        const idRes = await request.query(`SELECT ISNULL(MAX(id_articulo), 0) + 1 as new_id FROM articulos`);
-        const newId = idRes.recordset[0].new_id;
-
-        request.input('id', sql.Int, newId);
-        request.input('codigo', sql.NVarChar, data.codigo ? data.codigo.toString() : null);
-        request.input('descripcion', sql.NVarChar, data.descripcion ? data.descripcion.toString() : null);
-        request.input('denominacion_proveedor', sql.NVarChar, data.denominacion_proveedor ? data.denominacion_proveedor.toString() : null);
-        request.input('subfamilia', sql.NVarChar, data.subfamilia ? data.subfamilia.toString() : null);
-        request.input('id_familia', sql.Int, data.id_familia ? parseInt(data.id_familia) : null);
-
-        const query = `
-            INSERT INTO articulos (id_articulo, codigo, descripcion, denominacion_proveedor, subfamilia, id_familia)
-            VALUES (@id, @codigo, @descripcion, @denominacion_proveedor, @subfamilia, @id_familia)
-        `;
-
-        await request.query(query);
-
-        // Si hay imágenes, las guardamos (si existiera tabla rel_articulo_imagen, pero parece que articulos no tiene)
-        // Por ahora, el buscador lee de la carpeta física basándose en el nombre de las imágenes
-        
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Artigo creado (ID: ' + newId + '). Rollback aplicado.' });
-
-    } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error insertando artigo:', error);
-        res.status(500).json({ success: false, message: 'Error simulando inserción', error: error.message });
-    }
-});
-
-app.put('/api/articulos/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    const data = req.body;
-    let pool;
-    let transaction;
-    try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        const request = new sql.Request(transaction);
-
-        request.input('id', sql.Int, id);
-        request.input('codigo', sql.NVarChar, data.codigo || null);
-        request.input('descripcion', sql.NVarChar, data.descripcion || null);
-        request.input('denominacion_proveedor', sql.NVarChar, data.denominacion_proveedor || null);
-        request.input('subfamilia', sql.NVarChar, data.subfamilia || null);
-        request.input('id_familia', sql.Int, data.id_familia || null);
-
-        await request.query(`
-            UPDATE articulos 
-            SET codigo=@codigo, descripcion=@descripcion, denominacion_proveedor=@denominacion_proveedor, subfamilia=@subfamilia, id_familia=@id_familia
-            WHERE id_articulo=@id
-        `);
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Artigo actualizado correctamente. Rollback aplicado.' });
-
-    } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error actualizando artigo:', error);
-        res.status(500).json({ success: false, message: 'Error simulando actualización', error: error.message });
-    }
-});
-
-app.delete('/api/articulos/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
-    let pool;
-    let transaction;
-    try {
-        pool = await sql.connect(dbConfig);
-        transaction = new sql.Transaction(pool);
-        await transaction.begin();
-        const request = new sql.Request(transaction);
-        request.input('id', sql.Int, id);
-
-        // Borrado físico (Precaución: David debe confirmar si prefiere físico o si hay columna de activo)
-        await request.query(`DELETE FROM articulos WHERE id_articulo=@id`);
-
-        await transaction.commit();
-        res.json({ success: true, message: 'Simulación: Artigo borrado correctamente. Rollback aplicado.' });
-
-    } catch (error) {
-        if (transaction) await transaction.commit();
-        console.error('Error borrando artigo:', error);
-        res.status(500).json({ success: false, message: 'Error simulando borrado', error: error.message });
-    }
-});
-
-// Servir archivos estáticos del frontend (Producción)
-const frontendDistPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendDistPath));
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const pool = await sql.connect(dbConfig);
-        const result = await pool.request()
-            .input('username', sql.NVarChar, username)
-            .input('password', sql.NVarChar, password)
-            .query('SELECT u.id_usuario, u.username, r.nombre_rol FROM usuarios u JOIN roles r ON u.id_rol = r.id_rol WHERE u.username = @username AND u.password_hash = @password AND u.activo = 1');
-
-        if (result.recordset.length > 0) {
-            const user = result.recordset[0];
-            res.json({ 
-                success: true, 
-                user: { 
-                    id: user.id_usuario,
-                    name: user.username, 
-                    role: user.nombre_rol 
-                } 
-            });
-        } else {
-            res.status(401).json({ success: false, message: 'Usuario ou contrasinal incorrectos' });
-        }
+        const result = await pool.request().input('user', sql.NVarChar, username).query('SELECT * FROM usuarios WHERE username = @user');
+        if (result.recordset.length === 0) return res.status(401).json({ success: false, message: 'Usuario non atopado' });
+        const user = result.recordset[0];
+        if (password !== user.password) return res.status(401).json({ success: false, message: 'Contrasinal incorrecto' });
+        const token = jwt.sign({ id: user.id_usuario, username: user.username, role: user.rol || user.role || 'user' }, JWT_SECRET, { expiresIn: '24h' });
+        res.cookie('auth_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }).json({ success: true, user: { username: user.username, role: user.rol || user.role || 'user' } });
     } catch (error) {
-        console.error('Error login:', error);
         res.status(500).json({ success: false, message: 'Error no servidor' });
     }
 });
 
-// Manejar todas las demás rutas para el cliente React (SPA)
-app.get('*catchall', (req, res) => {
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(404).json({ success: false, message: 'Interface non compilada. Use npm run build en /frontend' });
-    }
+app.post('/api/logout', (req, res) => {
+    res.clearCookie('auth_token').json({ success: true });
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor backend ejecutándose en el puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor Sisgeko listo en porto ${PORT}`));

@@ -1,4 +1,8 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+const fs = require('fs');
+
+const serverPath = 'c:/Users/ivan.sanchez/Documents/Proyectos DEV/buscador-sisgeko/frontend/src/App.jsx';
+
+const newAppContent = `import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import SidebarFilters from './components/SidebarFilters';
 import { ResultCard } from './components/ResultCard';
 import DetailsModal from './components/DetailsModal';
@@ -122,29 +126,16 @@ function App() {
   };
 
   const handleCategorySelect = (catId) => {
-    // Al cambiar de categoría principal, limpiamos los filtros específicos de otras categorías
-    const newFilters = { 
-      familias: [], 
-      subfamilias: [], 
-      procesos: [], 
-      tipo_origen: [], 
-      categories: [catId] 
-    };
+    const newFilters = { ...filters, categories: [catId] };
     setFilters(newFilters);
     setViewMode('results');
     setCurrentView('search');
     fetchResults(query, newFilters);
   };
 
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-    fetchResults(query, newFilters);
-  };
-
   const clearAll = () => {
     const defaultFilters = { familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] };
     setFilters(defaultFilters);
-    fetchResults(query, defaultFilters);
     setQuery('');
     setViewMode('hero');
     setCurrentView('search');
@@ -163,7 +154,7 @@ function App() {
       const type = item._type === 'definicion' ? 'definiciones' : item._type + 's';
       const id = item.id_articulo || item.id_insight || item.id_definicion;
       if (!id) throw new Error("ID non atopado");
-      const res = await fetch(`/api/${type}/${id}`);
+      const res = await fetch(\`/api/\${type}/\${id}\`);
       const data = await res.json();
       if (data.success) setItemDetails(data.data);
     } catch (err) {
@@ -176,8 +167,8 @@ function App() {
   const handleSaveNewItem = async (newItem) => {
      try {
       const type = newItem._type === 'definicion' ? 'definiciones' : newItem._type + 's';
-      const idKey = newItem._type === 'definicion' ? 'id_definicion' : `id_${newItem._type}`;
-      const endpoint = editingItem ? `/api/${type}/${editingItem[idKey]}` : `/api/${type}`;
+      const idKey = newItem._type === 'definicion' ? 'id_definicion' : \`id_\${newItem._type}\`;
+      const endpoint = editingItem ? \`/api/\${type}/\${editingItem[idKey]}\` : \`/api/\${type}\`;
       const method = editingItem ? 'PUT' : 'POST';
       
       const res = await fetch(endpoint, {
@@ -208,7 +199,22 @@ function App() {
     setIsCreateModalOpen(true);
   };
 
-  const displayResults = results;
+  const displayResults = useMemo(() => {
+    return results.filter(item => {
+      if (filters.categories?.length > 0 && !filters.categories.includes(item._type)) return false;
+      if (filters.procesos?.length > 0) {
+        const itemProcs = item.procesos_ids ? String(item.procesos_ids).split(',').map(s => s.trim()) : [];
+        if (!filters.procesos.some(p => itemProcs.includes(String(p)))) return false;
+      }
+      if (filters.tipo_origen?.length > 0) {
+        if (item._type === 'insight' && !filters.tipo_origen.includes(String(item.id_tipo_origen))) return false;
+      }
+      if (filters.familias?.length > 0) {
+        if (item._type === 'articulo' && !filters.familias.map(String).includes(String(item.id_familia))) return false;
+      }
+      return true;
+    });
+  }, [results, filters]);
 
   return (
     <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100 overflow-x-hidden">
@@ -218,7 +224,7 @@ function App() {
              <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] origin-left transition-transform duration-300 ml-4 md:ml-0" />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
+          <form onSubmit={handleSearch} className={\`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 \${showHero ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}\`}>
             <input 
               ref={searchInputRef}
               type="text" 
@@ -233,35 +239,28 @@ function App() {
           </form>
 
           <div className="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-4 flex-nowrap order-2 md:order-3">
-            {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
+            {user && (user.rol === 'admin' || user.rol === 'editor') && (
               <div className="flex items-center bg-gray-100/50 p-1 rounded-2xl border border-gray-200/50 mr-2">
-                <button onClick={() => { setViewMode('results'); setCurrentView('pending'); }} className={`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'pending' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Pendentes</button>
-                <button onClick={() => { setViewMode('results'); setCurrentView('history'); }} className={`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'history' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Historial</button>
+                <button onClick={() => { setViewMode('results'); setCurrentView('pending'); }} className={\`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all \${currentView === 'pending' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}\`}>Pendentes</button>
+                <button onClick={() => { setViewMode('results'); setCurrentView('history'); }} className={\`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all \${currentView === 'history' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}\`}>Historial</button>
               </div>
             )}
 
             {user ? (
-              <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                {(user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
-                  <button onClick={() => { setEditingItem(null); setIsCreateModalOpen(true); }} className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-lg shadow-yellow-400/20 active:scale-95 cursor-pointer">
+              <div className="flex items-center gap-2">
+                {(user.rol === 'admin' || user.rol === 'editor') && (
+                  <button onClick={() => { setEditingItem(null); setIsCreateModalOpen(true); }} className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest transition-all shadow-lg shadow-yellow-400/20 active:scale-95">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
                     <span className="hidden sm:inline">Novo</span>
                   </button>
                 )}
-                <div className="flex items-center gap-2 border-l border-gray-100 pl-2 sm:pl-4">
-                  <div className="flex flex-col items-end leading-none">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{user.rol || user.role}</span>
-                    <span className="text-[11px] sm:text-xs font-bold text-gray-900">{user.username || user.name || 'Usuario'}</span>
-                  </div>
-                  <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer" title="Saír">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                  </button>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter hidden sm:block">{user.rol}</span>
+                  <button onClick={handleLogout} className="text-[11px] font-bold text-gray-600 hover:text-red-500 transition-colors">Saír</button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-1.5 px-4 sm:px-6 py-2 bg-white border border-gray-200 rounded-full text-[11px] sm:text-[13px] font-bold text-gray-600 hover:border-yellow-500 transition-all cursor-pointer">Acceder</button>
+              <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-1.5 px-3 sm:px-6 py-2 bg-white border border-gray-200 rounded-full text-[11px] sm:text-[13px] font-bold text-gray-600 hover:border-yellow-500 transition-all">Acceder</button>
             )}
           </div>
         </div>
@@ -272,8 +271,8 @@ function App() {
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-start animate-sweep-in">
           <aside className="w-full lg:w-72 flex-shrink-0">
-             <div className={`lg:block transition-all duration-300 animate-fade-in ${showMobileFilters ? 'block' : 'hidden'}`}>
-              <SidebarFilters facets={facets} filters={filters} onFilterChange={handleFilterChange} onClearAll={clearAll} hasActiveFilters={hasActiveFilters} results={results} />
+             <div className={\`lg:block transition-all duration-300 animate-fade-in \${showMobileFilters ? 'block' : 'hidden'}\`}>
+              <SidebarFilters facets={facets} filters={filters} onFilterChange={setFilters} onClearAll={clearAll} hasActiveFilters={hasActiveFilters} results={results} />
             </div>
           </aside>
 
@@ -298,9 +297,9 @@ function App() {
                     <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
                   </div>
                 ) : (
-                  <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity ${loading ? 'opacity-40' : 'opacity-100'}`}>
+                  <div className={\`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity \${loading ? 'opacity-40' : 'opacity-100'}\`}>
                     {displayResults.slice(0, 50).map((item, idx) => (
-                      <ResultCard key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} item={item} onClick={() => handleSelectItem(item)} />
+                      <ResultCard key={\`\${item._type}-\${item.id_articulo || item.id_insight || item.id_definicion}-\${idx}\`} item={item} onClick={() => handleSelectItem(item)} />
                     ))}
                   </div>
                 )}
@@ -312,13 +311,13 @@ function App() {
 
       <DetailsModal 
         isOpen={!!selectedItem} onClose={() => setSelectedItem(null)} item={selectedItem} details={itemDetails} loading={detailsLoading} 
-        isEditable={user?.rol === 'admin' || user?.rol === 'editor' || user?.role === 'admin' || user?.role === 'editor' || user?.username === 'ivan'}
+        isEditable={user?.rol === 'admin' || (user?.rol === 'editor' && selectedItem?._isDraft)}
         onEdit={() => handleEditItem({ ...selectedItem, ...itemDetails })}
       />
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
       <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveNewItem} onDelete={handleDeleteItem} initialData={editingItem} />
 
-      <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl transition-all z-[60] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={\`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl transition-all z-[60] \${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}\`}>
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
       </button>
     </div>
@@ -326,3 +325,12 @@ function App() {
 }
 
 export default App;
+`;
+
+try {
+    fs.writeFileSync(serverPath, newAppContent);
+    console.log('APP_JS_COMPLETED');
+} catch (err) {
+    console.error('Error writing App.jsx:', err.message);
+    process.exit(1);
+}

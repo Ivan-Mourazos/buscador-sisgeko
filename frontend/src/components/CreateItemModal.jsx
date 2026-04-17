@@ -232,7 +232,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 flex justify-between items-start sm:items-center bg-gray-50/50 gap-2">
                     <div>
                         <h2 className="text-xl font-black text-gray-900">
-                            {initialData ? `Editar ${type === 'articulo' ? 'Artigo' : type === 'insight' ? 'Insight' : 'Definición'}` : step === 1 ? 'Que queres engadir?' : `Novo ${type === 'articulo' ? 'Artigo' : type === 'insight' ? 'Insight' : 'Definición'}`}
+                            {initialData ? `Editar ${type === 'insight' ? 'Insight' : 'Definición'}` : step === 1 ? 'Que queres engadir?' : `Novo ${type === 'insight' ? 'Insight' : 'Definición'}`}
                         </h2>
                         <p className="text-xs text-gray-400 mt-0.5">
                             {initialData ? 'Modifica os campos necesarios para actualizar a información' : 'Define un novo elemento para a base de datos'}
@@ -250,22 +250,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
                 <div className="p-5 sm:p-8 overflow-y-auto custom-scrollbar flex-grow">
                     {step === 1 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-6 items-stretch">
-                            <button
-                                onClick={() => handleNext('articulo')}
-                                className="group p-8 bg-yellow-50/30 border-2 border-yellow-100/50 rounded-[2.5rem] hover:border-yellow-400 hover:bg-yellow-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
-                            >
-                                <div className="w-16 h-16 bg-yellow-500 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-yellow-500/30 group-hover:scale-110 transition-transform">
-                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 17v-4.5" />
-                                    </svg>
-                                </div>
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-gray-900 leading-tight">Artigo</h3>
-                                    <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-black">Fichas técnicas</p>
-                                </div>
-                            </button>
-
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 items-stretch">
                             <button
                                 onClick={() => handleNext('insight')}
                                 className="group p-8 bg-blue-50/30 border-2 border-blue-100/50 rounded-[2.5rem] hover:border-blue-400 hover:bg-blue-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
@@ -298,86 +283,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                         </div>
                     ) : (
                         <form id="create-form" onSubmit={handleSubmit} className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-                            {type === 'articulo' ? (
-                                <>
-                                    <InputField label="Descrición do Artigo" name="descripcion" placeholder="Nome completo do producto" required={true} value={formData.descripcion} onChange={handleChange} />
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <InputField label="Código / Ref" name="codigo" placeholder="ex: 12345ABC" value={formData.codigo} onChange={handleChange} />
-                                        <InputField label="Proveedor" name="denominacion_proveedor" placeholder="Nome da empresa" value={formData.denominacion_proveedor} onChange={handleChange} />
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <SelectField 
-                                            label="Familia" 
-                                            name="id_familia" 
-                                            value={formData.id_familia} 
-                                            onChange={handleChange} 
-                                            options={dbOptions.familias}
-                                        />
-                                        <SelectField 
-                                            label="Subfamilia" 
-                                            name="subfamilia" 
-                                            value={formData.subfamilia} 
-                                            onChange={handleChange} 
-                                            options={dbOptions.subfamilias}
-                                        />
-                                    </div>
-
-                                    <div className="p-6 bg-gray-50 rounded-[1.5rem] border border-gray-100 space-y-4">
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Galeira de Imaxes (Rutas)</h4>
-                                            <span className="text-[10px] font-bold text-yellow-500 bg-yellow-50 px-2 py-0.5 rounded-full">{formData.imagenes?.length || 0} Imaxes</span>
-                                        </div>
-
-                                        <div className="flex flex-wrap gap-2">
-                                            {formData.imagenes?.map((img, idx) => (
-                                                <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-gray-200 shadow-sm animate-in zoom-in duration-200">
-                                                    <span className="text-[11px] font-mono font-medium text-gray-600 truncate max-w-[150px]">{img}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeImage(idx)}
-                                                        className="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg transition-colors text-gray-300"
-                                                    >
-                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                            {(!formData.imagenes || formData.imagenes.length === 0) && (
-                                                <p className="text-[11px] text-gray-300 italic">Non hai imaxes engadidas aínda.</p>
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                                            <input
-                                                type="text"
-                                                value={newImageUrl}
-                                                onChange={(e) => setNewImageUrl(e.target.value)}
-                                                placeholder="ex: imaxe_nova.jpg"
-                                                className="flex-grow px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-yellow-400/20 focus:border-yellow-400 transition-all"
-                                                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-                                            />
-                                            <div className="flex gap-2 w-full sm:w-auto">
-                                                <button
-                                                    type="button"
-                                                    disabled={isUploading}
-                                                    onClick={() => fileInputRef.current?.click()}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-blue-50 text-blue-600 text-[10px] sm:text-[11px] font-black uppercase rounded-xl hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50"
-                                                >
-                                                    {isUploading ? 'Subindo...' : 'Subir'}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => addImage()}
-                                                    className="flex-1 sm:flex-none px-4 py-2 bg-gray-900 text-white text-[10px] sm:text-[11px] font-black uppercase rounded-xl hover:bg-black transition-all active:scale-95"
-                                                >
-                                                    Engadir
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : type === 'insight' ? (
+                            {type === 'insight' ? (
                                 <>
                                     <InputField label="Título do Insight" name="titulo" placeholder="Enunciado corto e directo" required={true} value={formData.titulo} onChange={handleChange} />
                                     <TextAreaField label="Contido do Insight" name="insight" placeholder="Explica a lección aprendida ou o dato clave..." required={true} value={formData.insight} onChange={handleChange} />

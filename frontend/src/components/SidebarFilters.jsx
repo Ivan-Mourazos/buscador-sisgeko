@@ -54,17 +54,30 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
     };
 
     const toggleFilter = (category, value) => {
-        const currentSelected = filters[category] || [];
-        const newSelected = currentSelected.includes(value)
-            ? currentSelected.filter(v => v !== value)
-            : [...currentSelected, value];
+        let updatedFilters;
+
+        if (category === 'categories') {
+            // Selección exclusiva: limpiar filtros de otras categorías pero mantener la nueva
+            updatedFilters = {
+                familias: [],
+                subfamilias: [],
+                procesos: [],
+                tipo_origen: [],
+                categories: [value] 
+            };
+        } else {
+            const currentSelected = filters[category] || [];
+            const newSelected = currentSelected.includes(value)
+                ? currentSelected.filter(v => v !== value)
+                : [...currentSelected, value];
+                
+            updatedFilters = { ...filters, [category]: newSelected };
             
-        let updatedFilters = { ...filters, [category]: newSelected };
-        
-        // Si desactivamos 'insight', limpiar filtros que dependen de él
-        if (category === 'categories' && !newSelected.includes('insight')) {
-            updatedFilters.procesos = [];
-            updatedFilters.tipo_origen = [];
+            // Si desactivamos 'insight', limpiar filtros que dependen de él
+            if (category === 'categories' && !newSelected.includes('insight')) {
+                updatedFilters.procesos = [];
+                updatedFilters.tipo_origen = [];
+            }
         }
 
         onFilterChange(updatedFilters);
@@ -139,17 +152,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                                     label={cat.nombre}
                                     count={cat.count}
                                     isSelected={isSelected}
-                                    onToggle={() => {
-                                        const isCurrentlySelected = filters.categories?.includes(cat.id);
-                                        const updatedFilters = { 
-                                            familias: [], 
-                                            subfamilias: [], 
-                                            procesos: [], 
-                                            tipo_origen: [], 
-                                            categories: isCurrentlySelected ? [] : [cat.id] 
-                                        };
-                                        onFilterChange(updatedFilters);
-                                    }}
+                                    onToggle={() => toggleFilter('categories', cat.id)}
                                 />
                             );
                         })}

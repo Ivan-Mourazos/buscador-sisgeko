@@ -36,7 +36,10 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     className={cardClasses}
                 >
                     <div className="flex justify-between items-start">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-yellow-600">Artigo</span>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-black uppercase tracking-widest text-yellow-600">Artigo</span>
+                            {item._isDraft && <Badge colorClass="bg-orange-50 text-orange-700 border-orange-200">Borrador pendente</Badge>}
+                        </div>
                     </div>
                     <div className="min-h-[3rem]">
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-yellow-700 transition-colors">
@@ -64,7 +67,10 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                 >
                     <div className="flex justify-between items-start">
                         <div className="flex flex-col">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">Insight</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-black uppercase tracking-widest text-blue-600">Insight</span>
+                                {item._isDraft && <Badge colorClass="bg-orange-50 text-orange-700 border-orange-200">Borrador pendente</Badge>}
+                            </div>
                             {item.procesos_lista && (
                                 <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-purple-500 mt-1">
                                     {item.procesos_lista}
@@ -93,7 +99,10 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     className={cardClasses}
                 >
                     <div className="flex justify-between items-start">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-purple-600">Definición</span>
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-black uppercase tracking-widest text-purple-600">Definición</span>
+                            {item._isDraft && <Badge colorClass="bg-orange-50 text-orange-700 border-orange-200">Borrador pendente</Badge>}
+                        </div>
                     </div>
                     <div className="min-h-[3rem]">
                         <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-700 transition-colors line-clamp-2">
