@@ -251,6 +251,25 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     )) || <p className="text-gray-300 italic text-sm">No hay FAQ's asociadas.</p>}
                                                 </div>
                                             </section>
+                                            {/* SECCIÓN DE AUDITORÍA / HISTORIAL */}
+                                            {(details?.resumen_edicion || item?.resumen_edicion) && (
+                                                <section className="animate-in fade-in duration-1000">
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                                                        Control de cambios
+                                                        <span className="h-[1px] flex-grow bg-gray-100"></span>
+                                                    </h3>
+                                                    <div className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 border-dashed">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                                                <i className="fas fa-history text-xs"></i>
+                                                            </div>
+                                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter italic">
+                                                                {details?.resumen_edicion || item?.resumen_edicion}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            )}
                                         </div>
                                     )}
                                 </div>

@@ -3,6 +3,7 @@ const sql = require('mssql');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
@@ -87,6 +88,7 @@ app.post('/api/search', async (req, res) => {
         // Articulos Base
         let sqlArtBase = `SELECT a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
         words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`; });
+        sqlArtBase += ` ORDER BY a.descripcion ASC`;
         const allMatchArts = (await request.query(sqlArtBase)).recordset.map(a => ({ ...a, _type: 'articulo' }));
 
         // Insights Base
@@ -101,6 +103,7 @@ app.post('/api/search', async (req, res) => {
                 AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
             ) `;
         words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
+        sqlInsBase += ` ORDER BY i.titulo ASC`;
         let allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
         // Definiciones Base
@@ -121,6 +124,7 @@ app.post('/api/search', async (req, res) => {
                 AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL)
             ) `;
         words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
+        sqlDefBase += ` ORDER BY d.titulo ASC`;
         let allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
 
         if (currentUser && currentUser.role === 'editor') {
@@ -220,11 +224,17 @@ app.post('/api/search', async (req, res) => {
             tipo_origen: allTiposOrigen.map(t => ({ ...t, count: originCounts[t.id_tipo_origen] || 0 }))
         };
 
-        const unifiedResults = allItems.filter(item => checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen));
+        const unifiedResults = allItems
+            .filter(item => checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen))
+            .sort((a, b) => {
+                const titleA = String(a.titulo || a.descripcion || '').toLowerCase();
+                const titleB = String(b.titulo || b.descripcion || '').toLowerCase();
+                return titleA.localeCompare(titleB, 'es', { sensitivity: 'base' });
+            });
         res.json({ success: true, results: unifiedResults, facets });
     } catch (error) {
         console.error('Error de API:', error);
-        res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
+        res.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
 });
 
@@ -271,11 +281,12 @@ app.get('/api/details', async (req, res) => {
             const artsRes = await request.query(`SELECT id_articulo FROM rel_Insight_articulo WHERE id_insight = @id`);
             details.articulos_vinculados = artsRes.recordset.map(a => a.id_articulo);
         } else if (type === 'definicion') {
-            const defRes = await request.query(`SELECT TOP 1 titulo, definicion FROM definiciones WHERE id_definicion = @id AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY version DESC`);
+            const defRes = await request.query(`SELECT TOP 1 titulo, definicion, resumen_edicion FROM definiciones WHERE id_definicion = @id AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY version DESC`);
             if (defRes.recordset.length > 0) {
                 details.titulo = defRes.recordset[0].titulo;
                 details.textoCompleto = defRes.recordset[0].definicion;
                 details.definicion = defRes.recordset[0].definicion;
+                details.resumen_edicion = defRes.recordset[0].resumen_edicion;
             }
             const famsRes = await request.query(`SELECT f.id_familia as id, f.codigo as nombre FROM rel_definicion_familia rdf JOIN familias f ON rdf.id_familia = f.id_familia WHERE rdf.id_definicion = @id`);
             details.familias_vinculadas = famsRes.recordset.map(f => f.id);
@@ -287,81 +298,312 @@ app.get('/api/details', async (req, res) => {
     }
 });
 
-app.post('/api/definiciones', authenticate, checkRole(['editor']), async (req, res) => {
+app.post('/api/definiciones', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const data = req.body;
     try {
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         request.input('id_definicion', sql.Int, 0);
-        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuairo, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuario_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Cambio enviado para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
     }
 });
 
-app.put('/api/definiciones/:groupId', authenticate, checkRole(['editor']), async (req, res) => {
+app.put('/api/definiciones/:groupId', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const groupId = parseInt(req.params.groupId);
     const data = req.body;
     try {
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         request.input('id_definicion', sql.Int, groupId);
-        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuairo, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuario_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
     }
 });
 
-app.post('/api/insights', authenticate, checkRole(['editor']), async (req, res) => {
+app.post('/api/insights', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const data = req.body;
+    console.log("RECIBIDA PETICIÓN CREAR INSIGHT:", data);
     try {
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
-        request.input('id_insight', sql.Int, 0);
-        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
-        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuairo, @comentario)`);
+        
+        // NO inclurimos id_insight porque al ser 0 fallaría la FK
+        const query = `INSERT INTO cambios_insights (fecha_cambio, id_usuairo_cambio, comentario_cambio) 
+                       VALUES (@fecha, @id_usuario, @comentario)`;
+        
+        console.log("EJECUTANDO QUERY DINÁMICO (CREACIÓN):", query);
+        await request.query(query);
         res.json({ success: true, message: 'Novo Insight enviado para aprobación.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
+        console.error("!!! ERROR SQL INSERT INSIGHT !!!", error.message);
+        res.status(500).json({ success: false, message: 'Error ao enviar cambio: ' + error.message });
     }
 });
 
-app.put('/api/insights/:groupId', authenticate, checkRole(['editor']), async (req, res) => {
+app.put('/api/insights/:groupId', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const groupId = parseInt(req.params.groupId);
     const data = req.body;
     try {
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         request.input('id_insight', sql.Int, groupId);
-        request.input('id_usuairo', sql.Int, req.user.id);
+        request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
-        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuairo, @comentario)`);
+        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización de Insight enviada para aprobación.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
+        res.status(500).json({ success: false, message: 'Error ao enviar actualización: ' + error.message });
     }
 });
 
-app.get('/api/pending-tasks', authenticate, checkRole(['editor']), async (req, res) => {
+app.delete('/api/definiciones/:id', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
-        const defs = await pool.request().query('SELECT c.*, u.username as editor FROM cambios_definiciones c JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario ORDER BY fecha_cambio DESC');
-        const ins = await pool.request().query('SELECT c.*, u.username as editor FROM cambios_insights c JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario ORDER BY fecha_cambio DESC');
-        const tasks = [...defs.recordset.map(t => ({ ...t, _type: 'definicion' })), ...ins.recordset.map(t => ({ ...t, _type: 'insight' }))];
-        res.json({ success: true, tasks });
+        const request = pool.request();
+        const { id } = req.params;
+        const comentario = JSON.stringify({ _operation: 'DELETE', titulo: req.query.titulo || 'Eliminación de Definición' });
+
+        await request
+            .input('id_def', sql.Int, id)
+            .input('fecha', sql.DateTime, new Date())
+            .input('id_usuario', sql.Int, req.user.id)
+            .input('comentario', sql.NVarChar, comentario)
+            .query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_def, @fecha, @id_usuario, @comentario)`);
+        
+        res.json({ success: true, message: 'Solicitude de eliminación enviada a aprobación.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error ao obter tarefas' });
+        res.status(500).json({ success: false, message: 'Error ao enviar solicitude de borrado: ' + error.message });
+    }
+});
+
+app.delete('/api/insights/:id', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        const { id } = req.params;
+        const comentario = JSON.stringify({ _operation: 'DELETE', titulo: req.query.titulo || 'Eliminación de Insight' });
+
+        await request
+            .input('id_ins', sql.Int, id)
+            .input('fecha', sql.DateTime, new Date())
+            .input('id_usuario', sql.Int, req.user.id)
+            .input('comentario', sql.NVarChar, comentario)
+            .query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_ins, @fecha, @id_usuario, @comentario)`);
+            
+        res.json({ success: true, message: 'Solicitude de eliminación enviada a aprobación.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error ao enviar solicitude de borrado: ' + error.message });
+    }
+});
+
+app.get('/api/pending-tasks', async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const qIns = `
+            SELECT c.*, u.username as editor_nombre 
+            FROM cambios_insights c 
+            JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+            WHERE (c.estado IS NULL OR c.estado LIKE '%pendiente%') 
+            ORDER BY c.fecha_cambio DESC`;
+        const qDefs = `
+            SELECT c.*, u.username as editor_nombre 
+            FROM cambios_definiciones c 
+            JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+            WHERE (c.estado IS NULL OR c.estado LIKE '%pendiente%') 
+            ORDER BY c.fecha_cambio DESC`;
+        
+        const ins = await pool.request().query(qIns);
+        const defs = await pool.request().query(qDefs);
+        
+        const tasks = [
+            ...defs.recordset.map(t => {
+                let data = {};
+                try { data = JSON.parse(t.comentario_cambio); } catch(e) {}
+                return { 
+                    ...t, 
+                    _type: 'definicion', 
+                    operation: data._operation || 'UPDATE',
+                    titulo: data.titulo || 'Sen título',
+                    editor_nombre: t.editor_nombre // <--- FALTA ESTO
+                };
+            }), 
+            ...ins.recordset.map(t => {
+                let data = {};
+                try { data = JSON.parse(t.comentario_cambio); } catch(e) {}
+                return { 
+                    ...t, 
+                    _type: 'insight', 
+                    operation: data._operation || 'UPDATE',
+                    titulo: data.titulo || data.insight || 'Sen título',
+                    editor_nombre: t.editor_nombre // <--- FALTA ESTO
+                };
+            })
+        ].sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio));
+        
+        res.json({ success: true, tasks });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+app.get('/api/debug-db', authenticate, async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const ins = await pool.request().query("SELECT TOP 10 * FROM cambios_insights ORDER BY fecha_cambio DESC");
+        const defs = await pool.request().query("SELECT TOP 10 * FROM cambios_definiciones ORDER BY fecha_cambio DESC");
+        res.json({ insights: ins.recordset, definiciones: defs.recordset });
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
+app.get('/api/activity-log', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        // 1. Desde tablas de cambios (aprobados recientemente)
+        const qDefCambios = `SELECT c.ID, c.id_definicion as origId, c.comentario_cambio, c.fecha_aprobacion, u.username as editor, a.username as aprobador, 'definicion' as _type 
+                      FROM cambios_definiciones c 
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+                      LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                      WHERE c.estado = 'APROBADO'`;
+        
+        const qInsCambios = `SELECT c.ID, c.id_insight as origId, c.comentario_cambio, c.fecha_aprobacion, u.username as editor, a.username as aprobador, 'insight' as _type 
+                      FROM cambios_insights c 
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+                      LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                      WHERE c.estado = 'APROBADO'`;
+
+        // 2. Desde tablas maestras (aprobados antiguos o que ya no están en cambios)
+        const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, 
+                            JSON_QUERY('{"titulo":"' + titulo + '","_operation":"HISTO"}') as comentario_cambio, 
+                            GETDATE() as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
+                            FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
+        
+        const qInsMaster = `SELECT id_insight as ID, id_insight as origId, 
+                            JSON_QUERY('{"titulo":"' + titulo + '","_operation":"HISTO"}') as comentario_cambio, 
+                            GETDATE() as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
+                            FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
+
+        const defsC = await pool.request().query(qDefCambios);
+        const insC = await pool.request().query(qInsCambios);
+        const defsM = await pool.request().query(qDefMaster);
+        const insM = await pool.request().query(qInsMaster);
+        
+        const logs = [...defsC.recordset, ...insC.recordset, ...defsM.recordset, ...insM.recordset]
+                      .sort((a, b) => new Date(b.fecha_aprobacion) - new Date(a.fecha_aprobacion));
+        
+        res.json({ success: true, logs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error ao obter historial: ' + error.message });
+    }
+});
+
+// ... resto de rutas ...
+
+// ENDPOINT DE APROBACIÓN
+app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const { type, taskId } = req.params;
+    const approverId = req.user.id;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        const tableCambios = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
+        const searchId = type === 'insight' ? 'id_insight' : 'id_definicion';
+        const tableMain = type === 'insight' ? 'insights' : 'definiciones';
+
+        // 1. Obtener el cambio
+        const changeRes = await pool.request()
+            .input('id', sql.Int, taskId)
+            .query(`SELECT * FROM ${tableCambios} WHERE ID = @id`);
+        
+        if (changeRes.recordset.length === 0) return res.status(404).json({ success: false, message: 'Cambio non atopado' });
+        const change = changeRes.recordset[0];
+
+        // 2. REGLA DE CUATRO OJOS
+        if (change.id_usuairo_cambio === approverId) {
+            return res.status(403).json({ success: false, message: 'Non podes aprobar as túas propias edicións' });
+        }
+
+        const data = JSON.parse(change.comentario_cambio);
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            const request = new sql.Request(transaction);
+            
+            // 3. Obtener nueva versión
+            let nextVersion = 1;
+            if (change[searchId] > 0) {
+                const verRes = await request.input('currentId', sql.Int, change[searchId])
+                                           .query(`SELECT MAX(version) as maxV FROM ${tableMain} WHERE ${searchId} = @currentId`);
+                nextVersion = (verRes.recordset[0].maxV || 0) + 1;
+                data[searchId] = change[searchId]; 
+            } else {
+                const maxIdRes = await request.query(`SELECT MAX(${searchId}) as maxId FROM ${tableMain}`);
+                data[searchId] = (maxIdRes.recordset[0].maxId || 0) + 1;
+            }
+
+            // 4. Inserción en tabla maestra
+            if (data._operation === 'DELETE') {
+                await request.input('targetId', sql.Int, change[searchId]).query(`UPDATE ${tableMain} SET eliminado = 1 WHERE ${searchId} = @targetId`);
+            } else if (type === 'insight') {
+                await request
+                    .input('insId', sql.Int, data.id_insight).input('tit', sql.NVarChar, data.titulo).input('ins', sql.NVarChar, data.insight)
+                    .input('img', sql.NVarChar, data.imagen).input('ori', sql.NVarChar, data.origen_informacion).input('det', sql.NVarChar, data.detalle_origen_informacion)
+                    .input('tip', sql.Int, data.id_tipo_origen || 1).input('ver', sql.Int, nextVersion)
+                    .input('res', sql.NVarChar, `Aprobado por ${req.user.username}`)
+                    .query(`INSERT INTO insights (id_insight, titulo, insight, imagen, origen_informacion, detalle_origen_informacion, id_tipo_origen, version, resumen_edicion, activo, eliminado) 
+                            VALUES (@insId, @tit, @ins, @img, @ori, @det, @tip, @ver, @res, 1, 0)`);
+            } else {
+                await request
+                    .input('defId', sql.Int, data.id_definicion).input('tit', sql.NVarChar, data.titulo).input('def', sql.NVarChar, data.definicion)
+                    .input('ver', sql.Int, nextVersion).input('res', sql.NVarChar, `Aprobado por ${req.user.username}`)
+                    .query(`INSERT INTO definiciones (id_definicion, titulo, definicion, version, resumen_edicion, activo, eliminado) 
+                            VALUES (@defId, @tit, @def, @ver, @res, 1, 0)`);
+            }
+
+            // 5. Marcar como APROBADO en historial de cambios (HISTORIAL SEGURO)
+            await new sql.Request(transaction)
+                .input('idC', sql.Int, taskId)
+                .input('appId', sql.Int, approverId)
+                .query(`UPDATE ${tableCambios} SET estado = 'APROBADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId WHERE ID = @idC`);
+
+            await transaction.commit();
+            res.json({ success: true, message: 'Aprobado con éxito.' });
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error: ' + error.message });
+    }
+});
+
+// ENDPOINT DE RECHAZO
+app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const { type, taskId } = req.params;
+    try {
+        const pool = await sql.connect(dbConfig);
+        const table = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
+        await pool.request().input('id', sql.Int, taskId).query(`DELETE FROM ${table} WHERE ID = @id`);
+        res.json({ success: true, message: 'Cambio rexeitado.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error ao rexeitar' });
     }
 });
 
@@ -379,6 +621,14 @@ app.get('/api/images', (req, res) => {
     else res.status(404).send('Imaxe non atopada');
 });
 
+app.get('/api/me', authenticate, (req, res) => {
+    res.json({ success: true, user: req.user });
+});
+
+app.post('/api/logout', (req, res) => {
+    res.clearCookie('auth_token').json({ success: true });
+});
+
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -386,9 +636,27 @@ app.post('/api/login', async (req, res) => {
         const result = await pool.request().input('user', sql.NVarChar, username).query('SELECT * FROM usuarios WHERE username = @user');
         if (result.recordset.length === 0) return res.status(401).json({ success: false, message: 'Usuario non atopado' });
         const user = result.recordset[0];
-        if (password !== user.password) return res.status(401).json({ success: false, message: 'Contrasinal incorrecto' });
-        const token = jwt.sign({ id: user.id_usuario, username: user.username, role: user.rol || user.role || 'user' }, JWT_SECRET, { expiresIn: '24h' });
-        res.cookie('auth_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }).json({ success: true, user: { username: user.username, role: user.rol || user.role || 'user' } });
+        
+        // Comparación simple contra password_hash
+        if (password !== user.password_hash) {
+            return res.status(401).json({ success: false, message: 'Contrasinal incorrecto' });
+        }
+
+        const roleString = user.id_rol === 1 ? 'editor' : (user.id_rol === 2 ? 'admin' : 'user');
+        
+        // Redundancia total para evitar fallos en frontend
+        const userSession = { 
+            id: user.id_usuario, 
+            username: user.username, 
+            role: roleString,
+            rol: roleString 
+        };
+
+        const token = jwt.sign(userSession, JWT_SECRET, { expiresIn: '24h' });
+        res.cookie('auth_token', token, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000 }).json({ 
+            success: true, 
+            user: userSession 
+        });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error no servidor' });
     }
@@ -398,4 +666,18 @@ app.post('/api/logout', (req, res) => {
     res.clearCookie('auth_token').json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Servidor Sisgeko listo en porto ${PORT}`));
+app.get('/api/pending-count', async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const ins = await pool.request().query("SELECT COUNT(*) as count FROM cambios_insights WHERE (estado IS NULL OR estado LIKE '%pendiente%')");
+        const defs = await pool.request().query("SELECT COUNT(*) as count FROM cambios_definiciones WHERE (estado IS NULL OR estado LIKE '%pendiente%')");
+        const total = (ins.recordset[0]?.count || 0) + (defs.recordset[0]?.count || 0);
+        res.json({ success: true, count: total });
+    } catch (e) {
+        res.json({ success: true, count: 0 });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Servidor Sisgeko listo en puerto ${PORT}`);
+});

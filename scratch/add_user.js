@@ -16,7 +16,7 @@ async function createUser() {
     try {
         await sql.connect(dbConfig);
         const username = 'ivan';
-        const passwordHash = '$2b$10$I73Hsu23NlQVFNi1BvyuIuOD6SsqQ6myNI0XnUaA6iSVLiC2lmZoq';
+        const passwordHash = '$2b$10$JDk9xyxJtZQc7jn/QO0DuOeKyCW3g0m2GY3.YBvO6AmNHNRSu/KYu';
         const name = 'Ivan Sanchez';
         const role = 'editor';
 

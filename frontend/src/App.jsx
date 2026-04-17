@@ -7,8 +7,10 @@ import CreateItemModal from './components/CreateItemModal';
 import CategorySelector from './components/CategorySelector';
 import PendingTasksView from './components/PendingTasksView';
 import HistoryView from './components/HistoryView';
+import ActivityLogView from './components/ActivityLogView';
 
 function App() {
+// ... resto de estados ...
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
   const [facets, setFacets] = useState({ 
@@ -39,9 +41,21 @@ function App() {
   const [viewMode, setViewMode] = useState('hero');
   const [currentView, setCurrentView] = useState('search'); // 'search', 'pending', 'history'
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const searchInputRef = useRef(null);
   const detailsCache = useRef(new Map());
+  const [toast, setToast] = useState(null);
+  const [confirmData, setConfirmData] = useState(null); // { title: '', message: '', onConfirm: () => {} }
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const askConfirm = (title, message, onConfirm) => {
+    setConfirmData({ title, message, onConfirm });
+  };
 
   // Validar sesión
   useEffect(() => {
@@ -62,10 +76,27 @@ function App() {
     };
     checkSession();
 
+    // Búsqueda inicial para poblar facetas y conteos del Hero
+    fetchResults('', filters);
+
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const fetchPendingCount = useCallback(async () => {
+    if (user && user.role === 'editor') {
+      try {
+        const res = await fetch('/api/pending-count');
+        const data = await res.json();
+        if (data.success) setPendingCount(data.count);
+      } catch (e) {}
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchPendingCount();
+  }, [fetchPendingCount, currentView]);
 
   const hasActiveFilters = query.trim() !== '' || Object.values(filters).some(arr => arr.length > 0);
   const showHero = viewMode === 'hero' && currentView === 'search';
@@ -141,6 +172,38 @@ function App() {
     fetchResults(query, newFilters);
   };
 
+  const handleSaveItem = async (newItem) => {
+    try {
+      const typeKey = newItem._type === 'definicion' ? 'definiciones' : newItem._type + 's';
+      const idKey = newItem._type === 'definicion' ? 'id_definicion' : `id_${newItem._type}`;
+      const isUpdate = !!newItem[idKey] && newItem[idKey] > 0;
+      const id = newItem[idKey];
+      
+      const url = isUpdate ? `/api/${typeKey}/${id}` : `/api/${typeKey}`;
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem),
+        credentials: 'include' // IMPORTANTE: Enviar cookies de sesión
+      });
+      const data = await res.json();
+      
+      if(data.success) {
+        showToast(data.message, 'success');
+        setEditingItem(null);
+        setIsCreateModalOpen(false);
+        fetchResults(query, filters);
+        fetchPendingCount();
+      } else {
+        showToast(data.message, 'error');
+      }
+    } catch (err) {
+      showToast("Error de conexión co servidor", 'error');
+    }
+  };
+
   const clearAll = () => {
     const defaultFilters = { familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] };
     setFilters(defaultFilters);
@@ -173,34 +236,37 @@ function App() {
     }
   };
 
-  const handleSaveNewItem = async (newItem) => {
-     try {
-      const type = newItem._type === 'definicion' ? 'definiciones' : newItem._type + 's';
-      const idKey = newItem._type === 'definicion' ? 'id_definicion' : `id_${newItem._type}`;
-      const endpoint = editingItem ? `/api/${type}/${editingItem[idKey]}` : `/api/${type}`;
-      const method = editingItem ? 'PUT' : 'POST';
+  const handleDeleteItem = async (item) => {
+    try {
+      const typeKey = item._type === 'definicion' ? 'definiciones' : 'insights';
+      const idKey = item._type === 'definicion' ? 'id_definicion' : `id_${item._type}`;
+      const id = item[idKey];
       
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newItem)
+      if (!id) {
+        showToast("Non se pode borrar un rexistro que aínda non foi gardado ou aprobado", 'info');
+        setIsCreateModalOpen(false);
+        return;
+      }
+
+      const titulo = encodeURIComponent(item.titulo || '');
+
+      const res = await fetch(`/api/${typeKey}/${id}?titulo=${titulo}`, {
+        method: 'DELETE',
+        credentials: 'include'
       });
       const data = await res.json();
-      
-      if(data.success) {
-        alert(data.message);
-        setEditingItem(null);
+      if (data.success) {
+        showToast(data.message, 'success');
+        fetchPendingCount();
         setIsCreateModalOpen(false);
-        fetchResults(query, filters);
+        setEditingItem(null);
       } else {
-        alert("Error ao gardar: " + data.message);
+        showToast(data.message, 'error');
       }
     } catch (err) {
-      alert("Error de conexión.");
+      showToast("Error de conexión co servidor", 'error');
     }
   };
-
-  const handleDeleteItem = (item) => alert("Simulación de borrado");
 
   const handleEditItem = (item) => {
     setEditingItem(item);
@@ -218,7 +284,7 @@ function App() {
              <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] origin-left transition-transform duration-300 ml-4 md:ml-0" />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero || currentView === 'pending' ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
               type="text" 
@@ -235,7 +301,17 @@ function App() {
           <div className="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-4 flex-nowrap order-2 md:order-3">
             {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
               <div className="flex items-center bg-gray-100/50 p-1 rounded-2xl border border-gray-200/50 mr-2">
-                <button onClick={() => { setViewMode('results'); setCurrentView('pending'); }} className={`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'pending' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Pendentes</button>
+                <button 
+                  onClick={() => { setViewMode('results'); setCurrentView('pending'); }} 
+                  className={`relative px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'pending' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  Pendentes
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white ring-2 ring-white animate-in zoom-in duration-300">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
                 <button onClick={() => { setViewMode('results'); setCurrentView('history'); }} className={`px-3 sm:px-4 py-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'history' ? 'bg-white text-yellow-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>Historial</button>
               </div>
             )}
@@ -271,15 +347,19 @@ function App() {
         <CategorySelector onSelect={handleCategorySelect} query={query} onQueryChange={setQuery} onSearch={handleSearch} facets={facets} />
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-start animate-sweep-in">
-          <aside className="w-full lg:w-72 flex-shrink-0">
-             <div className={`lg:block transition-all duration-300 animate-fade-in ${showMobileFilters ? 'block' : 'hidden'}`}>
-              <SidebarFilters facets={facets} filters={filters} onFilterChange={handleFilterChange} onClearAll={clearAll} hasActiveFilters={hasActiveFilters} results={results} />
-            </div>
-          </aside>
+          {currentView === 'search' && (
+            <aside className="w-full lg:w-72 flex-shrink-0">
+               <div className={`lg:block transition-all duration-300 animate-fade-in ${showMobileFilters ? 'block' : 'hidden'}`}>
+                <SidebarFilters facets={facets} filters={filters} onFilterChange={handleFilterChange} onClearAll={clearAll} hasActiveFilters={hasActiveFilters} results={results} />
+              </div>
+            </aside>
+          )}
 
           <section className="flex-grow w-full">
             {currentView === 'pending' ? (
               <PendingTasksView onClose={() => setCurrentView('search')} onRefresh={() => fetchResults(query, filters)} />
+            ) : currentView === 'activity-log' ? (
+              <ActivityLogView onClose={() => setCurrentView('search')} />
             ) : currentView === 'history' ? (
               <HistoryView onClose={() => setCurrentView('search')} />
             ) : (
@@ -310,13 +390,44 @@ function App() {
         </main>
       )}
 
+      {toast && (
+        <div className="premium-toast-container">
+          <div className={`premium-toast border-l-4 ${toast.type === 'error' ? 'border-red-500' : 'border-[#8c6508]'}`}>
+            {toast.type === 'error' ? (
+              <svg className="w-5 h-5 text-red-500 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            ) : (
+              <svg className="w-5 h-5 text-[#8c6508]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+            )}
+            <span className="font-semibold">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {confirmData && (
+        <div className="premium-modal-backdrop" onClick={() => setConfirmData(null)}>
+          <div className="premium-modal" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mb-6">
+                <svg className="w-8 h-8 text-[#8c6508]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">{confirmData.title || 'Aprobar Cambio'}</h3>
+              <p className="text-gray-500 mb-8 px-4 leading-relaxed">{confirmData.message || 'Estás seguro de que queres realizar esta acción?'}</p>
+              <div className="flex gap-3 w-full">
+                <button onClick={() => setConfirmData(null)} className="flex-1 py-4 px-6 rounded-2xl font-bold text-gray-400 hover:bg-gray-50 transition-all uppercase tracking-widest text-[11px]">Cancelar</button>
+                <button onClick={() => { confirmData.onConfirm(); setConfirmData(null); }} className="flex-1 premium-button-gold py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px]">Confirmar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <DetailsModal 
         isOpen={!!selectedItem} onClose={() => setSelectedItem(null)} item={selectedItem} details={itemDetails} loading={detailsLoading} 
-        isEditable={user?.rol === 'admin' || user?.rol === 'editor' || user?.role === 'admin' || user?.role === 'editor' || user?.username === 'ivan'}
+        isEditable={user?.role === 'admin' || user?.role === 'editor' || user?.rol === 'admin' || user?.rol === 'editor'}
         onEdit={() => handleEditItem({ ...selectedItem, ...itemDetails })}
       />
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
-      <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveNewItem} onDelete={handleDeleteItem} initialData={editingItem} />
+      <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveItem} onDelete={handleDeleteItem} initialData={editingItem} />
 
       <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl transition-all z-[60] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
