@@ -399,7 +399,7 @@ function App() {
                   </div>
                 ) : (
                   <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity ${loading ? 'opacity-40' : 'opacity-100'}`}>
-                    {displayResults.slice(0, 50).map((item, idx) => (
+                    {displayResults.map((item, idx) => (
                       <ResultCard key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} item={item} onClick={() => handleSelectItem(item)} />
                     ))}
                   </div>
