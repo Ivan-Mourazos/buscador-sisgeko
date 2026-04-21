@@ -36,10 +36,9 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
       `Estás seguro de que queres ${actionText} este cambio en "${task.titulo || 'Sen título'}"?`,
       async () => {
         try {
-          const res = await fetch(`/api/approve-task/${task.ID}`, {
+          const res = await fetch(`/api/pending-tasks/${task._type}/${task.ID}/${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action }),
             credentials: 'include'
           });
           const data = await res.json();

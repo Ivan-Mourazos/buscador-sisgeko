@@ -29,10 +29,10 @@ const PendingTasksModal = ({ isOpen, onClose, onRefresh }) => {
         
         setProcessingId(taskId);
         try {
-            const res = await fetch('/api/approve-task', {
+            const res = await fetch(`/api/pending-tasks/${type}/${taskId}/approve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ taskId, type })
+                credentials: 'include'
             });
             const data = await res.json();
             

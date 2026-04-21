@@ -10,7 +10,7 @@ import HistoryView from './components/HistoryView';
 import ActivityLogView from './components/ActivityLogView';
 
 function App() {
-// ... resto de estados ...
+
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState({ familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] });
   const [facets, setFacets] = useState({ 
@@ -113,6 +113,21 @@ function App() {
     }
   }, [query, filters.categories, currentView]);
 
+  // Búsqueda en vivo con DEBOUNCE
+  useEffect(() => {
+    // Solo buscamos si estamos en la vista de búsqueda
+    if (currentView !== 'search') return;
+    
+    // Si no hay query ni filtros activos, y estamos en modo hero, no disparamos nada
+    // Pero si el usuario borra todo, queremos volver al estado inicial o mostrar resultados vacíos
+    
+    const delayDebounceFn = setTimeout(() => {
+      fetchResults(query, filters);
+    }, 400); // 400ms de retraso
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [query, filters, currentView]);
+
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem('sisgeko_user', JSON.stringify(userData));
@@ -149,7 +164,7 @@ function App() {
   const handleSearch = (e) => {
     if (e) e.preventDefault();
     setCurrentView('search');
-    fetchResults(query, filters);
+    // fetchResults ahora se maneja por el useEffect de query/filters
   };
 
   const handleCategorySelect = (catId) => {
@@ -164,12 +179,12 @@ function App() {
     setFilters(newFilters);
     setViewMode('results');
     setCurrentView('search');
-    fetchResults(query, newFilters);
+    // fetchResults ahora se maneja por el useEffect de query/filters
   };
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    fetchResults(query, newFilters);
+    // fetchResults ahora se maneja por el useEffect de query/filters
   };
 
   const handleSaveItem = async (newItem) => {
@@ -281,10 +296,10 @@ function App() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
           <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 z-10 w-auto">
-             <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] origin-left transition-transform duration-300 ml-4 md:ml-0" />
+             <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] group-hover:scale-[2.6] md:group-hover:scale-[2.4] origin-left transition-transform duration-300 ml-4 md:ml-0" />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero || currentView === 'pending' ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero || ['pending', 'history'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
               type="text" 
@@ -357,7 +372,12 @@ function App() {
 
           <section className="flex-grow w-full">
             {currentView === 'pending' ? (
-              <PendingTasksView onClose={() => setCurrentView('search')} onRefresh={() => fetchResults(query, filters)} />
+              <PendingTasksView 
+                onClose={() => setCurrentView('search')} 
+                onRefresh={() => fetchResults(query, filters)} 
+                showToast={showToast} 
+                askConfirm={askConfirm} 
+              />
             ) : currentView === 'activity-log' ? (
               <ActivityLogView onClose={() => setCurrentView('search')} />
             ) : currentView === 'history' ? (

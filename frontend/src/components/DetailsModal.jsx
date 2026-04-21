@@ -156,21 +156,56 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                 </div>
                             ) : (
                                 <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-500">
-                                    {item._type === 'articulo' && details?.caracteristicas && details.caracteristicas.length > 0 && (
+                                    {item._type === 'articulo' && (
                                         <section>
                                             <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
                                                 <span className="w-12 h-[3px] bg-indigo-500 rounded-full"></span>
                                                 Información Técnica
                                             </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {details.caracteristicas.map((car, idx) => (
-                                                    <div key={idx} className="bg-gray-50/50 hover:bg-white rounded-[1.5rem] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all hover:border-yellow-100 group">
-                                                        <h4 className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.1em] mb-2 group-hover:text-yellow-600 transition-colors">{car.caracteristica.trim()}</h4>
-                                                        <p className="text-lg font-bold text-gray-900 leading-tight">{car.valor}</p>
-                                                        {car.descripcion_caracteristica && <p className="text-[11px] text-gray-500 mt-4 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">{car.descripcion_caracteristica}</p>}
+                                            
+                                            {details?.caracteristicas && details.caracteristicas.length > 0 ? (
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    {details.caracteristicas.map((car, idx) => (
+                                                        <div key={idx} className="bg-gray-50/50 hover:bg-white rounded-[1.5rem] p-4 sm:p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all hover:border-yellow-100 group flex flex-col">
+                                                            <div className="flex justify-between items-start mb-2">
+                                                                <h4 className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.1em] group-hover:text-yellow-600 transition-colors">
+                                                                    {car.caracteristica.trim()}
+                                                                </h4>
+                                                                {car.norma && (
+                                                                    <span className="text-[9px] font-black text-gray-300 uppercase tracking-tighter bg-gray-100 px-1.5 py-0.5 rounded">
+                                                                        {car.norma}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-lg font-bold text-gray-900 leading-tight mb-2">{car.valor}</p>
+                                                            
+                                                            {car.comentarios && (
+                                                                <p className="text-[11px] text-gray-500 mt-2 leading-relaxed italic border-t border-gray-100 pt-2 bg-white/50 p-2 rounded-lg">
+                                                                    {car.comentarios}
+                                                                </p>
+                                                            )}
+                                                            
+                                                            {car.caracteristica_desc && (
+                                                                <p className="text-[11px] text-gray-400 mt-auto pt-4 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+                                                                    {car.caracteristica_desc}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="bg-gray-50/50 rounded-3xl p-12 text-center border-2 border-dashed border-gray-100">
+                                                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                                                        <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
                                                     </div>
-                                                ))}
-                                            </div>
+                                                    <h4 className="text-gray-900 font-bold mb-1">Rexistro básico de artigo</h4>
+                                                    <p className="text-gray-500 text-sm max-w-xs mx-auto italic">
+                                                        Este artigo aínda non dispón de ficha técnica detallada na base de datos.
+                                                    </p>
+                                                </div>
+                                            )}
                                         </section>
                                     )}
 

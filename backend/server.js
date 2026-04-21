@@ -8,7 +8,11 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey_sisgeko';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error('CRITICAL ERROR: JWT_SECRET not found in .env');
+    process.exit(1);
+}
 
 app.use(cors({
     origin: true,
@@ -227,9 +231,10 @@ app.post('/api/search', async (req, res) => {
         const unifiedResults = allItems
             .filter(item => checkMatch(item, categories, familias, subfamilias, procesos, tipo_origen))
             .sort((a, b) => {
-                const titleA = String(a.titulo || a.descripcion || '').toLowerCase();
-                const titleB = String(b.titulo || b.descripcion || '').toLowerCase();
-                return titleA.localeCompare(titleB, 'es', { sensitivity: 'base' });
+                const clean = (s) => String(s || '').toLowerCase().replace(/^[^a-z0-9áéíóúüñ]+/i, '').trim();
+                const titleA = clean(a.titulo || a.descripcion);
+                const titleB = clean(b.titulo || b.descripcion);
+                return titleA.localeCompare(titleB, 'es', { sensitivity: 'base', numeric: true });
             });
         res.json({ success: true, results: unifiedResults, facets });
     } catch (error) {
@@ -267,7 +272,7 @@ app.get('/api/details', async (req, res) => {
         request.input('id', sql.Int, parseInt(id));
         let details = {};
         if (type === 'articulo') {
-            const valRes = await request.query(`SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
+            const valRes = await request.query(`SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios, v.norma FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
             details.caracteristicas = valRes.recordset;
             const imgRes = await request.query(`SELECT DISTINCT i.imagen FROM insights i JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''`);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
@@ -307,7 +312,7 @@ app.post('/api/definiciones', authenticate, checkRole(['editor', 'admin']), asyn
         request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuario_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Cambio enviado para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
@@ -324,7 +329,7 @@ app.put('/api/definiciones/:groupId', authenticate, checkRole(['editor', 'admin'
         request.input('id_usuario', sql.Int, req.user.id);
         request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuario_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
@@ -439,7 +444,7 @@ app.get('/api/pending-tasks', async (req, res) => {
                     _type: 'definicion', 
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || 'Sen título',
-                    editor_nombre: t.editor_nombre // <--- FALTA ESTO
+                    editor: t.editor_nombre
                 };
             }), 
             ...ins.recordset.map(t => {
@@ -450,7 +455,7 @@ app.get('/api/pending-tasks', async (req, res) => {
                     _type: 'insight', 
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || data.insight || 'Sen título',
-                    editor_nombre: t.editor_nombre // <--- FALTA ESTO
+                    editor: t.editor_nombre
                 };
             })
         ].sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio));
@@ -491,12 +496,12 @@ app.get('/api/activity-log', authenticate, checkRole(['editor', 'admin']), async
         // 2. Desde tablas maestras (aprobados antiguos o que ya no están en cambios)
         const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, 
                             JSON_QUERY('{"titulo":"' + titulo + '","_operation":"HISTO"}') as comentario_cambio, 
-                            GETDATE() as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
+                            '2000-01-01' as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
                             FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
         
         const qInsMaster = `SELECT id_insight as ID, id_insight as origId, 
                             JSON_QUERY('{"titulo":"' + titulo + '","_operation":"HISTO"}') as comentario_cambio, 
-                            GETDATE() as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
+                            '2000-01-01' as fecha_aprobacion, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
                             FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
 
         const defsC = await pool.request().query(qDefCambios);
@@ -505,7 +510,11 @@ app.get('/api/activity-log', authenticate, checkRole(['editor', 'admin']), async
         const insM = await pool.request().query(qInsMaster);
         
         const logs = [...defsC.recordset, ...insC.recordset, ...defsM.recordset, ...insM.recordset]
-                      .sort((a, b) => new Date(b.fecha_aprobacion) - new Date(a.fecha_aprobacion));
+                      .sort((a, b) => {
+                          const dateA = a.fecha_aprobacion ? new Date(a.fecha_aprobacion) : new Date(0);
+                          const dateB = b.fecha_aprobacion ? new Date(b.fecha_aprobacion) : new Date(0);
+                          return dateB - dateA;
+                      });
         
         res.json({ success: true, logs });
     } catch (error) {
@@ -513,7 +522,53 @@ app.get('/api/activity-log', authenticate, checkRole(['editor', 'admin']), async
     }
 });
 
-// ... resto de rutas ...
+app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    try {
+        const pool = await sql.connect(dbConfig);
+        const qDefCambios = `SELECT c.ID, c.id_definicion as origId, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, LOWER(c.estado) as estado, u.username as editor, a.username as aprobador, 'definicion' as _type 
+                      FROM cambios_definiciones c 
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+                      LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                      WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
+        
+        const qInsCambios = `SELECT c.ID, c.id_insight as origId, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, LOWER(c.estado) as estado, u.username as editor, a.username as aprobador, 'insight' as _type 
+                      FROM cambios_insights c 
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+                      LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                      WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
+
+        // 2. Históricos maestros (migrados)
+        const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, titulo,
+                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
+                      FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
+        
+        const qInsMaster = `SELECT id_insight as ID, id_insight as origId, titulo,
+                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
+                      FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
+
+        const defsC = await pool.request().query(qDefCambios);
+        const insC = await pool.request().query(qInsCambios);
+        const defsM = await pool.request().query(qDefMaster);
+        const insM = await pool.request().query(qInsMaster);
+        
+        // Mapear maestros para que tengan el mismo formato JSON que los cambios
+        const masterHistory = [...defsM.recordset, ...insM.recordset].map(row => ({
+            ...row,
+            comentario_cambio: JSON.stringify({ titulo: row.titulo, _operation: 'HISTO' })
+        }));
+
+        const history = [...defsC.recordset, ...insC.recordset, ...masterHistory]
+                      .sort((a, b) => {
+                          const dateA = a.fecha_aprobacion ? new Date(a.fecha_aprobacion) : new Date(0);
+                          const dateB = b.fecha_aprobacion ? new Date(b.fecha_aprobacion) : new Date(0);
+                          return dateB - dateA;
+                      });
+        
+        res.json({ success: true, history });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error ao obter historial: ' + error.message });
+    }
+});
 
 // ENDPOINT DE APROBACIÓN
 app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
@@ -597,13 +652,17 @@ app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['e
 // ENDPOINT DE RECHAZO
 app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const { type, taskId } = req.params;
+    const approverId = req.user.id;
     try {
         const pool = await sql.connect(dbConfig);
         const table = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
-        await pool.request().input('id', sql.Int, taskId).query(`DELETE FROM ${table} WHERE ID = @id`);
+        await pool.request()
+            .input('id', sql.Int, taskId)
+            .input('appId', sql.Int, approverId)
+            .query(`UPDATE ${table} SET estado = 'RECHAZADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId WHERE ID = @id`);
         res.json({ success: true, message: 'Cambio rexeitado.' });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error ao rexeitar' });
+        res.status(500).json({ success: false, message: 'Error ao rexeitar: ' + error.message });
     }
 });
 
@@ -625,9 +684,7 @@ app.get('/api/me', authenticate, (req, res) => {
     res.json({ success: true, user: req.user });
 });
 
-app.post('/api/logout', (req, res) => {
-    res.clearCookie('auth_token').json({ success: true });
-});
+
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;

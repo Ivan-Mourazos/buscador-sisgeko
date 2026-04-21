@@ -90,12 +90,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
                             />
                         </div>
                         
-                        <div className="bg-yellow-50/50 p-4 rounded-2xl border border-yellow-100/50">
-                            <p className="text-[11px] text-yellow-700 font-medium leading-relaxed">
-                                <span className="font-bold uppercase mr-1">Acesso:</span> 
-                                usuario: <code className="bg-yellow-100 px-1 rounded">angel</code> / contrasinal: <code className="bg-yellow-100 px-1 rounded">8613</code>
-                            </p>
-                        </div>
+
 
                         <button 
                             type="submit"
