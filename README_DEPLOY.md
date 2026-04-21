@@ -50,14 +50,22 @@ PM2 es un gestor de procesos que mantiene la app viva en segundo plano y la rein
 npm install -g pm2
 
 # Iniciar la aplicación
-cd /backend
+cd backend
 pm2 start server.js --name "sisgeko-search"
 
 # Ver estado
 pm2 status
 
-# Guardar para que arranque tras un reinicio del servidor
+# --- CONFIGURACIÓN DE AUTO-ARRANQUE EN LINUX ---
+# 1. Generar el comando de inicio para el sistema:
+pm2 startup
+
+# IMPORTANTE: El comando anterior te devolverá una línea que empieza por 'sudo env PATH...'.
+# Tienes que COPIAR y PEGAR ese comando exacto en la terminal para que surta efecto.
+
+# 2. Una vez ejecutado lo anterior, guarda el estado actual:
 pm2 save
+# -----------------------------------------------
 ```
 
 ### Opción B: Como Servicio del Sistema
