@@ -737,11 +737,8 @@ app.get('/api/pending-count', async (req, res) => {
 
 // SERVIR FRONTEND (PRODUCCIÓN)
 const distPath = path.resolve(__dirname, '../frontend/dist');
-console.log('--- DIAGNÓSTICO DE DESPLIEGUE ---');
-console.log('Ruta buscada para la web:', distPath);
 
 if (fs.existsSync(distPath)) {
-    console.log('✅ Carpeta "dist" encontrada. Sirviendo web...');
     app.use(express.static(distPath));
     app.get(/.*/, (req, res) => {
         if (!req.path.startsWith('/api/')) {
@@ -749,13 +746,10 @@ if (fs.existsSync(distPath)) {
         }
     });
 } else {
-    console.log('⚠️ ADVERTENCIA: No se encontró la carpeta "frontend/dist".');
-    console.log('   Asegúrate de ejecutar "npm run build" en la carpeta frontend.');
     app.get('/', (req, res) => {
         res.send('<h1>Servidor API Sisgeko en funcionamiento</h1><p>Error: No se encontró la carpeta de la web (dist). Ejecute "npm run build" en el frontend.</p>');
     });
 }
-console.log('---------------------------------');
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor Sisgeko listo en puerto ${PORT}`);

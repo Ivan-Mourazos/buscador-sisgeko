@@ -238,12 +238,12 @@ function App() {
     setItemDetails(null);
     setDetailsLoading(true);
     try {
-      const type = item._type === 'definicion' ? 'definiciones' : item._type + 's';
+      const type = item._type === 'definicion' ? 'definicion' : item._type;
       const id = item.id_articulo || item.id_insight || item.id_definicion;
       if (!id) throw new Error("ID non atopado");
-      const res = await fetch(`/api/${type}/${id}`);
+      const res = await fetch(`/api/details?type=${type}&id=${id}`);
       const data = await res.json();
-      if (data.success) setItemDetails(data.data);
+      if (data.success) setItemDetails(data.details);
     } catch (err) {
       console.error(err);
     } finally {
