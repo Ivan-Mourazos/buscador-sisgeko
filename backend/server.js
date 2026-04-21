@@ -743,7 +743,7 @@ console.log('Ruta buscada para la web:', distPath);
 if (fs.existsSync(distPath)) {
     console.log('✅ Carpeta "dist" encontrada. Sirviendo web...');
     app.use(express.static(distPath));
-    app.get('(.*)', (req, res) => {
+    app.get(/.*/, (req, res) => {
         if (!req.path.startsWith('/api/')) {
             res.sendFile(path.join(distPath, 'index.html'));
         }
