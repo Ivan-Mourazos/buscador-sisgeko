@@ -735,6 +735,17 @@ app.get('/api/pending-count', async (req, res) => {
     }
 });
 
+// SERVIR FRONTEND (PRODUCCIÓN)
+const distPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api/')) {
+            res.sendFile(path.join(distPath, 'index.html'));
+        }
+    });
+}
+
 app.listen(PORT, () => {
     console.log(`Servidor Sisgeko listo en puerto ${PORT}`);
 });
