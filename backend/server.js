@@ -682,8 +682,12 @@ app.get('/api/images', (req, res) => {
     let safePath = isLinux ? cleanPath.replace(/\\/g, '/') : cleanPath.replace(/\//g, '\\');
     const fullPath = path.resolve(networkBase, safePath);
     
-    if (fs.existsSync(fullPath)) res.sendFile(fullPath);
-    else res.status(404).send('Imaxe non atopada');
+    if (fs.existsSync(fullPath)) {
+        res.sendFile(fullPath);
+    } else {
+        console.log(`[IMG 404] Intentado leer: ${fullPath}`);
+        res.status(404).send(`Imaxe non atopada: ${fullPath}`);
+    }
 });
 
 app.get('/api/me', authenticate, (req, res) => {

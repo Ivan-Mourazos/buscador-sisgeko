@@ -124,7 +124,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 src={getImgUrl(img)} 
                                                 alt={`Thumb ${idx}`} 
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                onError={(e) => { e.target.src = 'https://via.placeholder.com/160x100?text=Error'; }}
+                                                onError={(e) => { e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="160" height="100"><rect width="160" height="100" fill="%23f3f4f6"/><text x="50%" y="50%" font-family="sans-serif" font-size="12" fill="%239ca3af" text-anchor="middle" dy=".3em">Sen Imaxe</text></svg>'; }}
                                             />
                                         </div>
                                     ))}
@@ -248,7 +248,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                                             src={getImgUrl(item.imagen)} 
                                                                             alt="Vista previa" 
                                                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                                            onError={(e) => { e.target.src = 'https://via.placeholder.com/200x130?text=Error'; }}
+                                                                            onError={(e) => { e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23f3f4f6"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" fill="%239ca3af" text-anchor="middle" dy=".3em">Sen Imaxe</text></svg>'; }}
                                                                         />
                                                                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-gray-900/5 transition-opacity">
                                                                             <div className="bg-white/95 p-2 rounded-full shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
