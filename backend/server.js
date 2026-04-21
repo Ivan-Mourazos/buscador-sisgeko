@@ -674,8 +674,14 @@ const networkBase = process.env.IMAGE_PATH || (isLinux ? '/mnt/sisgeko' : '\\\\1
 app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
     if (!imgPath) return res.status(400).send('Falta ruta');
-    let safePath = isLinux ? imgPath.replace(/\\/g, '/') : imgPath.replace(/\//g, '\\');
-    const fullPath = path.normalize(path.join(networkBase, safePath));
+    
+    // Eliminar prefijos absolutos de red de la base de datos
+    let cleanPath = imgPath.replace(/\\\\192\.168\.0\.128\\Sisgeko/i, '');
+    cleanPath = cleanPath.replace(/^\//, '').replace(/^\\/, ''); // Quitar slash inicial si queda
+    
+    let safePath = isLinux ? cleanPath.replace(/\\/g, '/') : cleanPath.replace(/\//g, '\\');
+    const fullPath = path.resolve(networkBase, safePath);
+    
     if (fs.existsSync(fullPath)) res.sendFile(fullPath);
     else res.status(404).send('Imaxe non atopada');
 });
