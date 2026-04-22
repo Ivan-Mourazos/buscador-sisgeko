@@ -83,9 +83,19 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                             {item.titulo}
                         </h3>
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2 items-center">
-                        {item.tipo_origen_nombre && <Badge colorClass="bg-emerald-50 text-emerald-700 border-emerald-100">Orixe: {item.tipo_origen_nombre}</Badge>}
-                        {item.origen_informacion && <span className="text-xs text-gray-400 mt-1 italic line-clamp-2 flex-grow overflow-hidden">{item.origen_informacion}</span>}
+                    <div className="mt-3 pt-3 border-t border-gray-50 flex flex-col gap-1.5">
+                        {item.tipo_origen_nombre && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter w-12">Orixe</span>
+                                <span className="text-[10px] font-bold text-emerald-600 uppercase">{item.tipo_origen_nombre}</span>
+                            </div>
+                        )}
+                        {item.origen_informacion && (
+                            <div className="flex items-start gap-2">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter w-12 shrink-0 mt-0.5">Ref</span>
+                                <span className="text-[10px] text-gray-500 italic line-clamp-1">{item.origen_informacion}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -110,8 +120,9 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         </h3>
                     </div>
                     {item.familias_lista && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            <Badge colorClass="bg-purple-50 text-purple-700 border-purple-100">{item.familias_lista}</Badge>
+                        <div className="mt-3 pt-3 border-t border-gray-50 flex items-center gap-2">
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter w-12 shrink-0">Familias</span>
+                            <span className="text-[10px] font-bold text-purple-600 uppercase line-clamp-1">{item.familias_lista}</span>
                         </div>
                     )}
                 </div>

@@ -144,8 +144,39 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                             )}
 
                             {item._type === 'definicion' && (
-                                <div className="p-6 sm:p-10 bg-amber-50/20 rounded-[2rem] sm:rounded-[2.5rem] border border-amber-100 ring-1 ring-amber-50 italic font-serif">
-                                    <p className="text-gray-800 text-lg sm:text-2xl leading-relaxed">{details?.textoCompleto || item.definicion}</p>
+                                <div className="space-y-10">
+                                    <div className="p-6 sm:p-10 bg-amber-50/20 rounded-[2rem] sm:rounded-[2.5rem] border border-amber-100 ring-1 ring-amber-50 italic font-serif">
+                                        <p className="text-gray-800 text-lg sm:text-2xl leading-relaxed">{details?.textoCompleto || item.definicion}</p>
+                                    </div>
+
+                                    {(details?.familias_nombres || details?.resumen_edicion || item?.resumen_edicion) && (
+                                        <section className="animate-in fade-in slide-in-from-top-2 duration-500">
+                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-4">
+                                                <span className="w-8 h-[2px] bg-purple-500 rounded-full"></span>
+                                                Detalles técnicos
+                                            </h3>
+                                            <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+                                                <div className="divide-y divide-gray-50">
+                                                    {details?.familias_nombres && (
+                                                        <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                            <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Familias vinculadas</span>
+                                                            <span className="bg-purple-50 text-purple-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-purple-100/50">
+                                                                {details.familias_nombres}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {(details?.resumen_edicion || item?.resumen_edicion) && (
+                                                        <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                            <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Control de cambios</span>
+                                                            <span className="text-xs text-gray-500 italic leading-relaxed">
+                                                                {details?.resumen_edicion || item?.resumen_edicion}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </section>
+                                    )}
                                 </div>
                             )}
 
@@ -240,67 +271,55 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 ))}
                                             </div>
                                         </section>
-                                    )}
-
-                                    {item._type === 'insight' && (
+                                                           {item._type === 'insight' && (
                                         <div className="flex flex-col gap-10">
                                             {/* SECCIÓN COMBINADA: ORIGEN + IMÁGENES */}
                                             <section className="animate-in fade-in slide-in-from-top-4 duration-500">
-                                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-4">
+                                                    <span className="w-8 h-[2px] bg-blue-500 rounded-full"></span>
                                                     Detalles da fonte e recursos
-                                                    <span className="h-[1px] flex-grow bg-gray-100"></span>
                                                 </h3>
                                                 
-                                                <div className="bg-gray-50/80 p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border border-gray-100 ring-1 ring-gray-200/50 shadow-sm">
-                                                    <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start">
-                                                        {/* PARTE IZQUIERDA: INFORMACIÓN DE REFERENCIA (APILADO VERTICAL) */}
-                                                        <div className="flex flex-col gap-4 sm:gap-6 min-w-0 sm:min-w-[300px] flex-shrink-0">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documento de Referencia</span>
-                                                                <span className="text-lg font-bold text-gray-900 leading-snug break-words max-w-sm">{item.origen_informacion || 'No especificado'}</span>
+                                                <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
+                                                    <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-50">
+                                                        {/* PARTE IZQUIERDA: INFORMACIÓN EN LISTA (NUEVO DISEÑO) */}
+                                                        <div className="flex-grow divide-y divide-gray-50">
+                                                            <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                                <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Fonte de referencia</span>
+                                                                <span className="text-sm font-bold text-gray-900 leading-snug">{item.origen_informacion || 'No especificado'}</span>
                                                             </div>
-                                                            <div className="flex flex-col gap-2">
-                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tipoloxía de fonte</span>
-                                                                <span className="inline-flex self-start bg-gray-900 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-md">
+                                                            <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                                <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Tipoloxía</span>
+                                                                <span className="inline-flex self-start bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
                                                                     {item.tipo_origen_nombre || 'Xeral'}
                                                                 </span>
                                                             </div>
-                                                            {/* Procesos movidos arriba */}
+                                                            {item.detalle_origen_informacion && (
+                                                                <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                                    <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Nota adicional</span>
+                                                                    <span className="text-xs text-gray-500 italic leading-relaxed">{item.detalle_origen_informacion}</span>
+                                                                </div>
+                                                            )}
                                                         </div>
 
-                                                        {/* PARTE DERECHA: RECURSOS GRÁFICOS (PARA INSIGHTS) */}
+                                                        {/* PARTE DERECHA: IMAGEN (SI EXISTE) */}
                                                         {item.imagen && (
-                                                            <div className="flex-grow flex flex-col gap-3">
-                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Vista de Página / Infografías</span>
-                                                                <div className="flex flex-wrap gap-4">
-                                                                    <div 
-                                                                        onClick={() => setActiveImage(item.imagen)}
-                                                                        className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white hover:border-yellow-400 transition-all shadow-lg hover:shadow-xl w-[200px] h-[130px] bg-white ring-1 ring-black/5"
-                                                                    >
-                                                                        <img 
-                                                                            src={getImgUrl(item.imagen)} 
-                                                                            alt="Vista previa" 
-                                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                                            onError={(e) => { e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23f3f4f6"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" fill="%239ca3af" text-anchor="middle" dy=".3em">Sen Imaxe</text></svg>'; }}
-                                                                        />
-                                                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-gray-900/5 transition-opacity">
-                                                                            <div className="bg-white/95 p-2 rounded-full shadow-2xl scale-75 group-hover:scale-100 transition-transform duration-300">
-                                                                                <svg className="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
+                                                            <div className="lg:w-72 p-5 bg-gray-50/30 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-gray-100 gap-3">
+                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Infografía / Captura</span>
+                                                                <div 
+                                                                    onClick={() => setActiveImage(item.imagen)}
+                                                                    className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white hover:border-blue-400 transition-all shadow-lg w-full aspect-video bg-white ring-1 ring-black/5"
+                                                                >
+                                                                    <img 
+                                                                        src={getImgUrl(item.imagen)} 
+                                                                        alt="Vista previa" 
+                                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                        onError={(e) => { e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect width="800" height="600" fill="%23f3f4f6"/><text x="50%" y="50%" font-family="sans-serif" font-size="24" fill="%239ca3af" text-anchor="middle" dy=".3em">Sen Imaxe</text></svg>'; }}
+                                                                    />
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>
-
-                                                    {item.detalle_origen_informacion && (
-                                                        <div className="mt-8 pt-6 border-t border-gray-200/50">
-                                                            <p className="text-sm text-gray-500 font-medium italic leading-relaxed">
-                                                                "{item.detalle_origen_informacion}"
-                                                            </p>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </section>
 
@@ -319,25 +338,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     )) || <p className="text-gray-300 italic text-sm">No hay FAQ's asociadas.</p>}
                                                 </div>
                                             </section>
-                                            {/* SECCIÓN DE AUDITORÍA / HISTORIAL */}
-                                            {(details?.resumen_edicion || item?.resumen_edicion) && (
-                                                <section className="animate-in fade-in duration-1000">
-                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                                                        Control de cambios
-                                                        <span className="h-[1px] flex-grow bg-gray-100"></span>
-                                                    </h3>
-                                                    <div className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 border-dashed">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                                                                <i className="fas fa-history text-xs"></i>
-                                                            </div>
-                                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-tighter italic">
-                                                                {details?.resumen_edicion || item?.resumen_edicion}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </section>
-                                            )}
+
                                         </div>
                                     )}
                                 </div>
