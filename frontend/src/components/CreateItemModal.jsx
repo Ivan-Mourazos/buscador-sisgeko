@@ -107,12 +107,20 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
             setStep(2);
             setType(initialData._type);
             const data = { ...initialData };
+            
+            // Normalizar arrays de IDs vinculados (poden vir como obxectos dende API details)
+            if (data.articulos_vinculados) {
+                data.articulos_vinculados = data.articulos_vinculados.map(a => typeof a === 'object' ? a.id_articulo : a);
+            }
+            if (data.procesos_vinculados) {
+                data.procesos_vinculados = data.procesos_vinculados.map(p => typeof p === 'object' ? p.id_proceso : p);
+            }
+            if (data.familias_vinculadas) {
+                data.familias_vinculadas = data.familias_vinculadas.map(f => typeof f === 'object' ? (f.id || f.value || f.id_familia) : f);
+            }
+
             if (data._type === 'articulo' && !data.imagenes) {
                 data.imagenes = [];
-            }
-            // Asegurar que familias_vinculadas son IDs planos
-            if (data.familias_vinculadas) {
-                data.familias_vinculadas = data.familias_vinculadas.map(f => typeof f === 'object' ? (f.id || f.value) : f);
             }
             setFormData(data);
         } else {
