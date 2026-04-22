@@ -274,6 +274,20 @@ app.get('/api/details', async (req, res) => {
         if (type === 'articulo') {
             const valRes = await request.query(`SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios, v.norma FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
             details.caracteristicas = valRes.recordset;
+            
+            // Obtener insights vinculados
+            const insightRes = await request.query(`
+                SELECT i.id_insight, i.titulo, i.insight, i.origen_informacion, t.tipo_origen as tipo_origen_nombre
+                FROM insights i 
+                JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight 
+                LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
+                WHERE ria.id_articulo = @id 
+                AND (i.activo = 1 OR i.activo IS NULL) 
+                AND (i.eliminado = 0 OR i.eliminado IS NULL)
+                ORDER BY i.version DESC
+            `);
+            details.insights_vinculados = insightRes.recordset;
+
             const imgRes = await request.query(`SELECT DISTINCT i.imagen FROM insights i JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''`);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
         } else if (type === 'insight') {
