@@ -652,18 +652,36 @@ app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['e
 // ENDPOINT DE RECHAZO
 app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const { type, taskId } = req.params;
-    const { reason } = req.body; // Motivo obligatorio para rechazar
+    const { reason } = req.body;
     const approverId = req.user.id;
     try {
         const pool = await sql.connect(dbConfig);
         const table = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
         
-        // Se añade el motivo de rechazo usando JSON_MODIFY para mantener el payload original pero inyectando el motivo
+        // Obtenemos el registro actual para modificar el JSON en Node (más compatible que JSON_MODIFY)
+        const currentRes = await pool.request()
+            .input('id', sql.Int, taskId)
+            .query(`SELECT comentario_cambio FROM ${table} WHERE ID = @id`);
+            
+        if (currentRes.recordset.length === 0) {
+            return res.status(404).json({ success: false, message: 'Rexistro non atopado.' });
+        }
+
+        let payload = {};
+        try {
+            payload = JSON.parse(currentRes.recordset[0].comentario_cambio);
+        } catch (e) {
+            console.error("Error parseando comentario_cambio:", e);
+        }
+
+        // Inyectamos el motivo de rechazo
+        payload.motivo = reason ? `Rexeitado: ${reason}` : 'Rexeitado sen motivo';
+
         await pool.request()
             .input('id', sql.Int, taskId)
             .input('appId', sql.Int, approverId)
-            .input('reason', sql.NVarChar, reason ? `Rexeitado: ${reason}` : 'Rexeitado sen motivo')
-            .query(`UPDATE ${table} SET estado = 'RECHAZADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId, comentario_cambio = JSON_MODIFY(comentario_cambio, '$.motivo', @reason) WHERE ID = @id`);
+            .input('newComment', sql.NVarChar, JSON.stringify(payload))
+            .query(`UPDATE ${table} SET estado = 'RECHAZADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId, comentario_cambio = @newComment WHERE ID = @id`);
         
         res.json({ success: true, message: 'Cambio rexeitado.' });
     } catch (error) {
