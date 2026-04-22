@@ -271,7 +271,9 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 ))}
                                             </div>
                                         </section>
-                                                           {item._type === 'insight' && (
+                                    )}
+
+                                    {item._type === 'insight' && (
                                         <div className="flex flex-col gap-10">
                                             {/* SECCIÓN COMBINADA: ORIGEN + IMÁGENES */}
                                             <section className="animate-in fade-in slide-in-from-top-4 duration-500">
