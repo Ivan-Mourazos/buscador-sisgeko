@@ -58,6 +58,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     // Form state
     const [formData, setFormData] = useState({});
     const [newImageUrl, setNewImageUrl] = useState('');
+    const [deleteReason, setDeleteReason] = useState('');
 
     // State for DB options
     const [dbOptions, setDbOptions] = useState({
@@ -139,6 +140,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
         setFormData({});
         setShowDeleteConfirm(false);
         setNewImageUrl('');
+        setDeleteReason('');
         onClose();
     };
 
@@ -194,7 +196,11 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
     };
 
     const handleDelete = () => {
-        onDelete(formData);
+        if (!deleteReason || deleteReason.trim().length < 5) {
+            alert("Por favor, indica o motivo do borrado (mínimo 5 caracteres).");
+            return;
+        }
+        onDelete({ ...formData, resumen_edicion: deleteReason });
         resetAndClose();
     };
 
@@ -533,21 +539,31 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                             {initialData && (
                                 <div className="flex items-center gap-3">
                                     {showDeleteConfirm ? (
-                                        <div className="flex items-center gap-2 bg-red-50 p-1 pr-3 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-left-2 transition-all">
-                                            <button
-                                                type="button"
-                                                onClick={handleDelete}
-                                                className="px-5 py-2 bg-red-500 text-white text-xs font-black rounded-xl hover:bg-red-600 shadow-md shadow-red-500/20"
-                                            >
-                                                Confirmar Borrado
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowDeleteConfirm(false)}
-                                                className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest px-2"
-                                            >
-                                                Cancelar
-                                            </button>
+                                        <div className="flex flex-col gap-2 bg-red-50 p-3 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-left-2 transition-all w-full sm:w-64">
+                                            <label className="text-[10px] font-black uppercase text-red-800 tracking-widest ml-1">Motivo do borrado:</label>
+                                            <textarea
+                                                autoFocus
+                                                value={deleteReason}
+                                                onChange={(e) => setDeleteReason(e.target.value)}
+                                                placeholder="Xustificación obrigat..."
+                                                className="w-full text-xs p-2 rounded-xl border border-red-200 outline-none focus:border-red-400 resize-none h-16 bg-white placeholder-red-300"
+                                            />
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDelete}
+                                                    className="flex-1 py-2 bg-red-500 text-white text-[10px] font-black rounded-xl hover:bg-red-600 shadow-md shadow-red-500/20 uppercase tracking-wider"
+                                                >
+                                                    Confirmar
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setShowDeleteConfirm(false); setDeleteReason(''); }}
+                                                    className="flex-1 py-2 text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
                                         </div>
                                     ) : (
                                         <button

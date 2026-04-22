@@ -4,6 +4,8 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [rejectTask, setRejectTask] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
 
   const fetchPendingTasks = async () => {
     // Recuperar usuario actual
@@ -29,14 +31,18 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
   }, []);
 
   const handleAction = async (task, action) => {
-    const actionText = action === 'approve' ? 'aprobar' : 'rexeitar';
+    if (action === 'reject') {
+      setRejectTask(task.ID);
+      setRejectReason('');
+      return;
+    }
     
     askConfirm(
-      `${action === 'approve' ? 'Aprobar' : 'Rexeitar'} cambio`,
-      `Estás seguro de que queres ${actionText} este cambio en "${task.titulo || 'Sen título'}"?`,
+      'Aprobar cambio',
+      `Estás seguro de que queres aprobar este cambio en "${task.titulo || 'Sen título'}"?`,
       async () => {
         try {
-          const res = await fetch(`/api/pending-tasks/${task._type}/${task.ID}/${action}`, {
+          const res = await fetch(`/api/pending-tasks/${task._type}/${task.ID}/approve`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
@@ -54,6 +60,33 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
         }
       }
     );
+  };
+
+  const confirmReject = async (task) => {
+    if (!rejectReason || rejectReason.trim().length < 5) {
+      showToast("O motivo de rexeitamento debe ter polo menos 5 caracteres", "error");
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/pending-tasks/${task._type}/${task.ID}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: rejectReason }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        setRejectTask(null);
+        onRefresh();
+        fetchPendingTasks();
+      } else {
+        showToast(data.message, 'error');
+      }
+    } catch (err) {
+      showToast("Erro de conexión", 'error');
+    }
   };
 
   const formatDiff = (diffStr) => {
@@ -143,23 +176,52 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
                   </div>
                   
                   <div className="flex sm:flex-col gap-3 flex-shrink-0 mt-4 sm:mt-0">
-                    <button 
-                      onClick={() => handleAction(task, 'approve')}
-                      disabled={!canApprove}
-                      className={`flex-1 sm:w-16 h-12 sm:h-16 flex items-center justify-center rounded-2xl shadow-lg transition-all active:scale-95 group/btn ${
-                        canApprove ? 'bg-[#8c6508] text-white shadow-[#8c6508]/20 hover:bg-[#b08b3a] hover:-translate-y-1' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                      }`}
-                      title={canApprove ? "Aprobar" : "Non podes aprobar o teu propio cambio"}
-                    >
-                      <svg className="w-6 h-6 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    </button>
-                    <button 
-                      onClick={() => handleAction(task, 'reject')}
-                      className="flex-1 sm:w-16 h-12 sm:h-16 flex items-center justify-center bg-white border-2 border-red-50 text-red-400 rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-95 group/btn"
-                      title="Rexeitar"
-                    >
-                      <svg className="w-6 h-6 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                    {rejectTask === task.ID ? (
+                      <div className="flex flex-col gap-2 w-full sm:w-48 bg-red-50 p-3 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-right-4">
+                        <label className="text-[9px] font-black uppercase text-red-800 tracking-widest ml-1">Motivo (obrigatorio):</label>
+                        <textarea
+                          autoFocus
+                          value={rejectReason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                          placeholder="Por que rexeitas isto?"
+                          className="w-full text-xs p-2 rounded-xl border border-red-200 outline-none focus:border-red-400 resize-none h-16 bg-white"
+                        />
+                        <div className="flex gap-2 mt-1">
+                          <button 
+                            onClick={() => setRejectTask(null)}
+                            className="flex-1 py-2 text-[10px] font-bold text-red-400 hover:text-red-600 uppercase transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                          <button 
+                            onClick={() => confirmReject(task)}
+                            className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase rounded-xl shadow-md transition-all active:scale-95"
+                          >
+                            Confirmar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button 
+                          onClick={() => handleAction(task, 'approve')}
+                          disabled={!canApprove}
+                          className={`flex-1 sm:w-16 h-12 sm:h-16 flex items-center justify-center rounded-2xl shadow-lg transition-all active:scale-95 group/btn ${
+                            canApprove ? 'bg-[#8c6508] text-white shadow-[#8c6508]/20 hover:bg-[#b08b3a] hover:-translate-y-1' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                          }`}
+                          title={canApprove ? "Aprobar" : "Non podes aprobar o teu propio cambio"}
+                        >
+                          <svg className="w-6 h-6 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </button>
+                        <button 
+                          onClick={() => handleAction(task, 'reject')}
+                          className="flex-1 sm:w-16 h-12 sm:h-16 flex items-center justify-center bg-white border-2 border-red-50 text-red-400 rounded-2xl hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-all active:scale-95 group/btn"
+                          title="Rexeitar"
+                        >
+                          <svg className="w-6 h-6 transition-transform group-hover/btn:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

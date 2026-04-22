@@ -652,14 +652,19 @@ app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['e
 // ENDPOINT DE RECHAZO
 app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
     const { type, taskId } = req.params;
+    const { reason } = req.body; // Motivo obligatorio para rechazar
     const approverId = req.user.id;
     try {
         const pool = await sql.connect(dbConfig);
         const table = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
+        
+        // Se añade el motivo de rechazo usando JSON_MODIFY para mantener el payload original pero inyectando el motivo
         await pool.request()
             .input('id', sql.Int, taskId)
             .input('appId', sql.Int, approverId)
-            .query(`UPDATE ${table} SET estado = 'RECHAZADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId WHERE ID = @id`);
+            .input('reason', sql.NVarChar, reason ? `Rexeitado: ${reason}` : 'Rexeitado sen motivo')
+            .query(`UPDATE ${table} SET estado = 'RECHAZADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId, comentario_cambio = JSON_MODIFY(comentario_cambio, '$.motivo', @reason) WHERE ID = @id`);
+        
         res.json({ success: true, message: 'Cambio rexeitado.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao rexeitar: ' + error.message });
