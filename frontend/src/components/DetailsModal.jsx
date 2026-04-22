@@ -304,55 +304,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                         </section>
                                     )}
 
-                                    {/* DEFINICIONS VINCULADAS VIA FAMILIA */}
-                                    {details?.definiciones_vinculadas && details.definiciones_vinculadas.length > 0 && (
-                                        <section className="animate-in fade-in slide-in-from-top-4 duration-700 mt-12">
-                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
-                                                <span className="w-12 h-[3px] bg-purple-500 rounded-full"></span>
-                                                Definicións vinculadas
-                                            </h3>
-                                            <div className="grid grid-cols-1 gap-6">
-                                                {details.definiciones_vinculadas.map((def, idx) => {
-                                                    const isExpanded = expandedLinkedId === `def-${idx}`;
-                                                    return (
-                                                        <div 
-                                                            key={idx} 
-                                                            onClick={(e) => handleToggle(e, `def-${idx}`)}
-                                                            className={`bg-white border rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
-                                                                isExpanded ? 'border-purple-200 shadow-xl ring-1 ring-purple-50' : 'border-gray-100 hover:shadow-lg hover:border-purple-100'
-                                                            }`}
-                                                        >
-                                                            <div className="flex justify-between items-start gap-4">
-                                                                <div className="flex flex-col gap-2">
-                                                                    <span className="bg-purple-50 text-purple-600 self-start px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-purple-100/50">
-                                                                        Concepto Técnico
-                                                                    </span>
-                                                                    <h4 className={`text-lg font-black transition-colors ${isExpanded ? 'text-purple-600' : 'text-gray-900'}`}>
-                                                                        {def.titulo}
-                                                                    </h4>
-                                                                </div>
-                                                                <div className={`mt-2 text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-purple-500' : 'group-hover:text-purple-400'}`}>
-                                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                                                                    </svg>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0'}`}>
-                                                                <div className="overflow-hidden">
-                                                                    <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100/50">
-                                                                        <p className="text-base text-gray-600 leading-relaxed">
-                                                                            {def.definicion}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </section>
-                                    )}
+
 
                                     {item._type === 'insight' && (
                                         <div className="flex flex-col gap-10">

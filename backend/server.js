@@ -291,18 +291,7 @@ app.get('/api/details', async (req, res) => {
             const imgRes = await request.query(`SELECT DISTINCT i.imagen FROM insights i JOIN rel_Insight_articulo ria ON i.id_insight = ria.id_insight WHERE ria.id_articulo = @id AND i.imagen IS NOT NULL AND i.imagen != ''`);
             details.imagenes = imgRes.recordset.map(r => r.imagen);
 
-            // Obtener definiciones vinculadas via Familia
-            const defsRes = await request.query(`
-                SELECT d.id_definicion, d.titulo, d.definicion
-                FROM definiciones d
-                JOIN rel_definicion_familia rdf ON d.id_definicion = rdf.id_definicion
-                JOIN articulos a ON a.id_familia = rdf.id_familia
-                WHERE a.id_articulo = @id
-                AND (d.activo = 1 OR d.activo IS NULL)
-                AND (d.eliminado = 0 OR d.eliminado IS NULL)
-                AND d.version = (SELECT MAX(version) FROM definiciones d2 WHERE d2.id_definicion = d.id_definicion AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL))
-            `);
-            details.definiciones_vinculadas = defsRes.recordset;
+
         } else if (type === 'insight') {
             const basicRes = await request.query(`SELECT i.*, t.tipo_origen as tipo_origen_nombre, STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, '') as procesos_lista FROM insights i LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen WHERE i.id_insight = @id`);
             if (basicRes.recordset.length > 0) Object.assign(details, basicRes.recordset[0]);
