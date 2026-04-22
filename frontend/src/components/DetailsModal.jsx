@@ -4,6 +4,17 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
     const [activeImage, setActiveImage] = useState(null);
     const [expandedLinkedId, setExpandedLinkedId] = useState(null);
 
+    const handleToggle = (e, id) => {
+        const isExpanding = expandedLinkedId !== id;
+        setExpandedLinkedId(isExpanding ? id : null);
+        if (isExpanding) {
+            const el = e.currentTarget;
+            setTimeout(() => {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    };
+
     // Resetear imagen si cambiamos de item y bloquear scroll
     useEffect(() => {
         setActiveImage(null);
@@ -251,7 +262,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     return (
                                                         <div 
                                                             key={idx} 
-                                                            onClick={() => setExpandedLinkedId(isExpanded ? null : `ins-${idx}`)}
+                                                            onClick={(e) => handleToggle(e, `ins-${idx}`)}
                                                             className={`bg-white border rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
                                                                 isExpanded ? 'border-blue-200 shadow-xl ring-1 ring-blue-50' : 'border-gray-100 hover:shadow-lg hover:border-blue-100'
                                                             }`}
@@ -306,7 +317,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     return (
                                                         <div 
                                                             key={idx} 
-                                                            onClick={() => setExpandedLinkedId(isExpanded ? null : `def-${idx}`)}
+                                                            onClick={(e) => handleToggle(e, `def-${idx}`)}
                                                             className={`bg-white border rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
                                                                 isExpanded ? 'border-purple-200 shadow-xl ring-1 ring-purple-50' : 'border-gray-100 hover:shadow-lg hover:border-purple-100'
                                                             }`}
@@ -409,7 +420,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                             return (
                                                                 <div 
                                                                     key={idx} 
-                                                                    onClick={() => setExpandedLinkedId(isExpanded ? null : `art-${idx}`)}
+                                                                    onClick={(e) => handleToggle(e, `art-${idx}`)}
                                                                     className={`bg-white border rounded-2xl p-5 transition-all cursor-pointer group ${
                                                                         isExpanded ? 'border-yellow-200 shadow-xl ring-1 ring-yellow-50' : 'border-gray-100 hover:shadow-lg hover:border-yellow-100'
                                                                     }`}
