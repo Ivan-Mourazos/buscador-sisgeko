@@ -297,8 +297,13 @@ app.get('/api/details', async (req, res) => {
             details.intenciones = intRes.recordset.map(i => i.intencion);
             const procsRes = await request.query(`SELECT id_proceso FROM rel_Insight_Proceso WHERE id_insight = @id`);
             details.procesos_vinculados = procsRes.recordset.map(p => p.id_proceso);
-            const artsRes = await request.query(`SELECT id_articulo FROM rel_Insight_articulo WHERE id_insight = @id`);
-            details.articulos_vinculados = artsRes.recordset.map(a => a.id_articulo);
+            const artsRes = await request.query(`
+                SELECT a.id_articulo, a.descripcion, a.codigo 
+                FROM articulos a 
+                JOIN rel_Insight_articulo ria ON a.id_articulo = ria.id_articulo 
+                WHERE ria.id_insight = @id
+            `);
+            details.articulos_vinculados = artsRes.recordset;
         } else if (type === 'definicion') {
             const defRes = await request.query(`SELECT TOP 1 titulo, definicion, resumen_edicion FROM definiciones WHERE id_definicion = @id AND (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY version DESC`);
             if (defRes.recordset.length > 0) {

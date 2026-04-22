@@ -323,7 +323,30 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                         )}
                                                     </div>
                                                 </div>
-                                            </section>
+                                            {/* ARTIGOS VINCULADOS */}
+                                            {details?.articulos_vinculados && details.articulos_vinculados.length > 0 && (
+                                                <section className="animate-in fade-in slide-in-from-top-4 duration-700">
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-4">
+                                                        <span className="w-8 h-[2px] bg-yellow-500 rounded-full"></span>
+                                                        Artigos vinculados
+                                                    </h3>
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        {details.articulos_vinculados.map((art, idx) => (
+                                                            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 group flex justify-between items-center">
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
+                                                                    <h4 className="text-base font-bold text-gray-900">{art.descripcion}</h4>
+                                                                </div>
+                                                                {art.codigo && (
+                                                                    <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                                                                        {art.codigo}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </section>
+                                            )}
 
                                             {/* PREGUNTAS CLAVE / FAQ - PRIORIDAD BAJA */}
                                             <section className="animate-in fade-in slide-in-from-top-4 duration-700">
@@ -340,7 +363,6 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     )) || <p className="text-gray-300 italic text-sm">No hay FAQ's asociadas.</p>}
                                                 </div>
                                             </section>
-
                                         </div>
                                     )}
                                 </div>
