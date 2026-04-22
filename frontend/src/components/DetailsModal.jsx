@@ -370,35 +370,19 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     </h3>
                                                     <div className="grid grid-cols-1 gap-4">
                                                         {details.articulos_vinculados.map((art, idx) => {
-                                                            const isExpanded = expandedLinkedId === `art-${idx}`;
                                                             const desc = art.descripcion || art.DESCRIPCION || art.titulo || 'Artigo sen descrición';
                                                             const code = art.codigo || art.CODIGO;
                                                             return (
-                                                                <div 
-                                                                    key={idx} 
-                                                                    onClick={(e) => handleToggle(e, `art-${idx}`)}
-                                                                    className={`bg-white border rounded-2xl p-5 transition-all cursor-pointer group ${
-                                                                        isExpanded ? 'border-yellow-200 shadow-xl ring-1 ring-yellow-50' : 'border-gray-100 hover:shadow-lg hover:border-yellow-100'
-                                                                    }`}
-                                                                >
-                                                                    <div className="flex justify-between items-center gap-4">
-                                                                        <div className="flex flex-col gap-1">
-                                                                            <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
-                                                                            <h4 className={`text-base font-bold transition-colors ${isExpanded ? 'text-yellow-700' : 'text-gray-900'}`}>{desc}</h4>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-3">
-                                                                            {code && (
-                                                                                <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                                                                                    {code}
-                                                                                </span>
-                                                                            )}
-                                                                            <div className={`text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-yellow-500' : 'group-hover:text-yellow-400'}`}>
-                                                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                                                                                </svg>
-                                                                            </div>
-                                                                        </div>
+                                                                <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 group flex justify-between items-center">
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
+                                                                        <h4 className="text-base font-bold text-gray-900">{desc}</h4>
                                                                     </div>
+                                                                    {code && (
+                                                                        <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                                                                            {code}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             );
                                                         })}
