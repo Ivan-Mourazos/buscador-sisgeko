@@ -5,6 +5,7 @@ const HistoryView = ({ onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [expandedId, setExpandedId] = useState(null);
 
     const fetchHistory = async () => {
         setLoading(true);
@@ -41,10 +42,11 @@ const HistoryView = ({ onClose }) => {
             if (op === 'HISTO') op = 'HISTÓRICO';
             return {
                 titulo: parsed.titulo || parsed.descripcion || parsed.insight || fallbackTitle,
-                operation: op
+                operation: op,
+                resumen: parsed.resumen_edicion || parsed.comentario || parsed.motivo || 'Sen motivo ou xustificación rexistrada.'
             };
         } catch (e) {
-            return { titulo: str, operation: 'EDICIÓN' };
+            return { titulo: str, operation: 'EDICIÓN', resumen: 'Sen motivo rexistrado.' };
         }
     };
 
@@ -175,64 +177,96 @@ const HistoryView = ({ onClose }) => {
                             <tbody className="divide-y divide-gray-50">
                                 {filteredHistory.map(item => {
                                     const info = safeParse(item.comentario_cambio);
+                                    const rowKey = `${item._type}-${item.ID}`;
+                                    const isExpanded = expandedId === rowKey;
+                                    
                                     return (
-                                        <tr key={`${item._type}-${item.ID}`} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col">
-                                                    <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mb-1 border ${
-                                                        item._type === 'definicion' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                        <React.Fragment key={rowKey}>
+                                            <tr 
+                                                onClick={() => setExpandedId(isExpanded ? null : rowKey)}
+                                                className={`hover:bg-gray-50/80 transition-all cursor-pointer ${isExpanded ? 'bg-yellow-50/30 shadow-sm border-l-2 border-l-yellow-400' : 'border-l-2 border-l-transparent'}`}
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`mt-1 text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-90 text-yellow-500' : ''}`}>
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mb-1 border ${
+                                                                item._type === 'definicion' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                                            }`}>
+                                                                {item._type === 'definicion' ? 'Definición' : 'Insight'}
+                                                            </span>
+                                                            <span className="text-sm font-bold text-gray-900 leading-tight truncate max-w-[180px]" title={info.titulo}>
+                                                                {info.titulo}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                                        info.operation === 'BORRADO' ? 'text-red-500' : 
+                                                        info.operation === 'CREACIÓN' ? 'text-emerald-500' : 'text-gray-400'
                                                     }`}>
-                                                        {item._type === 'definicion' ? 'Definición' : 'Insight'}
+                                                        {info.operation}
                                                     </span>
-                                                    <span className="text-sm font-bold text-gray-900 leading-tight truncate max-w-[180px]" title={info.titulo}>
-                                                        {info.titulo}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
+                                                        item.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                                                    }`}>
+                                                        {item.estado === 'aprobado' ? '✓ Aprobado' : '✕ Rexeitado'}
                                                     </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest ${
-                                                    info.operation === 'BORRADO' ? 'text-red-500' : 
-                                                    info.operation === 'CREACIÓN' ? 'text-emerald-500' : 'text-gray-400'
-                                                }`}>
-                                                    {info.operation}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
-                                                    item.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
-                                                }`}>
-                                                    {item.estado === 'aprobado' ? '✓ Aprobado' : '✕ Rexeitado'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
-                                                    <span className="text-[11px] text-gray-700 font-bold">
-                                                        {formatDate(item.fecha_cambio)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
-                                                    <span className="text-[11px] text-gray-700 font-bold">
-                                                        {formatDate(item.fecha_aprobacion)}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col gap-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Edi:</span>
-                                                        <span className="text-xs text-gray-600 font-bold">{item.editor}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
+                                                        <span className="text-[11px] text-gray-700 font-bold">
+                                                            {formatDate(item.fecha_cambio)}
+                                                        </span>
                                                     </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Apr:</span>
-                                                        <span className="text-xs text-gray-600 font-bold">{item.aprobador || 'Pendente'}</span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
+                                                        <span className="text-[11px] text-gray-700 font-bold">
+                                                            {formatDate(item.fecha_aprobacion)}
+                                                        </span>
                                                     </div>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Edi:</span>
+                                                            <span className="text-xs text-gray-600 font-bold">{item.editor}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Apr:</span>
+                                                            <span className="text-xs text-gray-600 font-bold">{item.aprobador || 'Pendente'}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr className="bg-yellow-50/10 border-b border-gray-100/50">
+                                                    <td colSpan="6" className="px-12 py-6">
+                                                        <div className="flex flex-col gap-2 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                            <div className="flex items-center gap-2 text-yellow-600 mb-1">
+                                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <h4 className="text-xs font-black uppercase tracking-widest">Motivo do Cambio</h4>
+                                                            </div>
+                                                            <div className="bg-white rounded-2xl p-5 border border-yellow-100 shadow-sm text-sm text-gray-700 font-medium whitespace-pre-wrap leading-relaxed">
+                                                                {info.resumen}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
                                     );
                                 })}
                             </tbody>
