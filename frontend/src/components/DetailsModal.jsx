@@ -319,16 +319,20 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-50">
                                                         {/* PARTE IZQUIERDA: INFORMACIÓN EN LISTA (NUEVO DISEÑO) */}
                                                         <div className="flex-grow divide-y divide-gray-50">
-                                                            <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
-                                                                <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Fonte de referencia</span>
-                                                                <span className="text-sm font-bold text-gray-900 leading-snug">{item.origen_informacion || 'No especificado'}</span>
-                                                            </div>
-                                                            <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
-                                                                <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Tipoloxía</span>
-                                                                <span className="inline-flex self-start bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
-                                                                    {item.tipo_origen_nombre || 'Xeral'}
-                                                                </span>
-                                                            </div>
+                                                            {item.origen_informacion && (
+                                                                <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                                    <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Fonte de referencia</span>
+                                                                    <span className="text-sm font-bold text-gray-900 leading-snug">{item.origen_informacion}</span>
+                                                                </div>
+                                                            )}
+                                                            {item.tipo_origen_nombre && (
+                                                                <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
+                                                                    <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Tipoloxía</span>
+                                                                    <span className="inline-flex self-start bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                                                                        {item.tipo_origen_nombre}
+                                                                    </span>
+                                                                </div>
+                                                            )}
                                                             {item.detalle_origen_informacion && (
                                                                 <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 transition-colors group">
                                                                     <span className="sm:w-48 text-[10px] font-black text-gray-400 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Nota adicional</span>

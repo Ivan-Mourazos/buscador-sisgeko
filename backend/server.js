@@ -719,8 +719,6 @@ app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
     if (!imgPath) return res.status(400).send('Falta ruta');
     
-    console.log(`[IMG REQUEST] URL Original: ${imgPath}`);
-    
     // Eliminar prefijos absolutos de red de la base de datos
     let cleanPath = imgPath.replace(/\\\\192\.168\.0\.128\\Sisgeko/i, '');
     // Soporte para posibles rutas con barras normales de BD antiguas
@@ -729,8 +727,6 @@ app.get('/api/images', (req, res) => {
     let safePath = isLinux ? cleanPath.replace(/\\/g, '/') : cleanPath.replace(/\//g, '\\');
     const fullPath = path.resolve(networkBase, safePath);
     
-    console.log(`[IMG DEBUG] Base: ${networkBase} | Limpa: ${cleanPath} | Final: ${fullPath}`);
-    
     if (isLinux && !fs.existsSync(networkBase)) {
         console.log(`[IMG ERROR CRÍTICO] O directorio base ${networkBase} NON EXISTE ou non está montado.`);
     }
@@ -738,7 +734,6 @@ app.get('/api/images', (req, res) => {
     if (fs.existsSync(fullPath)) {
         res.sendFile(fullPath);
     } else {
-        console.log(`[IMG 404] Arquivo non atopado no disco: ${fullPath}`);
         res.status(404).send(`Imaxe non atopada: ${fullPath}`);
     }
 });
