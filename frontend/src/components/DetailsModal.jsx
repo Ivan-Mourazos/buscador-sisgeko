@@ -323,6 +323,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                         )}
                                                     </div>
                                                 </div>
+                                            </section>
                                             {/* ARTIGOS VINCULADOS */}
                                             {details?.articulos_vinculados && details.articulos_vinculados.length > 0 && (
                                                 <section className="animate-in fade-in slide-in-from-top-4 duration-700">
