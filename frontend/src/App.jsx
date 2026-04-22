@@ -449,7 +449,11 @@ function App() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
       <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveItem} onDelete={handleDeleteItem} initialData={editingItem} />
 
-      <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-2xl transition-all z-[60] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <button 
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+        className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-[0_10px_25px_rgba(234,179,8,0.4)] transition-all z-[80] cursor-pointer hover:bg-yellow-600 hover:scale-110 active:scale-95 hover:shadow-[0_15px_35px_rgba(234,179,8,0.5)] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        title="Volver arriba"
+      >
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
       </button>
     </div>
