@@ -391,20 +391,22 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                             )}
 
                                             {/* PREGUNTAS CLAVE / FAQ - PRIORIDAD BAJA */}
-                                            <section className="animate-in fade-in slide-in-from-top-4 duration-700">
-                                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                                                    Información adicional / FAQ's
-                                                    <span className="h-[1px] flex-grow bg-gray-100"></span>
-                                                </h3>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {details?.intenciones?.map((int, i) => (
-                                                        <div key={i} className="flex gap-4 text-base text-gray-700 bg-white p-5 rounded-2xl border border-gray-100 font-bold group shadow-sm hover:border-yellow-100 hover:shadow-md transition-all">
-                                                            <div className="w-6 h-6 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0 text-xs font-black">?</div>
-                                                            {int}
-                                                        </div>
-                                                    )) || <p className="text-gray-300 italic text-sm">No hay FAQ's asociadas.</p>}
-                                                </div>
-                                            </section>
+                                            {details?.intenciones && details.intenciones.length > 0 && (
+                                                <section className="animate-in fade-in slide-in-from-top-4 duration-700">
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                                                        Información adicional / FAQ's
+                                                        <span className="h-[1px] flex-grow bg-gray-100"></span>
+                                                    </h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        {details.intenciones.map((int, i) => (
+                                                            <div key={i} className="flex gap-4 text-base text-gray-700 bg-white p-5 rounded-2xl border border-gray-100 font-bold group shadow-sm hover:border-yellow-100 hover:shadow-md transition-all">
+                                                                <div className="w-6 h-6 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0 text-xs font-black">?</div>
+                                                                {int}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </section>
+                                            )}
                                         </div>
                                     )}
                                 </div>
