@@ -273,6 +273,35 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                         </section>
                                     )}
 
+                                    {/* DEFINICIONS VINCULADAS VIA FAMILIA */}
+                                    {details?.definiciones_vinculadas && details.definiciones_vinculadas.length > 0 && (
+                                        <section className="animate-in fade-in slide-in-from-top-4 duration-700 mt-12">
+                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-4">
+                                                <span className="w-12 h-[3px] bg-purple-500 rounded-full"></span>
+                                                Definicións vinculadas
+                                            </h3>
+                                            <div className="grid grid-cols-1 gap-6">
+                                                {details.definiciones_vinculadas.map((def, idx) => (
+                                                    <div key={idx} className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 hover:shadow-xl transition-all hover:border-purple-100 group">
+                                                        <div className="flex flex-col gap-2 mb-4">
+                                                            <span className="bg-purple-50 text-purple-600 self-start px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-purple-100/50">
+                                                                Concepto Técnico
+                                                            </span>
+                                                            <h4 className="text-lg font-black text-gray-900 group-hover:text-purple-600 transition-colors">
+                                                                {def.titulo}
+                                                            </h4>
+                                                        </div>
+                                                        <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50">
+                                                            <p className="text-sm text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
+                                                                {def.definicion}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </section>
+                                    )}
+
                                     {item._type === 'insight' && (
                                         <div className="flex flex-col gap-10">
                                             {/* SECCIÓN COMBINADA: ORIGEN + IMÁGENES */}
