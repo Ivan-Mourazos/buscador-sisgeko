@@ -134,7 +134,7 @@ app.post('/api/search', async (req, res) => {
         if (currentUser && currentUser.role === 'editor') {
             const reqDrafts = pool.request();
             reqDrafts.input('userId', sql.Int, currentUser.id);
-            const draftDefs = await reqDrafts.query(`SELECT * FROM cambios_definiciones WHERE id_usuairo_cambio = @userId`);
+            const draftDefs = await reqDrafts.query(`SELECT * FROM cambios_definiciones WHERE id_usuairo_cambio = @userId AND estado IS NULL`);
             draftDefs.recordset.forEach(row => {
                 try {
                     const draftData = JSON.parse(row.comentario_cambio);
@@ -143,7 +143,7 @@ app.post('/api/search', async (req, res) => {
                     allMatchDefs.push(item);
                 } catch(e) {}
             });
-            const draftIns = await reqDrafts.query(`SELECT * FROM cambios_insights WHERE id_usuairo_cambio = @userId`);
+            const draftIns = await reqDrafts.query(`SELECT * FROM cambios_insights WHERE id_usuairo_cambio = @userId AND estado IS NULL`);
             draftIns.recordset.forEach(row => {
                 try {
                     const draftData = JSON.parse(row.comentario_cambio);
