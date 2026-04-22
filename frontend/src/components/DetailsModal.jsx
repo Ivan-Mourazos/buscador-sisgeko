@@ -332,19 +332,23 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                         Artigos vinculados
                                                     </h3>
                                                     <div className="grid grid-cols-1 gap-4">
-                                                        {details.articulos_vinculados.map((art, idx) => (
-                                                            <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 group flex justify-between items-center">
-                                                                <div className="flex flex-col gap-1">
-                                                                    <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
-                                                                    <h4 className="text-base font-bold text-gray-900">{art.descripcion}</h4>
+                                                        {details.articulos_vinculados.map((art, idx) => {
+                                                            const desc = art.descripcion || art.DESCRIPCION || art.titulo || 'Artigo sen descrición';
+                                                            const code = art.codigo || art.CODIGO;
+                                                            return (
+                                                                <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 group flex justify-between items-center">
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
+                                                                        <h4 className="text-base font-bold text-gray-900">{desc}</h4>
+                                                                    </div>
+                                                                    {code && (
+                                                                        <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                                                                            {code}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
-                                                                {art.codigo && (
-                                                                    <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                                                                        {art.codigo}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        ))}
+                                                            );
+                                                        })}
                                                     </div>
                                                 </section>
                                             )}

@@ -298,7 +298,7 @@ app.get('/api/details', async (req, res) => {
             const procsRes = await request.query(`SELECT id_proceso FROM rel_Insight_Proceso WHERE id_insight = @id`);
             details.procesos_vinculados = procsRes.recordset.map(p => p.id_proceso);
             const artsRes = await request.query(`
-                SELECT a.id_articulo, a.descripcion, a.codigo 
+                SELECT DISTINCT a.id_articulo, a.descripcion, a.codigo 
                 FROM articulos a 
                 JOIN rel_Insight_articulo ria ON a.id_articulo = ria.id_articulo 
                 WHERE ria.id_insight = @id
