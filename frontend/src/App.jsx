@@ -295,11 +295,11 @@ function App() {
     <div className="min-h-screen bg-gray-50/30 text-gray-800 font-sans selection:bg-yellow-100 overflow-x-hidden">
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
-          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 z-10 w-auto">
-             <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] group-hover:scale-[2.6] md:group-hover:scale-[2.4] origin-left transition-transform duration-300 ml-4 md:ml-0 pointer-events-none" />
+          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 w-auto">
+             <img src="/Logosisgekotgm.png" alt="SISGEKO" className="h-10 md:h-14 w-auto object-contain scale-[2.4] md:scale-[2.2] group-hover:scale-[2.6] md:group-hover:scale-[2.4] origin-left transition-transform duration-300 ml-4 md:ml-0" />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative group transition-all duration-700 ${showHero || ['pending', 'history'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-[32rem] order-3 md:order-2 flex-grow md:flex-grow-0 relative z-20 group transition-all duration-700 ${showHero || ['pending', 'history'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
               type="text" 
@@ -313,7 +313,7 @@ function App() {
             </button>
           </form>
 
-          <div className="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-4 flex-nowrap order-2 md:order-3">
+          <div className="flex items-center gap-2 sm:gap-4 ml-2 sm:ml-4 flex-nowrap order-2 md:order-3 relative z-20">
             {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
               <div className="flex items-center bg-gray-100/50 p-1 rounded-2xl border border-gray-200/50 mr-2">
                 <button 
