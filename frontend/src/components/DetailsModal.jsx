@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 
 const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onEdit }) => {
     const [activeImage, setActiveImage] = useState(null);
+    const [expandedLinkedId, setExpandedLinkedId] = useState(null);
 
     // Resetear imagen si cambiamos de item y bloquear scroll
     useEffect(() => {
         setActiveImage(null);
+        setExpandedLinkedId(null);
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -244,31 +246,49 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                             </h3>
                                             
                                             <div className="grid grid-cols-1 gap-6">
-                                                {details.insights_vinculados.map((ins, idx) => (
-                                                    <div key={idx} className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 hover:shadow-xl transition-all hover:border-blue-100 group">
-                                                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                                                            <div className="flex flex-col gap-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-100/50">
-                                                                        {ins.tipo_origen_nombre || 'Información'}
-                                                                    </span>
-                                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                                                        Ref: {ins.origen_informacion || 'Doc. Xeral'}
-                                                                    </span>
+                                                {details.insights_vinculados.map((ins, idx) => {
+                                                    const isExpanded = expandedLinkedId === `ins-${idx}`;
+                                                    return (
+                                                        <div 
+                                                            key={idx} 
+                                                            onClick={() => setExpandedLinkedId(isExpanded ? null : `ins-${idx}`)}
+                                                            className={`bg-white border rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
+                                                                isExpanded ? 'border-blue-200 shadow-xl ring-1 ring-blue-50' : 'border-gray-100 hover:shadow-lg hover:border-blue-100'
+                                                            }`}
+                                                        >
+                                                            <div className="flex justify-between items-start gap-4">
+                                                                <div className="flex flex-col gap-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-100/50">
+                                                                            {ins.tipo_origen_nombre || 'Información'}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                                                            Ref: {ins.origen_informacion || 'Doc. Xeral'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <h4 className={`text-lg font-black transition-colors ${isExpanded ? 'text-blue-600' : 'text-gray-900'}`}>
+                                                                        {ins.titulo}
+                                                                    </h4>
                                                                 </div>
-                                                                <h4 className="text-lg font-black text-gray-900 group-hover:text-blue-600 transition-colors">
-                                                                    {ins.titulo}
-                                                                </h4>
+                                                                <div className={`mt-2 text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-blue-500' : 'group-hover:text-blue-400'}`}>
+                                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0'}`}>
+                                                                <div className="overflow-hidden">
+                                                                    <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100/50">
+                                                                        <p className="text-base text-gray-600 leading-relaxed">
+                                                                            {ins.insight}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        
-                                                        <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50">
-                                                            <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 group-hover:line-clamp-none transition-all duration-500">
-                                                                {ins.insight}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         </section>
                                     )}
@@ -281,23 +301,44 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 Definicións vinculadas
                                             </h3>
                                             <div className="grid grid-cols-1 gap-6">
-                                                {details.definiciones_vinculadas.map((def, idx) => (
-                                                    <div key={idx} className="bg-white border border-gray-100 rounded-[2rem] p-6 sm:p-8 hover:shadow-xl transition-all hover:border-purple-100 group">
-                                                        <div className="flex flex-col gap-2 mb-4">
-                                                            <span className="bg-purple-50 text-purple-600 self-start px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-purple-100/50">
-                                                                Concepto Técnico
-                                                            </span>
-                                                            <h4 className="text-lg font-black text-gray-900 group-hover:text-purple-600 transition-colors">
-                                                                {def.titulo}
-                                                            </h4>
+                                                {details.definiciones_vinculadas.map((def, idx) => {
+                                                    const isExpanded = expandedLinkedId === `def-${idx}`;
+                                                    return (
+                                                        <div 
+                                                            key={idx} 
+                                                            onClick={() => setExpandedLinkedId(isExpanded ? null : `def-${idx}`)}
+                                                            className={`bg-white border rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
+                                                                isExpanded ? 'border-purple-200 shadow-xl ring-1 ring-purple-50' : 'border-gray-100 hover:shadow-lg hover:border-purple-100'
+                                                            }`}
+                                                        >
+                                                            <div className="flex justify-between items-start gap-4">
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className="bg-purple-50 text-purple-600 self-start px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-purple-100/50">
+                                                                        Concepto Técnico
+                                                                    </span>
+                                                                    <h4 className={`text-lg font-black transition-colors ${isExpanded ? 'text-purple-600' : 'text-gray-900'}`}>
+                                                                        {def.titulo}
+                                                                    </h4>
+                                                                </div>
+                                                                <div className={`mt-2 text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-purple-500' : 'group-hover:text-purple-400'}`}>
+                                                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0'}`}>
+                                                                <div className="overflow-hidden">
+                                                                    <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100/50">
+                                                                        <p className="text-base text-gray-600 leading-relaxed">
+                                                                            {def.definicion}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100/50">
-                                                            <p className="text-sm text-gray-600 leading-relaxed group-hover:text-gray-900 transition-colors">
-                                                                {def.definicion}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         </section>
                                     )}
@@ -362,19 +403,35 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     </h3>
                                                     <div className="grid grid-cols-1 gap-4">
                                                         {details.articulos_vinculados.map((art, idx) => {
+                                                            const isExpanded = expandedLinkedId === `art-${idx}`;
                                                             const desc = art.descripcion || art.DESCRIPCION || art.titulo || 'Artigo sen descrición';
                                                             const code = art.codigo || art.CODIGO;
                                                             return (
-                                                                <div key={idx} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 group flex justify-between items-center">
-                                                                    <div className="flex flex-col gap-1">
-                                                                        <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
-                                                                        <h4 className="text-base font-bold text-gray-900">{desc}</h4>
+                                                                <div 
+                                                                    key={idx} 
+                                                                    onClick={() => setExpandedLinkedId(isExpanded ? null : `art-${idx}`)}
+                                                                    className={`bg-white border rounded-2xl p-5 transition-all cursor-pointer group ${
+                                                                        isExpanded ? 'border-yellow-200 shadow-xl ring-1 ring-yellow-50' : 'border-gray-100 hover:shadow-lg hover:border-yellow-100'
+                                                                    }`}
+                                                                >
+                                                                    <div className="flex justify-between items-center gap-4">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">Artigo</span>
+                                                                            <h4 className={`text-base font-bold transition-colors ${isExpanded ? 'text-yellow-700' : 'text-gray-900'}`}>{desc}</h4>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            {code && (
+                                                                                <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
+                                                                                    {code}
+                                                                                </span>
+                                                                            )}
+                                                                            <div className={`text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-yellow-500' : 'group-hover:text-yellow-400'}`}>
+                                                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                                                </svg>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
-                                                                    {code && (
-                                                                        <span className="text-[11px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                                                                            {code}
-                                                                        </span>
-                                                                    )}
                                                                 </div>
                                                             );
                                                         })}
