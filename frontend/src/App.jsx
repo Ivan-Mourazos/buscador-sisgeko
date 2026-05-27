@@ -27,6 +27,7 @@ function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [itemDetails, setItemDetails] = useState(null);
@@ -128,11 +129,25 @@ function App() {
     // Pero si el usuario borra todo, queremos volver al estado inicial o mostrar resultados vacíos
     
     const delayDebounceFn = setTimeout(() => {
-      fetchResults(query, filters);
+      fetchResults(query, filters, 0, false);
     }, 400); // 400ms de retraso
 
     return () => clearTimeout(delayDebounceFn);
   }, [query, filters, currentView]);
+
+  // Infinite Scroll listener
+  useEffect(() => {
+    const handleInfiniteScroll = () => {
+      if (loading || results.length >= totalCount || currentView !== 'search') return;
+
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200) {
+        fetchResults(query, filters, results.length, true);
+      }
+    };
+
+    window.addEventListener('scroll', handleInfiniteScroll);
+    return () => window.removeEventListener('scroll', handleInfiniteScroll);
+  }, [loading, results.length, totalCount, query, filters, currentView]);
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -147,12 +162,14 @@ function App() {
     setCurrentView('search');
   };
 
-  const fetchResults = async (q, f) => {
-    if (abortControllerRef.current) {
+  const fetchResults = async (q, f, offset = 0, append = false) => {
+    if (!append && abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     const controller = new AbortController();
-    abortControllerRef.current = controller;
+    if (!append) {
+      abortControllerRef.current = controller;
+    }
 
     setLoading(true);
     try {
@@ -160,19 +177,24 @@ function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
-        body: JSON.stringify({ query: q, filters: f })
+        body: JSON.stringify({ query: q, filters: f, limit: 50, offset })
       });
       const data = await res.json();
       if (data.success) {
-        setResults(data.results);
+        if (append) {
+          setResults(prev => [...prev, ...data.results]);
+        } else {
+          setResults(data.results);
+        }
         setFacets(data.facets);
+        setTotalCount(data.total);
         setError(null);
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
       setError("Error ao conectar co servidor");
     } finally {
-      if (abortControllerRef.current === controller) {
+      if (abortControllerRef.current === controller || append) {
         setLoading(false);
       }
     }
@@ -244,11 +266,12 @@ function App() {
   const clearAll = () => {
     const defaultFilters = { familias: [], subfamilias: [], procesos: [], tipo_origen: [], categories: [] };
     setFilters(defaultFilters);
-    fetchResults(query, defaultFilters);
+    fetchResults(query, defaultFilters, 0, false);
     setQuery('');
     setViewMode('hero');
     setCurrentView('search');
     setResults([]);
+    setTotalCount(0);
   };
 
   const goHome = () => {
@@ -456,7 +479,7 @@ function App() {
               <>
                 <div className="mb-8 flex items-center justify-between">
                   <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">Resultados 
-                  {displayResults.length > 0 && <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-black"> {displayResults.length} </span>}</h2>
+                  {totalCount > 0 && <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-black"> {totalCount} </span>}</h2>
                   <div className="h-px flex-grow ml-4 bg-gray-100" />
                 </div>
 
@@ -468,15 +491,22 @@ function App() {
                     <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
                   </div>
                 ) : (
-                  <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity ${loading ? 'opacity-40' : 'opacity-100'}`}>
-                    {displayResults.map((item, idx) => (
-                      <ResultCard 
-                        key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} 
-                        item={item} 
-                        onClick={() => handleSelectItem(item)} 
-                        onPrefetch={() => handlePrefetchItem(item)}
-                      />
-                    ))}
+                  <div className="pb-20">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity ${loading && results.length === 0 ? 'opacity-40' : 'opacity-100'}`}>
+                      {displayResults.map((item, idx) => (
+                        <ResultCard 
+                          key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} 
+                          item={item} 
+                          onClick={() => handleSelectItem(item)} 
+                          onPrefetch={() => handlePrefetchItem(item)}
+                        />
+                      ))}
+                    </div>
+                    {loading && results.length > 0 && (
+                      <div className="flex justify-center py-6">
+                        <div className="w-8 h-8 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin" />
+                      </div>
+                    )}
                   </div>
                 )}
               </>
