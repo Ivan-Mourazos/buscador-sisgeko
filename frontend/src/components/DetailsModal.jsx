@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
-const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onEdit }) => {
+const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onEdit, user }) => {
     const [activeImage, setActiveImage] = useState(null);
     const [expandedLinkedId, setExpandedLinkedId] = useState(null);
+
+    // Versiones / Historial State
+    const [historyData, setHistoryData] = useState([]);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+    const [historyError, setHistoryError] = useState(null);
 
     const handleToggle = (e, id) => {
         const isExpanding = expandedLinkedId !== id;
@@ -19,6 +25,9 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
     useEffect(() => {
         setActiveImage(null);
         setExpandedLinkedId(null);
+        setShowHistory(false);
+        setHistoryData([]);
+        setHistoryError(null);
         if (isOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -26,6 +35,34 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
         }
         return () => { document.body.style.overflow = 'unset'; };
     }, [item, isOpen]);
+
+    const loadVersionHistory = async () => {
+        if (showHistory) {
+            setShowHistory(false);
+            return;
+        }
+
+        setHistoryLoading(true);
+        setHistoryError(null);
+        try {
+            const type = item._type === 'definicion' ? 'definicion' : 'insight';
+            const id = item.id_articulo || item.id_insight || item.id_definicion;
+            const res = await fetch(`/api/history/${type}/${id}`);
+            const data = await res.json();
+            if (data.success) {
+                setHistoryData(data.history || []);
+                setShowHistory(true);
+            } else {
+                throw new Error(data.message || 'Erro ao cargar o histórico');
+            }
+        } catch (err) {
+            console.error("Error loading version history:", err);
+            setHistoryError(err.message);
+            setShowHistory(true);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
 
     if (!isOpen || !item) return null;
 
@@ -408,6 +445,120 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 </section>
                                             )}
                                         </div>
+                                    )}
+
+                                    {/* SECCIÓN HISTÓRICO DE VERSIÓNS (SOLO ADMINS - TEMPORALMENTE EDITORES) */}
+                                    {(user?.role === 'admin' || user?.rol === 'admin' || user?.role === 'editor' || user?.rol === 'editor') && item._type !== 'articulo' && (
+                                        <section className="border-t border-gray-100 pt-8 animate-in fade-in duration-300">
+                                            <div className="flex items-center justify-between mb-6">
+                                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-4">
+                                                    <span className="w-8 h-[2px] bg-red-500 rounded-full"></span>
+                                                    Control de versións (Admin)
+                                                </h3>
+                                                <button
+                                                    onClick={loadVersionHistory}
+                                                    disabled={historyLoading}
+                                                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all active:scale-95 flex items-center gap-1.5"
+                                                >
+                                                    {historyLoading ? (
+                                                        <div className="w-3.5 h-3.5 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div>
+                                                    ) : (
+                                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    )}
+                                                    {showHistory ? 'Ocultar histórico' : 'Ver histórico de versións'}
+                                                </button>
+                                            </div>
+
+                                            {showHistory && (
+                                                <div className="bg-gray-50/50 rounded-3xl p-6 border border-gray-100/80 animate-in slide-in-from-top-2 duration-300">
+                                                    {historyError ? (
+                                                        <div className="text-xs font-bold text-red-500 p-2 text-center bg-red-50 border border-dashed border-red-100 rounded-xl">
+                                                            {historyError}
+                                                        </div>
+                                                    ) : historyData.length === 0 ? (
+                                                        <div className="text-xs text-gray-400 italic p-4 text-center">
+                                                            Non se atoparon versións aprobadas anteriores no rexistro de cambios.
+                                                        </div>
+                                                    ) : (
+                                                        <div className="relative pl-6 border-l border-gray-200 flex flex-col gap-6">
+                                                            {historyData.map((hItem, hIdx) => {
+                                                                let payload = {};
+                                                                try {
+                                                                    payload = typeof hItem.comentario_cambio === 'string' 
+                                                                        ? JSON.parse(hItem.comentario_cambio) 
+                                                                        : hItem.comentario_cambio;
+                                                                } catch (e) {}
+
+                                                                const displayDate = hItem.fecha_aprobacion 
+                                                                    ? new Date(hItem.fecha_aprobacion).toLocaleString('gl-ES', {
+                                                                        day: '2-digit', month: '2-digit', year: 'numeric',
+                                                                        hour: '2-digit', minute: '2-digit'
+                                                                    }) 
+                                                                    : 'Data descoñecida';
+
+                                                                return (
+                                                                    <div key={hItem.ID || hIdx} className="relative flex flex-col gap-3 group">
+                                                                        {/* Nodo del timeline */}
+                                                                        <span className="absolute -left-[31px] top-1.5 w-4.5 h-4.5 rounded-full border-4 border-white bg-red-500 group-hover:scale-110 transition-transform"></span>
+                                                                        
+                                                                        {/* Meta del cambio */}
+                                                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                                                            <span className="text-[11px] text-gray-700 font-extrabold">{displayDate}</span>
+                                                                            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider">
+                                                                                <span className="bg-yellow-50 text-yellow-600 px-2 py-0.5 rounded-md border border-yellow-100">Edi: {hItem.editor}</span>
+                                                                                <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md border border-emerald-100">Apr: {hItem.aprobador || 'Sistema'}</span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Contenido del cambio */}
+                                                                        <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm group-hover:shadow-md transition-all flex flex-col gap-3">
+                                                                            {payload.titulo && (
+                                                                                <div className="flex flex-col">
+                                                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Título / Termo</span>
+                                                                                    <span className="text-xs font-bold text-gray-900 leading-snug">{payload.titulo}</span>
+                                                                                </div>
+                                                                            )}
+                                                                            {(payload.insight || payload.definicion) && (
+                                                                                <div className="flex flex-col border-t border-dashed border-gray-100 pt-2.5">
+                                                                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Contido</span>
+                                                                                    <p className="text-xs text-gray-600 font-medium leading-relaxed whitespace-pre-wrap">
+                                                                                        {payload.insight || payload.definicion}
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                            {item._type === 'insight' && (payload.origen_informacion || payload.detalle_origen_informacion) && (
+                                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-dashed border-gray-100 pt-2.5">
+                                                                                    {payload.origen_informacion && (
+                                                                                        <div className="flex flex-col">
+                                                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Fonte / Orixe</span>
+                                                                                            <span className="text-[11px] font-bold text-gray-800">{payload.origen_informacion}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {payload.detalle_origen_informacion && (
+                                                                                        <div className="flex flex-col">
+                                                                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Detalle da Fonte</span>
+                                                                                            <span className="text-[11px] text-gray-600 italic font-medium">{payload.detalle_origen_informacion}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
+                                                                            {(payload.resumen_edicion || payload.comentario || payload.motivo) && (
+                                                                                <div className="flex flex-col border-t border-dashed border-gray-100 pt-2.5 bg-yellow-50/20 p-2.5 rounded-xl border border-yellow-100/50 mt-1">
+                                                                                    <span className="text-[9px] font-black text-yellow-600 uppercase tracking-widest leading-none mb-1">Motivo do Cambio</span>
+                                                                                    <span className="text-[11px] text-yellow-700 font-medium italic">{payload.resumen_edicion || payload.comentario || payload.motivo}</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </section>
                                     )}
                                 </div>
                             )}

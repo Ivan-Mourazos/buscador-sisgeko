@@ -122,6 +122,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
             if (data._type === 'articulo' && !data.imagenes) {
                 data.imagenes = [];
             }
+            // Limpiar motivo edición anterior ("Aprobado por ...") para nueva edición
+            data.resumen_edicion = '';
             setFormData(data);
         } else {
             setFormData({});

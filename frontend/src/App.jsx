@@ -445,6 +445,7 @@ function App() {
         isOpen={!!selectedItem} onClose={() => setSelectedItem(null)} item={selectedItem} details={itemDetails} loading={detailsLoading} 
         isEditable={user?.role === 'admin' || user?.role === 'editor' || user?.rol === 'admin' || user?.rol === 'editor'}
         onEdit={() => handleEditItem({ ...selectedItem, ...itemDetails })}
+        user={user}
       />
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
       <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveItem} onDelete={handleDeleteItem} initialData={editingItem} />

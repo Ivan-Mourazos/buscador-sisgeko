@@ -93,17 +93,23 @@ function PendingTasksView({ onClose, onRefresh, showToast, askConfirm }) {
     if (!diffStr) return null;
     try {
       const diff = typeof diffStr === 'string' ? JSON.parse(diffStr) : diffStr;
+      const ignoredKeys = ['id_insight', 'id_definicion', 'activo', 'eliminado', 'id_tipo_origen', 'procesos_lista', 'familias_lista', 'id_articulo'];
       return (
         <div className="space-y-2 mt-4 text-[11px] sm:text-xs">
           {Object.keys(diff).map(key => {
-            if (key.startsWith('_')) return null;
+            if (key.startsWith('_') || ignoredKeys.includes(key)) return null;
             const label = key.replace(/_/g, ' ').toUpperCase();
             const val = diff[key];
             if (val === null || val === undefined) return null;
+            let displayVal = String(val);
+            if (Array.isArray(val)) {
+              if (val.length === 0) return null;
+              displayVal = val.join(', ');
+            }
             return (
               <div key={key} className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
                 <span className="font-black text-gray-400 min-w-[120px] uppercase tracking-tighter">{label}:</span>
-                <span className="text-gray-700 font-medium break-words leading-relaxed">{String(val)}</span>
+                <span className="text-gray-700 font-medium break-words leading-relaxed">{displayVal}</span>
               </div>
             );
           })}
