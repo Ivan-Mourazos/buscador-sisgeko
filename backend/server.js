@@ -71,6 +71,35 @@ const buildInClause = (arr) => arr.map(x => {
     return !isNaN(num) ? num : `'${String(x).replace(/'/g, "''")}'`;
 }).join(',');
 
+// Caché de metadatos para optimizar velocidad del endpoint de búsqueda
+let metadataCache = null;
+let metadataCacheTime = 0;
+const METADATA_CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+async function getMetadataFacets(pool) {
+    const now = Date.now();
+    if (metadataCache && (now - metadataCacheTime) < METADATA_CACHE_DURATION) {
+        return metadataCache;
+    }
+    
+    // Ejecutar consultas de metadatos estáticos en paralelo
+    const [familiasRes, subfamiliasRes, procesosRes, tiposOrigenRes] = await Promise.all([
+        pool.request().query("SELECT * FROM familias"),
+        pool.request().query("SELECT DISTINCT id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL"),
+        pool.request().query("SELECT * FROM procesos"),
+        pool.request().query("SELECT * FROM tipo_origen")
+    ]);
+    
+    metadataCache = {
+        allFamilias: familiasRes.recordset,
+        allSubfamilias: subfamiliasRes.recordset,
+        allProcesos: procesosRes.recordset,
+        allTiposOrigen: tiposOrigenRes.recordset
+    };
+    metadataCacheTime = now;
+    return metadataCache;
+}
+
 // Nuevo Endpoint Avanzado POST /api/search
 app.post('/api/search', async (req, res) => {
     try {
@@ -78,10 +107,8 @@ app.post('/api/search', async (req, res) => {
         const { categories = [], familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
         
         const pool = await sql.connect(dbConfig);
-        const request = pool.request();
         
         const words = query.trim().split(/\s+/).filter(w => w.length > 0);
-        words.forEach((w, i) => request.input(`q${i}`, sql.NVarChar, `%${w}%`));
 
         let currentUser = null;
         if (req.cookies.auth_token) {
@@ -90,15 +117,21 @@ app.post('/api/search', async (req, res) => {
             } catch (e) {}
         }
 
+        // Crear requests individuales para paralelismo seguro en mssql
+        const createSearchRequest = () => {
+            const reqObj = pool.request();
+            words.forEach((w, i) => reqObj.input(`q${i}`, sql.NVarChar, `%${w}%`));
+            return reqObj;
+        };
+
         // Articulos Base
-        let sqlArtBase = `SELECT a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
-        words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion LIKE @q${i} OR a.codigo LIKE @q${i} OR a.denominacion_proveedor LIKE @q${i})`; });
+        let sqlArtBase = `SELECT TOP 100 a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
+        words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion COLLATE Latin1_General_CI_AI LIKE @q${i} OR a.codigo COLLATE Latin1_General_CI_AI LIKE @q${i} OR a.denominacion_proveedor COLLATE Latin1_General_CI_AI LIKE @q${i})`; });
         sqlArtBase += ` ORDER BY a.descripcion ASC`;
-        const allMatchArts = (await request.query(sqlArtBase)).recordset.map(a => ({ ...a, _type: 'articulo' }));
 
         // Insights Base
         let sqlInsBase = `
-            SELECT i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
+            SELECT TOP 100 i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
             ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
             FROM insights i 
             WHERE (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
@@ -107,13 +140,12 @@ app.post('/api/search', async (req, res) => {
                 WHERE i2.id_insight = i.id_insight 
                 AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
             ) `;
-        words.forEach((_, i) => { sqlInsBase += ` AND (i.insight LIKE @q${i} OR i.titulo LIKE @q${i})`; });
+        words.forEach((_, i) => { sqlInsBase += ` AND (i.insight COLLATE Latin1_General_CI_AI LIKE @q${i} OR i.titulo COLLATE Latin1_General_CI_AI LIKE @q${i})`; });
         sqlInsBase += ` ORDER BY i.titulo ASC`;
-        let allMatchIns = (await request.query(sqlInsBase)).recordset.map(i => ({ ...i, _type: 'insight' }));
 
         // Definiciones Base
         let sqlDefBase = `
-            SELECT d.*, 
+            SELECT TOP 100 d.*, 
             ISNULL(STUFF((
                 SELECT ', ' + f.codigo 
                 FROM rel_definicion_familia rdf2 
@@ -128,14 +160,43 @@ app.post('/api/search', async (req, res) => {
                 WHERE d2.id_definicion = d.id_definicion 
                 AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL)
             ) `;
-        words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo LIKE @q${i} OR d.definicion LIKE @q${i})`; });
+        words.forEach((_, i) => { sqlDefBase += ` AND (d.titulo COLLATE Latin1_General_CI_AI LIKE @q${i} OR d.definicion COLLATE Latin1_General_CI_AI LIKE @q${i})`; });
         sqlDefBase += ` ORDER BY d.titulo ASC`;
-        let allMatchDefs = (await request.query(sqlDefBase)).recordset.map(d => ({ ...d, _type: 'definicion' }));
 
+        const requestArt = createSearchRequest();
+        const requestIns = createSearchRequest();
+        const requestDef = createSearchRequest();
+
+        // Promesas base
+        const promises = [
+            requestArt.query(sqlArtBase),
+            requestIns.query(sqlInsBase),
+            requestDef.query(sqlDefBase),
+            getMetadataFacets(pool)
+        ];
+
+        let draftsPromise = null;
         if (currentUser && currentUser.role === 'editor') {
             const reqDrafts = pool.request();
             reqDrafts.input('userId', sql.Int, currentUser.id);
-            const draftDefs = await reqDrafts.query(`SELECT * FROM cambios_definiciones WHERE id_usuairo_cambio = @userId AND estado IS NULL`);
+            draftsPromise = Promise.all([
+                reqDrafts.query(`SELECT * FROM cambios_definiciones WHERE id_usuairo_cambio = @userId AND estado IS NULL`),
+                reqDrafts.query(`SELECT * FROM cambios_insights WHERE id_usuairo_cambio = @userId AND estado IS NULL`)
+            ]);
+            promises.push(draftsPromise);
+        }
+
+        const resolved = await Promise.all(promises);
+
+        let allMatchArts = resolved[0].recordset.map(a => ({ ...a, _type: 'articulo' }));
+        let allMatchIns = resolved[1].recordset.map(i => ({ ...i, _type: 'insight' }));
+        let allMatchDefs = resolved[2].recordset.map(d => ({ ...d, _type: 'definicion' }));
+        const { allFamilias, allSubfamilias, allProcesos, allTiposOrigen } = resolved[3];
+
+        if (draftsPromise) {
+            const draftsResolved = resolved[4];
+            const draftDefs = draftsResolved[0];
+            const draftIns = draftsResolved[1];
             draftDefs.recordset.forEach(row => {
                 try {
                     const draftData = JSON.parse(row.comentario_cambio);
@@ -144,7 +205,6 @@ app.post('/api/search', async (req, res) => {
                     allMatchDefs.push(item);
                 } catch(e) {}
             });
-            const draftIns = await reqDrafts.query(`SELECT * FROM cambios_insights WHERE id_usuairo_cambio = @userId AND estado IS NULL`);
             draftIns.recordset.forEach(row => {
                 try {
                     const draftData = JSON.parse(row.comentario_cambio);
@@ -154,11 +214,6 @@ app.post('/api/search', async (req, res) => {
                 } catch(e) {}
             });
         }
-
-        const allFamilias = (await pool.request().query("SELECT * FROM familias")).recordset;
-        const allSubfamilias = (await pool.request().query("SELECT DISTINCT id_familia, subfamilia AS nombre FROM articulos WHERE subfamilia IS NOT NULL")).recordset;
-        const allProcesos = (await pool.request().query("SELECT * FROM procesos")).recordset;
-        const allTiposOrigen = (await pool.request().query("SELECT * FROM tipo_origen")).recordset;
 
         const matchInsIds = allMatchIns.map(i => i.id_insight);
         let insProcesosMap = {};
