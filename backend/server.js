@@ -103,9 +103,12 @@ async function getMetadataFacets(pool) {
 // Nuevo Endpoint Avanzado POST /api/search
 app.post('/api/search', async (req, res) => {
     try {
-        const { query = "", filters = {} } = req.body;
+        const { query = "", filters = {}, limit = 50, offset = 0 } = req.body;
         const { categories = [], familias = [], subfamilias = [], procesos = [], tipo_origen = [] } = filters;
         
+        const parsedLimit = parseInt(limit) || 50;
+        const parsedOffset = parseInt(offset) || 0;
+
         const pool = await sql.connect(dbConfig);
         
         const words = query.trim().split(/\s+/).filter(w => w.length > 0);
@@ -124,15 +127,14 @@ app.post('/api/search', async (req, res) => {
             return reqObj;
         };
 
-        // Articulos Base
-        let sqlArtBase = `SELECT TOP 100 a.*, f.codigo as familia_nombre FROM articulos a LEFT JOIN familias f ON a.id_familia = f.id_familia WHERE 1=1 `;
+        // Articulos Base (Columnas ligeras para conteo rápido y filtrado)
+        let sqlArtBase = `SELECT a.id_articulo, a.descripcion, a.codigo, a.id_familia, a.subfamilia, a.denominacion_proveedor FROM articulos a WHERE 1=1 `;
         words.forEach((_, i) => { sqlArtBase += ` AND (a.descripcion COLLATE Latin1_General_CI_AI LIKE @q${i} OR a.codigo COLLATE Latin1_General_CI_AI LIKE @q${i} OR a.denominacion_proveedor COLLATE Latin1_General_CI_AI LIKE @q${i})`; });
         sqlArtBase += ` ORDER BY a.descripcion ASC`;
 
-        // Insights Base
+        // Insights Base (Columnas ligeras para conteo rápido y filtrado)
         let sqlInsBase = `
-            SELECT TOP 100 i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
-            ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
+            SELECT i.id_insight, i.titulo, i.id_tipo_origen 
             FROM insights i 
             WHERE (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
             AND i.version = (
@@ -143,16 +145,9 @@ app.post('/api/search', async (req, res) => {
         words.forEach((_, i) => { sqlInsBase += ` AND (i.insight COLLATE Latin1_General_CI_AI LIKE @q${i} OR i.titulo COLLATE Latin1_General_CI_AI LIKE @q${i})`; });
         sqlInsBase += ` ORDER BY i.titulo ASC`;
 
-        // Definiciones Base
+        // Definiciones Base (Columnas ligeras para conteo rápido y filtrado)
         let sqlDefBase = `
-            SELECT TOP 100 d.*, 
-            ISNULL(STUFF((
-                SELECT ', ' + f.codigo 
-                FROM rel_definicion_familia rdf2 
-                JOIN familias f ON rdf2.id_familia = f.id_familia 
-                WHERE rdf2.id_definicion = d.id_definicion 
-                FOR XML PATH('')
-            ), 1, 2, ''), '') as familias_lista
+            SELECT d.id_definicion, d.titulo 
             FROM definiciones d 
             WHERE (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
             AND d.version = (
@@ -215,7 +210,7 @@ app.post('/api/search', async (req, res) => {
             });
         }
 
-        const matchInsIds = allMatchIns.map(i => i.id_insight);
+        const matchInsIds = allMatchIns.map(i => i.id_insight).filter(id => id > 0);
         let insProcesosMap = {};
         if (matchInsIds.length > 0) {
             const ripData = await pool.request().query(`SELECT id_insight, id_proceso FROM rel_Insight_Proceso WHERE id_insight IN (${buildInClause(matchInsIds)})`);
@@ -292,7 +287,86 @@ app.post('/api/search', async (req, res) => {
                 const titleB = clean(b.titulo || b.descripcion);
                 return titleA.localeCompare(titleB, 'es', { sensitivity: 'base', numeric: true });
             });
-        res.json({ success: true, results: unifiedResults, facets });
+
+        const totalCount = unifiedResults.length;
+        const slicedResults = unifiedResults.slice(parsedOffset, parsedOffset + parsedLimit);
+
+        // Hidratar con detalles completos en lote solo para los resultados visibles
+        const sliceArts = slicedResults.filter(x => x._type === 'articulo' && !x._isDraft);
+        const sliceIns = slicedResults.filter(x => x._type === 'insight' && !x._isDraft);
+        const sliceDefs = slicedResults.filter(x => x._type === 'definicion' && !x._isDraft);
+
+        const detailsPromises = [];
+
+        if (sliceArts.length > 0) {
+            const artIds = sliceArts.map(x => x.id_articulo);
+            detailsPromises.push(pool.request().query(`
+                SELECT a.*, f.codigo as familia_nombre 
+                FROM articulos a 
+                LEFT JOIN familias f ON a.id_familia = f.id_familia 
+                WHERE a.id_articulo IN (${buildInClause(artIds)})
+            `).then(res => res.recordset.map(x => ({ ...x, _type: 'articulo' }))));
+        } else {
+            detailsPromises.push(Promise.resolve([]));
+        }
+
+        if (sliceIns.length > 0) {
+            const insIds = sliceIns.map(x => x.id_insight);
+            detailsPromises.push(pool.request().query(`
+                SELECT i.*, (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) as tipo_origen_nombre,
+                ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
+                FROM insights i 
+                WHERE i.id_insight IN (${buildInClause(insIds)})
+                AND (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
+                AND i.version = (
+                    SELECT MAX(version) FROM insights i2 
+                    WHERE i2.id_insight = i.id_insight 
+                    AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
+                )
+            `).then(res => res.recordset.map(x => ({ ...x, _type: 'insight' }))));
+        } else {
+            detailsPromises.push(Promise.resolve([]));
+        }
+
+        if (sliceDefs.length > 0) {
+            const defIds = sliceDefs.map(x => x.id_definicion);
+            detailsPromises.push(pool.request().query(`
+                SELECT d.*, 
+                ISNULL(STUFF((
+                    SELECT ', ' + f.codigo 
+                    FROM rel_definicion_familia rdf2 
+                    JOIN familias f ON rdf2.id_familia = f.id_familia 
+                    WHERE rdf2.id_definicion = d.id_definicion 
+                    FOR XML PATH('')
+                ), 1, 2, ''), '') as familias_lista
+                FROM definiciones d 
+                WHERE d.id_definicion IN (${buildInClause(defIds)})
+                AND (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
+                AND d.version = (
+                    SELECT MAX(version) FROM definiciones d2 
+                    WHERE d2.id_definicion = d.id_definicion 
+                    AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL)
+                )
+            `).then(res => res.recordset.map(x => ({ ...x, _type: 'definicion' }))));
+        } else {
+            detailsPromises.push(Promise.resolve([]));
+        }
+
+        const [fullArts, fullIns, fullDefs] = await Promise.all(detailsPromises);
+
+        const fullArtsMap = new Map(fullArts.map(x => [x.id_articulo, x]));
+        const fullInsMap = new Map(fullIns.map(x => [x.id_insight, x]));
+        const fullDefsMap = new Map(fullDefs.map(x => [x.id_definicion, x]));
+
+        const detailedResults = slicedResults.map(item => {
+            if (item._isDraft) return item;
+            if (item._type === 'articulo') return fullArtsMap.get(item.id_articulo) || item;
+            if (item._type === 'insight') return fullInsMap.get(item.id_insight) || item;
+            if (item._type === 'definicion') return fullDefsMap.get(item.id_definicion) || item;
+            return item;
+        });
+
+        res.json({ success: true, results: detailedResults, facets, total: totalCount });
     } catch (error) {
         console.error('Error de API:', error);
         res.status(500).json({ success: false, message: 'Error interno del servidor' });
