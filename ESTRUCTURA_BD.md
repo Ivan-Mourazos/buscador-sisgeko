@@ -27,6 +27,10 @@ La base de datos actual está diseñada pensada en SQL Server (`mssql`), soporta
    - `rel_Insight_articulo`: Relaciona insights con artículos específicos.
    - `rel_insight_intencion`: Relaciona insights con preguntas/intenciones.
 
+4. **Tablas de Seguridad y Acceso**
+   - `roles`: Definición de los roles del sistema (Admin, Editor, Lector).
+   - `usuarios`: Cuentas de usuario autorizadas con sus correos y permisos.
+
 ---
 
 ## Detalle de Tablas y Columnas
@@ -120,6 +124,20 @@ Unión entre las preguntas y los insights que las resuelven.
 * **id_insight** (`INT`): Foreign Key -> `insights.id_insight`.
 * **id_intencion** (`INT`): Foreign Key -> `intenciones.id_intencion`.
 
+### 14. roles
+Define los roles y permisos del sistema.
+* **id_rol** (`INT`, Primary Key)
+* **nombre_rol** (`NVARCHAR(100)`): Nombre del rol (ej. "admin", "editor").
+
+### 15. usuarios
+Cuentas de usuario autorizadas para acceder a la administración.
+* **id_usuario** (`INT`, Primary Key)
+* **username** (`NVARCHAR(200)`): Nombre de usuario de acceso.
+* **password_hash** (`NVARCHAR(MAX)`): Hash de la contraseña.
+* **id_rol** (`INT`): Foreign Key -> `roles.id_rol`.
+* **activo** (`BIT`): Indica si el usuario está activo (1) o inactivo (0).
+* **email** (`NVARCHAR(255)`): Correo electrónico para notificaciones.
+
 ---
 
 ## Script SQL de Creación Rápida (DDL)
@@ -164,6 +182,11 @@ CREATE TABLE intenciones (
     intencion NVARCHAR(255)
 );
 
+CREATE TABLE roles (
+    id_rol INT PRIMARY KEY IDENTITY,
+    nombre_rol NVARCHAR(100)
+);
+
 
 -- == 2. TABLAS DEPENDIENTES NIVEL 1 ==
 
@@ -194,6 +217,16 @@ CREATE TABLE rel_definicion_familia (
     id_familia INT,
     CONSTRAINT FK_rdf_definiciones FOREIGN KEY (id_definicion) REFERENCES definiciones(id_definicion),
     CONSTRAINT FK_rdf_familias FOREIGN KEY (id_familia) REFERENCES familias(id_familia)
+);
+
+CREATE TABLE usuarios (
+    id_usuario INT PRIMARY KEY IDENTITY,
+    username NVARCHAR(200) UNIQUE,
+    password_hash NVARCHAR(MAX),
+    id_rol INT,
+    activo BIT,
+    email NVARCHAR(255) NULL,
+    CONSTRAINT FK_usuarios_roles FOREIGN KEY (id_rol) REFERENCES roles(id_rol)
 );
 
 

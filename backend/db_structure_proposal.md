@@ -16,6 +16,7 @@ Permiten identificar quién realiza los cambios y qué permisos tiene.
 *   `password_hash` (NVARCHAR(MAX)): Contraseña cifrada.
 *   `id_rol` (INT, FK -> roles): Rol asignado.
 *   `activo` (BIT): Estado del usuario (1=Activo).
+*   `email` (NVARCHAR(255), NULL): Dirección de correo para notificaciones.
 
 ---
 

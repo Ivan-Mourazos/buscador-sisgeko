@@ -78,6 +78,85 @@
       "data_type": "nvarchar",
       "max_length": -1,
       "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "estado",
+      "data_type": "nvarchar",
+      "max_length": 40,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "id_aprobador",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_definiciones",
+      "column_name": "fecha_aprobacion",
+      "data_type": "datetime",
+      "max_length": 8,
+      "is_nullable": true
+    }
+  ],
+  "cambios_insights": [
+    {
+      "table_name": "cambios_insights",
+      "column_name": "ID",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "id_insight",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "fecha_cambio",
+      "data_type": "datetime",
+      "max_length": 8,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "id_usuairo_cambio",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "comentario_cambio",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "estado",
+      "data_type": "nvarchar",
+      "max_length": 40,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "id_aprobador",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": true
+    },
+    {
+      "table_name": "cambios_insights",
+      "column_name": "fecha_aprobacion",
+      "data_type": "datetime",
+      "max_length": 8,
+      "is_nullable": true
     }
   ],
   "caracteristicas": [
@@ -159,6 +238,13 @@
       "data_type": "bit",
       "max_length": 1,
       "is_nullable": true
+    },
+    {
+      "table_name": "definiciones",
+      "column_name": "resumen_edicion",
+      "data_type": "nvarchar",
+      "max_length": -1,
+      "is_nullable": true
     }
   ],
   "familias": [
@@ -187,7 +273,21 @@
   "insights": [
     {
       "table_name": "insights",
+      "column_name": "ID",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "insights",
       "column_name": "id_insight",
+      "data_type": "int",
+      "max_length": 4,
+      "is_nullable": false
+    },
+    {
+      "table_name": "insights",
+      "column_name": "version",
       "data_type": "int",
       "max_length": 4,
       "is_nullable": false
@@ -232,6 +332,27 @@
       "column_name": "titulo",
       "data_type": "nvarchar",
       "max_length": 510,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "activo",
+      "data_type": "bit",
+      "max_length": 1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "eliminado",
+      "data_type": "bit",
+      "max_length": 1,
+      "is_nullable": true
+    },
+    {
+      "table_name": "insights",
+      "column_name": "resumen_edicion",
+      "data_type": "nvarchar",
+      "max_length": -1,
       "is_nullable": true
     }
   ],

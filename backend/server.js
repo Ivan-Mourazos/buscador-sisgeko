@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
+const { initScheduler } = require('./scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -811,4 +812,5 @@ if (fs.existsSync(distPath)) {
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor Sisgeko listo en puerto ${PORT}`);
+    initScheduler();
 });
