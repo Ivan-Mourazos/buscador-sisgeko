@@ -45,6 +45,7 @@ function App() {
 
   const searchInputRef = useRef(null);
   const detailsCache = useRef(new Map());
+  const abortControllerRef = useRef(null);
   const [toast, setToast] = useState(null);
   const [confirmData, setConfirmData] = useState(null); // { title: '', message: '', onConfirm: () => {} }
 
@@ -81,7 +82,12 @@ function App() {
 
     const handleScroll = () => setShowScrollTop(window.scrollY > 300);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const fetchPendingCount = useCallback(async () => {
@@ -142,22 +148,33 @@ function App() {
   };
 
   const fetchResults = async (q, f) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setLoading(true);
     try {
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({ query: q, filters: f })
       });
       const data = await res.json();
       if (data.success) {
         setResults(data.results);
         setFacets(data.facets);
+        setError(null);
       }
     } catch (err) {
+      if (err.name === 'AbortError') return;
       setError("Error ao conectar co servidor");
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === controller) {
+        setLoading(false);
+      }
     }
   };
 
@@ -206,6 +223,11 @@ function App() {
       const data = await res.json();
       
       if(data.success) {
+        // Limpiar caché de detalles para forzar recarga
+        if (id) {
+          const type = newItem._type === 'definicion' ? 'definicion' : newItem._type;
+          detailsCache.current.delete(`${type}-${id}`);
+        }
         showToast(data.message, 'success');
         setEditingItem(null);
         setIsCreateModalOpen(false);
@@ -233,22 +255,67 @@ function App() {
     clearAll();
   };
 
+  // Pre-carga y caché para detalles
+  const fetchDetailsForCache = async (type, id) => {
+    const cacheKey = `${type}-${id}`;
+    if (detailsCache.current.has(cacheKey)) {
+      return detailsCache.current.get(cacheKey);
+    }
+    
+    if (!fetchDetailsForCache.activePromises) {
+      fetchDetailsForCache.activePromises = new Map();
+    }
+    if (fetchDetailsForCache.activePromises.has(cacheKey)) {
+      return fetchDetailsForCache.activePromises.get(cacheKey);
+    }
+
+    const promise = (async () => {
+      try {
+        const res = await fetch(`/api/details?type=${type}&id=${id}`);
+        const data = await res.json();
+        if (data.success) {
+          detailsCache.current.set(cacheKey, data.details);
+          return data.details;
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        fetchDetailsForCache.activePromises.delete(cacheKey);
+      }
+      return null;
+    })();
+
+    fetchDetailsForCache.activePromises.set(cacheKey, promise);
+    return promise;
+  };
+
+  const handlePrefetchItem = useCallback((item) => {
+    const type = item._type === 'definicion' ? 'definicion' : item._type;
+    const id = item.id_articulo || item.id_insight || item.id_definicion;
+    if (!id) return;
+    fetchDetailsForCache(type, id);
+  }, []);
+
   const handleSelectItem = async (item) => {
     setSelectedItem(item);
+    const type = item._type === 'definicion' ? 'definicion' : item._type;
+    const id = item.id_articulo || item.id_insight || item.id_definicion;
+    if (!id) return;
+
+    const cacheKey = `${type}-${id}`;
+    if (detailsCache.current.has(cacheKey)) {
+      setItemDetails(detailsCache.current.get(cacheKey));
+      setDetailsLoading(false);
+      return;
+    }
+
     setItemDetails(null);
     setDetailsLoading(true);
-    try {
-      const type = item._type === 'definicion' ? 'definicion' : item._type;
-      const id = item.id_articulo || item.id_insight || item.id_definicion;
-      if (!id) throw new Error("ID non atopado");
-      const res = await fetch(`/api/details?type=${type}&id=${id}`);
-      const data = await res.json();
-      if (data.success) setItemDetails(data.details);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setDetailsLoading(false);
+    const details = await fetchDetailsForCache(type, id);
+    if (details) {
+      setItemDetails(details);
     }
+    setDetailsLoading(false);
   };
 
   const handleDeleteItem = async (item) => {
@@ -271,6 +338,9 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
+        // Limpiar de la caché de detalles
+        const type = item._type === 'definicion' ? 'definicion' : item._type;
+        detailsCache.current.delete(`${type}-${id}`);
         showToast(data.message, 'success');
         fetchPendingCount();
         setIsCreateModalOpen(false);
@@ -400,7 +470,12 @@ function App() {
                 ) : (
                   <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pb-20 transition-opacity ${loading ? 'opacity-40' : 'opacity-100'}`}>
                     {displayResults.map((item, idx) => (
-                      <ResultCard key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} item={item} onClick={() => handleSelectItem(item)} />
+                      <ResultCard 
+                        key={`${item._type}-${item.id_articulo || item.id_insight || item.id_definicion}-${idx}`} 
+                        item={item} 
+                        onClick={() => handleSelectItem(item)} 
+                        onPrefetch={() => handlePrefetchItem(item)}
+                      />
                     ))}
                   </div>
                 )}
