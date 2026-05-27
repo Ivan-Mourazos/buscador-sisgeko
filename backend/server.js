@@ -294,7 +294,7 @@ app.get('/api/details', async (req, res) => {
 
 
         } else if (type === 'insight') {
-            const basicRes = await request.query(`SELECT i.*, t.tipo_origen as tipo_origen_nombre, STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, '') as procesos_lista FROM insights i LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen WHERE i.id_insight = @id`);
+            const basicRes = await request.query(`SELECT TOP 1 i.*, t.tipo_origen as tipo_origen_nombre, STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, '') as procesos_lista FROM insights i LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen WHERE i.id_insight = @id AND (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL) ORDER BY i.version DESC`);
             if (basicRes.recordset.length > 0) Object.assign(details, basicRes.recordset[0]);
             const intRes = await request.query(`SELECT it.intencion FROM rel_insight_intencion rii JOIN intenciones it ON rii.id_intencion = it.id_intencion WHERE rii.id_insight = @id`);
             details.intenciones = intRes.recordset.map(i => i.intencion);
@@ -560,11 +560,11 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
                       WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
 
         // 2. Históricos maestros (migrados)
-        const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, titulo,
+        const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, titulo, definicion,
                       NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
                       FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
         
-        const qInsMaster = `SELECT id_insight as ID, id_insight as origId, titulo,
+        const qInsMaster = `SELECT id_insight as ID, id_insight as origId, titulo, insight,
                       NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
                       FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
 
@@ -576,7 +576,12 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
         // Mapear maestros para que tengan el mismo formato JSON que los cambios
         const masterHistory = [...defsM.recordset, ...insM.recordset].map(row => ({
             ...row,
-            comentario_cambio: JSON.stringify({ titulo: row.titulo, _operation: 'HISTO' })
+            comentario_cambio: JSON.stringify({ 
+                titulo: row.titulo, 
+                _operation: 'HISTO',
+                definicion: row.definicion,
+                insight: row.insight
+            })
         }));
 
         const history = [...defsC.recordset, ...insC.recordset, ...masterHistory]
@@ -589,6 +594,46 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
         res.json({ success: true, history });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao obter historial: ' + error.message });
+    }
+});
+
+app.get('/api/history/:type/:id', authenticate, checkRole(['admin', 'editor']), async (req, res) => {
+    const { type, id } = req.params;
+    try {
+        const pool = await sql.connect(dbConfig);
+        const request = pool.request();
+        request.input('id', sql.Int, parseInt(id));
+
+        if (type === 'insight') {
+            const query = `
+                SELECT c.ID, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, 
+                       u.username as editor, a.username as aprobador
+                FROM cambios_insights c
+                LEFT JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario
+                LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                WHERE c.id_insight = @id AND c.estado = 'APROBADO'
+                ORDER BY c.fecha_aprobacion DESC
+            `;
+            const result = await request.query(query);
+            res.json({ success: true, history: result.recordset });
+        } else if (type === 'definicion') {
+            const query = `
+                SELECT c.ID, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, 
+                       u.username as editor, a.username as aprobador
+                FROM cambios_definiciones c
+                LEFT JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario
+                LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                WHERE c.id_definicion = @id AND c.estado = 'APROBADO'
+                ORDER BY c.fecha_aprobacion DESC
+            `;
+            const result = await request.query(query);
+            res.json({ success: true, history: result.recordset });
+        } else {
+            res.status(400).json({ success: false, message: 'Tipo no válido' });
+        }
+    } catch (error) {
+        console.error("Error ao obter histórico por rexistro:", error);
+        res.status(500).json({ success: false, message: 'Error interno de servidor: ' + error.message });
     }
 });
 
