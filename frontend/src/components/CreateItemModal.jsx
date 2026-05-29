@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const InputField = ({ label, name, placeholder, type = "text", required = false, value, onChange }) => (
     <div className="space-y-1.5 flex-grow">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
         <input
             type={type}
             name={name}
@@ -10,14 +10,14 @@ const InputField = ({ label, name, placeholder, type = "text", required = false,
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300"
+            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500"
         />
     </div>
 );
 
 const TextAreaField = ({ label, name, placeholder, required = false, value, onChange }) => (
     <div className="space-y-1.5">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
         <textarea
             name={name}
             value={value || ''}
@@ -25,20 +25,20 @@ const TextAreaField = ({ label, name, placeholder, required = false, value, onCh
             placeholder={placeholder}
             required={required}
             rows={3}
-            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-300 resize-none"
+            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500 resize-none"
         />
     </div>
 );
 
 const SelectField = ({ label, name, value, onChange, options, required = false }) => (
     <div className="space-y-1.5 flex-grow">
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
         <select
             name={name}
             value={value || ''}
             onChange={onChange}
             required={required}
-            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700 placeholder:text-gray-400 appearance-none cursor-pointer"
+            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500 appearance-none cursor-pointer"
         >
             <option value="" disabled>Selecciona unha opción...</option>
             {options.map(opt => (
@@ -242,21 +242,21 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden border dark:border-zinc-700/80 transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 flex justify-between items-start sm:items-center bg-gray-50/50 gap-2">
+                <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-start sm:items-center bg-gray-50/50 dark:bg-zinc-950/20 gap-2">
                     <div>
-                        <h2 className="text-xl font-black text-gray-900">
+                        <h2 className="text-xl font-black text-gray-900 dark:text-white">
                             {initialData ? `Editar ${type === 'insight' ? 'Insight' : 'Definición'}` : step === 1 ? 'Que queres engadir?' : `Novo ${type === 'insight' ? 'Insight' : 'Definición'}`}
                         </h2>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5">
                             {initialData ? 'Modifica os campos necesarios para actualizar a información' : 'Define un novo elemento para a base de datos'}
                         </p>
                     </div>
                     <button
                         onClick={resetAndClose}
-                        className="p-2.5 hover:bg-red-50 hover:text-red-500 rounded-2xl transition-all text-gray-400"
+                        className="p-2.5 hover:bg-red-50 dark:hover:bg-red-950/25 hover:text-red-500 rounded-2xl transition-all text-gray-400 dark:text-zinc-500"
                     >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -269,7 +269,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-6 items-stretch">
                             <button
                                 onClick={() => handleNext('insight')}
-                                className="group p-8 bg-blue-50/30 border-2 border-blue-100/50 rounded-[2.5rem] hover:border-blue-400 hover:bg-blue-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                className="group p-8 bg-blue-50/30 dark:bg-blue-950/10 border-2 border-blue-100/50 dark:border-blue-900/30 rounded-[2.5rem] hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
                             >
                                 <div className="w-16 h-16 bg-blue-500 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform">
                                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -277,14 +277,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     </svg>
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-gray-900 leading-tight">Insight</h3>
-                                    <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-black">Datos clave</p>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Insight</h3>
+                                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 uppercase tracking-[0.2em] font-black">Datos clave</p>
                                 </div>
                             </button>
 
                             <button
                                 onClick={() => handleNext('definicion')}
-                                className="group p-8 bg-purple-50/30 border-2 border-purple-100/50 rounded-[2.5rem] hover:border-purple-400 hover:bg-purple-50 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                                className="group p-8 bg-purple-50/30 dark:bg-purple-950/10 border-2 border-purple-100/50 dark:border-purple-900/30 rounded-[2.5rem] hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/20 transition-all text-center flex flex-col items-center gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
                             >
                                 <div className="w-16 h-16 bg-purple-500 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform">
                                     <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -292,8 +292,8 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     </svg>
                                 </div>
                                 <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-gray-900 leading-tight">Definición</h3>
-                                    <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-black">Conceptos clave</p>
+                                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Definición</h3>
+                                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 uppercase tracking-[0.2em] font-black">Conceptos clave</p>
                                 </div>
                             </button>
                         </div>
@@ -317,13 +317,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
                                     {/* Vinculación a Artigos */}
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Artigos vinculados</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Artigos vinculados</label>
                                         <div className="flex flex-wrap gap-2 mb-2">
                                             {(formData.articulos_vinculados || []).map(artId => {
                                                 const art = dbOptions.articulos.find(a => a.id_articulo === artId);
                                                 return (
-                                                    <div key={artId} className="flex items-center gap-2 bg-yellow-50 px-3 py-1.5 rounded-xl border border-yellow-100 shadow-sm animate-in zoom-in duration-200">
-                                                        <span className="text-[11px] font-bold text-yellow-700">{art?.descripcion || `ID: ${artId}`}</span>
+                                                    <div key={artId} className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/20 px-3 py-1.5 rounded-xl border border-yellow-100 dark:border-yellow-900/30 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-yellow-700 dark:text-yellow-400">{art?.descripcion || `ID: ${artId}`}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -332,7 +332,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                                     articulos_vinculados: (prev.articulos_vinculados || []).filter(id => id !== artId)
                                                                 }));
                                                             }}
-                                                            className="p-1 hover:bg-yellow-200 hover:text-yellow-800 rounded-lg transition-colors text-yellow-400"
+                                                            className="p-1 hover:bg-yellow-200 dark:hover:bg-yellow-900/30 hover:text-yellow-800 dark:hover:text-yellow-300 rounded-lg transition-colors text-yellow-400 dark:text-yellow-600"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -343,7 +343,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             })}
                                         </div>
                                         <select
-                                            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700"
+                                            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-200"
                                             onChange={(e) => {
                                                 const id = parseInt(e.target.value);
                                                 if (id && !(formData.articulos_vinculados || []).includes(id)) {
@@ -365,14 +365,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     {/* Vinculación a Procesos */}
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center px-1">
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Procesos vinculados</label>
+                                            <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Procesos vinculados</label>
                                         </div>
                                         <div className="flex flex-wrap gap-2 mb-2">
                                             {(formData.procesos_vinculados || []).map(procId => {
                                                 const proc = dbOptions.procesos.find(p => p.id_proceso === procId);
                                                 return (
-                                                    <div key={procId} className="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 shadow-sm animate-in zoom-in duration-200">
-                                                        <span className="text-[11px] font-bold text-blue-700">{proc?.nombre || `ID: ${procId}`}</span>
+                                                    <div key={procId} className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/20 px-3 py-1.5 rounded-xl border border-blue-100 dark:border-blue-900/30 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400">{proc?.nombre || `ID: ${procId}`}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -381,7 +381,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                                     procesos_vinculados: (prev.procesos_vinculados || []).filter(id => id !== procId)
                                                                 }));
                                                             }}
-                                                            className="p-1 hover:bg-blue-200 hover:text-blue-800 rounded-lg transition-colors text-blue-400"
+                                                            className="p-1 hover:bg-blue-200 dark:hover:bg-blue-900/30 hover:text-blue-800 dark:hover:text-blue-300 rounded-lg transition-colors text-blue-400 dark:text-blue-650"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -410,7 +410,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                         }}
                                                         className={`px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${isSelected
                                                                 ? 'bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20'
-                                                                : 'bg-white border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-500'
+                                                                : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-500 dark:hover:text-blue-400'
                                                             }`}
                                                     >
                                                         {proc.nombre}
@@ -427,12 +427,12 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             type="button"
                                             disabled={isUploading}
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="px-4 py-3 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-2xl hover:bg-blue-100 transition-all mb-0.5 disabled:opacity-50"
+                                            className="px-4 py-3 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase rounded-2xl hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-all mb-0.5 disabled:opacity-50"
                                         >
                                             {isUploading ? '...' : 'Subir'}
                                         </button>
                                         {formData.imagen && (
-                                            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 bg-gray-50 flex-shrink-0 mb-1 shadow-sm">
+                                            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex-shrink-0 mb-1 shadow-sm">
                                                 <img
                                                     src={getImgUrl(formData.imagen)}
                                                     alt="Preview"
@@ -461,13 +461,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                     
                                     {/* Vinculación a Familias */}
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Familias vinculadas</label>
+                                        <label className="text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest ml-1">Familias vinculadas</label>
                                         <div className="flex flex-wrap gap-2 mb-2">
                                             {(formData.familias_vinculadas || []).map(famId => {
                                                 const fam = dbOptions.familias.find(f => f.value === famId);
                                                 return (
-                                                    <div key={famId} className="flex items-center gap-2 bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-100 shadow-sm animate-in zoom-in duration-200">
-                                                        <span className="text-[11px] font-bold text-purple-700">{fam?.label || `ID: ${famId}`}</span>
+                                                    <div key={famId} className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/20 px-3 py-1.5 rounded-xl border border-purple-100 dark:border-purple-900/30 shadow-sm animate-in zoom-in duration-200">
+                                                        <span className="text-[11px] font-bold text-purple-700 dark:text-purple-400">{fam?.label || `ID: ${famId}`}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -476,7 +476,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                                     familias_vinculadas: (prev.familias_vinculadas || []).filter(id => id !== famId)
                                                                 }));
                                                             }}
-                                                            className="p-1 hover:bg-purple-200 hover:text-purple-800 rounded-lg transition-colors text-purple-400"
+                                                            className="p-1 hover:bg-purple-200 dark:hover:bg-purple-900/30 hover:text-purple-800 dark:hover:text-purple-300 rounded-lg transition-colors text-purple-400 dark:text-purple-600"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -487,7 +487,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             })}
                                         </div>
                                         <select
-                                            className="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-yellow-50 focus:border-yellow-400 transition-all outline-none text-sm text-gray-700"
+                                            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-200"
                                             onChange={(e) => {
                                                 const id = parseInt(e.target.value);
                                                 if (id && !(formData.familias_vinculadas || []).includes(id)) {
@@ -531,13 +531,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 />
 
                 {step === 2 && (
-                    <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 gap-4">
+                    <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 dark:border-zinc-800 flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 dark:bg-zinc-950/20 gap-4">
                         <div className="flex justify-center sm:justify-start items-center gap-4">
                             {!initialData && (
                                 <button
                                     type="button"
                                     onClick={() => setStep(1)}
-                                    className="flex items-center gap-2 px-6 py-3 text-gray-500 font-bold hover:text-gray-900 transition-colors"
+                                    className="flex items-center gap-2 px-6 py-3 text-gray-500 dark:text-zinc-400 font-bold hover:text-gray-900 dark:hover:text-zinc-200 transition-colors"
                                 >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -549,14 +549,14 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                             {initialData && (
                                 <div className="flex items-center gap-3">
                                     {showDeleteConfirm ? (
-                                        <div className="flex flex-col gap-2 bg-red-50 p-3 rounded-2xl border border-red-100 animate-in fade-in slide-in-from-left-2 transition-all w-full sm:w-64">
-                                            <label className="text-[10px] font-black uppercase text-red-800 tracking-widest ml-1">Motivo do borrado:</label>
+                                        <div className="flex flex-col gap-2 bg-red-50 dark:bg-red-950/20 p-3 rounded-2xl border border-red-100 dark:border-red-900/30 animate-in fade-in slide-in-from-left-2 transition-all w-full sm:w-64">
+                                            <label className="text-[10px] font-black uppercase text-red-800 dark:text-red-400 tracking-widest ml-1">Motivo do borrado:</label>
                                             <textarea
                                                 autoFocus
                                                 value={deleteReason}
                                                 onChange={(e) => setDeleteReason(e.target.value)}
                                                 placeholder="Xustificación obrigat..."
-                                                className="w-full text-xs p-2 rounded-xl border border-red-200 outline-none focus:border-red-400 resize-none h-16 bg-white placeholder-red-300"
+                                                className="w-full text-xs p-2 rounded-xl border border-red-200 dark:border-red-900/40 outline-none focus:border-red-400 resize-none h-16 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 placeholder-red-300 dark:placeholder-red-800/60"
                                             />
                                             <div className="flex gap-2">
                                                 <button
@@ -569,7 +569,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 <button
                                                     type="button"
                                                     onClick={() => { setShowDeleteConfirm(false); setDeleteReason(''); }}
-                                                    className="flex-1 py-2 text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest"
+                                                    className="flex-1 py-2 text-[10px] font-bold text-red-400 dark:text-red-450 hover:text-red-600 dark:hover:text-red-300 uppercase tracking-widest"
                                                 >
                                                     Cancelar
                                                 </button>
@@ -579,7 +579,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         <button
                                             type="button"
                                             onClick={() => setShowDeleteConfirm(true)}
-                                            className="flex items-center gap-2 px-6 py-3 text-red-400 font-bold hover:text-red-600 transition-colors"
+                                            className="flex items-center gap-2 px-6 py-3 text-red-400 dark:text-red-450 font-bold hover:text-red-600 dark:hover:text-red-350 transition-colors"
                                         >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -594,7 +594,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                         <button
                             form="create-form"
                             type="submit"
-                            className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-3.5 bg-yellow-500 hover:bg-yellow-600 text-white font-black rounded-2xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95"
+                            className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-3.5 bg-yellow-500 hover:bg-yellow-600 text-black font-black rounded-2xl shadow-lg shadow-yellow-500/20 transition-all active:scale-95"
                         >
                             {initialData ? 'Actualizar Elemento' : 'Gardar Elemento'}
                         </button>

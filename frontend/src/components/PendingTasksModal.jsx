@@ -53,14 +53,14 @@ const PendingTasksModal = ({ isOpen, onClose, onRefresh }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-[2rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] border dark:border-zinc-700/80">
+                <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/20">
                     <div>
-                        <h2 className="text-xl font-black text-gray-900 leading-tight">Tarefas Pendentes</h2>
-                        <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-bold">Revisión e Aprobación (4 Ollos)</p>
+                        <h2 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Tarefas Pendentes</h2>
+                        <p className="text-xs text-gray-400 dark:text-zinc-500 mt-1 uppercase tracking-widest font-bold">Revisión e Aprobación (4 Ollos)</p>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all">
+                    <button onClick={onClose} className="p-2 hover:bg-red-50 dark:hover:bg-red-950/25 text-gray-400 hover:text-red-500 rounded-xl transition-all">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -70,46 +70,46 @@ const PendingTasksModal = ({ isOpen, onClose, onRefresh }) => {
                 <div className="flex-grow overflow-y-auto p-6 custom-scrollbar">
                     {loading ? (
                         <div className="flex flex-col items-center py-20 opacity-50">
-                            <div className="w-8 h-8 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin mb-4" />
-                            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">Cargando tarefas...</p>
+                            <div className="w-8 h-8 border-4 border-yellow-100 dark:border-yellow-950/20 border-t-yellow-500 rounded-full animate-spin mb-4" />
+                            <p className="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">Cargando tarefas...</p>
                         </div>
                     ) : tasks.length === 0 ? (
-                        <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <div className="text-center py-20 bg-gray-50 dark:bg-zinc-950/20 rounded-3xl border border-dashed border-gray-200 dark:border-zinc-800">
+                             <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border dark:border-zinc-800">
                                 <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                              </div>
-                             <p className="text-gray-500 font-bold">Todo ao día. Non hai cambios pendentes.</p>
+                             <p className="text-gray-500 dark:text-zinc-400 font-bold">Todo ao día. Non hai cambios pendentes.</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
                             {tasks.map(task => (
-                                <div key={`${task._type}-${task.ID}`} className="group bg-white border border-gray-100 p-5 rounded-3xl shadow-sm hover:shadow-md hover:border-yellow-200 transition-all flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                <div key={`${task._type}-${task.ID}`} className="group bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-5 rounded-3xl shadow-sm hover:shadow-md hover:border-yellow-200 dark:hover:border-yellow-500/30 transition-all flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                                                task._type === 'definicion' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                                task._type === 'definicion' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/30' : 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30'
                                             }`}>
                                                 {task._type === 'definicion' ? 'Definición' : 'Insight'}
                                             </span>
-                                            <span className="text-[10px] text-gray-400 font-bold">#{task.ID}</span>
+                                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-bold">#{task.ID}</span>
                                         </div>
-                                        <h3 className="text-base font-bold text-gray-800 leading-tight">
+                                        <h3 className="text-base font-bold text-gray-800 dark:text-zinc-200 leading-tight">
                                             {JSON.parse(task.comentario_cambio).titulo}
                                         </h3>
                                         <div className="mt-2 flex items-center gap-3">
                                             <div className="flex items-center gap-1.5">
-                                                <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-500">
+                                                <div className="w-5 h-5 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center text-[10px] font-bold text-gray-500 dark:text-zinc-400">
                                                     {task.editor?.charAt(0).toUpperCase()}
                                                 </div>
-                                                <span className="text-xs text-gray-500 font-medium">{task.editor}</span>
+                                                <span className="text-xs text-gray-500 dark:text-zinc-400 font-medium">{task.editor}</span>
                                             </div>
-                                            <span className="text-gray-300">•</span>
-                                            <span className="text-[11px] text-gray-400">{new Date(task.fecha_cambio).toLocaleString()}</span>
+                                            <span className="text-gray-300 dark:text-zinc-700">•</span>
+                                            <span className="text-[11px] text-gray-400 dark:text-zinc-500">{new Date(task.fecha_cambio).toLocaleString()}</span>
                                         </div>
                                         {JSON.parse(task.comentario_cambio).resumen_edicion && (
-                                            <p className="mt-3 text-xs bg-gray-50 p-3 rounded-xl text-gray-600 italic border border-gray-100">
+                                            <p className="mt-3 text-xs bg-gray-50 dark:bg-zinc-950/40 p-3 rounded-xl text-gray-600 dark:text-zinc-400 italic border border-gray-100 dark:border-zinc-800">
                                                 "{JSON.parse(task.comentario_cambio).resumen_edicion}"
                                             </p>
                                         )}

@@ -2,10 +2,10 @@ import React, { useState, useMemo } from 'react';
 
 const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, children }) => {
     return (
-        <div className={`select-none ${level > 0 ? 'ml-4 border-l border-gray-100 pl-4' : ''}`}>
+        <div className={`select-none ${level > 0 ? 'ml-4 border-l border-gray-100 dark:border-zinc-800 pl-4' : ''}`}>
             <div 
                 className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-all ${
-                    onToggle ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default'
+                    onToggle ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/50' : 'cursor-default'
                 } group ${level === 0 ? 'mt-2' : 'mt-0.5'}`}
                 onClick={onToggle}
             >
@@ -13,7 +13,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 <div className={`w-4 h-4 rounded-[4px] border-2 flex-shrink-0 transition-all ${
                     isSelected 
                     ? 'bg-yellow-500 border-yellow-500 shadow-sm' 
-                    : 'bg-white border-gray-200 group-hover:border-yellow-300'
+                    : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 group-hover:border-yellow-300 dark:group-hover:border-yellow-500'
                 }`}>
                     {isSelected && (
                         <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
@@ -23,7 +23,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 </div>
                 
                 <span className={`text-[13px] leading-tight transition-colors flex-grow ${
-                    isSelected ? 'text-gray-900 font-black' : 'text-gray-600 font-medium group-hover:text-gray-900'
+                    isSelected ? 'text-gray-900 dark:text-white font-black' : 'text-gray-600 dark:text-zinc-400 font-medium group-hover:text-gray-900 dark:group-hover:text-zinc-200'
                 }`}>
                     {label}
                 </span>
@@ -31,8 +31,8 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                 {count > 0 && (
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border transition-all ${
                         isSelected 
-                        ? 'bg-yellow-50 text-yellow-700 border-yellow-100' 
-                        : 'bg-gray-50 text-gray-500 border-gray-100 group-hover:bg-amber-50 group-hover:text-amber-600 group-hover:border-amber-100'
+                        ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-900/30' 
+                        : 'bg-gray-50 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 border-gray-100 dark:border-zinc-700 group-hover:bg-amber-50 dark:group-hover:bg-yellow-950/20 group-hover:text-amber-600 dark:group-hover:text-yellow-400 group-hover:border-amber-100 dark:group-hover:border-yellow-900/20'
                     }`}>
                         {count}
                     </span>
@@ -125,14 +125,14 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
             <div className="mb-10">
                 {/* ... Header ... */}
                 <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em]">Filtros</h3>
+                    <h3 className="text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-[0.2em]">Filtros</h3>
                     {hasActiveFilters && (
                         <button 
                             onClick={() => {
                                 onClearAll();
                                 setExpandedFamilies({});
                             }}
-                            className="text-[10px] font-bold text-yellow-600 hover:text-yellow-700 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
+                            className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 uppercase tracking-wider flex items-center gap-1 transition-colors cursor-pointer"
                         >
                             Limpiar
                         </button>
@@ -141,7 +141,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
 
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">Categoría</h4>
+                        <h4 className="text-[13px] font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wide">Categoría</h4>
                     </div>
                     <div className="space-y-1">
                         {facets.categories.map(cat => {
@@ -161,7 +161,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 
                 {visibleFamilies.length > 0 && (
                     <div className="mb-4 animate-sweep-staggered" style={{ animationDelay: '400ms' }}>
-                        <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Familia</h4>
+                        <h4 className="text-[13px] font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wide mb-2">Familia</h4>
                         <div className="space-y-1">
                             {visibleFamilies.map(familia => {
                                 const fidStr = String(familia.id_familia);
@@ -206,7 +206,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
 
                 {visibleProcesos.length > 0 && (
                     <div className="mb-4 animate-sweep-staggered" style={{ animationDelay: '500ms' }}>
-                        <h4 className="text-[13px] font-bold text-gray-700 uppercase tracking-wide mb-2">Procesos</h4>
+                        <h4 className="text-[13px] font-bold text-gray-700 dark:text-zinc-300 uppercase tracking-wide mb-2">Procesos</h4>
                         <div className="space-y-1">
                             {visibleProcesos.map(proceso => (
                                 <TreeItem 
@@ -222,8 +222,8 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                 )}
 
                 {visibleOrigins.length > 0 && (
-                    <div className="mt-8 border-t border-gray-50 pt-6 animate-sweep-staggered" style={{ animationDelay: '600ms' }}>
-                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Orixe</h4>
+                    <div className="mt-8 border-t border-gray-50 dark:border-zinc-800 pt-6 animate-sweep-staggered" style={{ animationDelay: '600ms' }}>
+                        <h4 className="text-[11px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-4">Orixe</h4>
                         <div className="space-y-1">
                             {visibleOrigins.map(tipo => (
                                 <TreeItem 
@@ -244,7 +244,7 @@ const SidebarFilters = ({ facets, filters, onFilterChange, onClearAll, hasActive
                         onClearAll();
                         setExpandedFamilies({});
                     }}
-                    className="mt-4 w-full py-2.5 px-4 bg-yellow-50 text-yellow-700 border border-yellow-100 rounded-xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-100 transition-all duration-200 cursor-pointer"
+                    className="mt-4 w-full py-2.5 px-4 bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border border-yellow-100 dark:border-yellow-900/30 rounded-xl text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-yellow-100 dark:hover:bg-yellow-950/40 transition-all duration-200 cursor-pointer"
                 >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />

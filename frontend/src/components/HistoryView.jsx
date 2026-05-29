@@ -103,12 +103,12 @@ const HistoryView = ({ onClose }) => {
         <div className="flex flex-col animate-fade-in-up">
             <div className="flex items-start sm:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Historial de Cambios</h2>
-                    <p className="text-sm sm:text-base text-gray-500 font-medium italic">Rexistro completo de auditoría das accións realizadas</p>
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-zinc-100 tracking-tight">Historial de Cambios</h2>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-zinc-400 font-medium italic">Rexistro completo de auditoría das accións realizadas</p>
                 </div>
                 <button 
                     onClick={onClose}
-                    className="p-3 bg-white border border-gray-200 text-gray-400 hover:text-gray-900 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 flex-shrink-0"
+                    className="p-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-400 dark:text-zinc-500 hover:text-gray-900 dark:hover:text-zinc-200 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 flex-shrink-0"
                     title="Volver á busca"
                 >
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,7 +129,7 @@ const HistoryView = ({ onClose }) => {
                     placeholder="Buscar por título, autor, estado ou tipo de acción..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-[2rem] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all shadow-sm group-hover:shadow-md font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all shadow-sm group-hover:shadow-md font-medium"
                 />
                 {searchTerm && (
                     <button 
@@ -145,9 +145,9 @@ const HistoryView = ({ onClose }) => {
             </div>
 
             {/* Filtros rápidos (Móvil - Selectores compactos) */}
-            <div className="md:hidden mb-6 bg-gray-50/50 p-4 rounded-3xl border border-gray-100/80 flex flex-col gap-3">
+            <div className="md:hidden mb-6 bg-gray-50/50 dark:bg-zinc-950/20 p-4 rounded-3xl border border-gray-100/80 dark:border-zinc-800/80 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Filtros rápidos</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">Filtros rápidos</span>
                     {(opFilter !== 'ALL' || typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
                         <button
                             onClick={() => {
@@ -165,7 +165,7 @@ const HistoryView = ({ onClose }) => {
                     <select
                         value={opFilter}
                         onChange={(e) => setOpFilter(e.target.value)}
-                        className="bg-white border border-gray-200 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 dark:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
                     >
                         <option value="ALL">Acción (Todas)</option>
                         <option value="CREACIÓN">Creación</option>
@@ -176,7 +176,7 @@ const HistoryView = ({ onClose }) => {
                     <select
                         value={typeFilter}
                         onChange={(e) => setTypeFilter(e.target.value)}
-                        className="bg-white border border-gray-200 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 dark:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
                     >
                         <option value="ALL">Tipo (Todos)</option>
                         <option value="definicion">Definición</option>
@@ -186,7 +186,7 @@ const HistoryView = ({ onClose }) => {
                     <select
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="bg-white border border-gray-200 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
+                        className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl pl-2 pr-6 py-2.5 text-[9px] font-black uppercase tracking-wider text-gray-600 dark:text-zinc-400 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 24 24%22 stroke=%22%236B7280%22><path stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222.5%22 d=%22M19 9l-7 7-7-7%22/></svg>')] bg-no-repeat bg-[right_0.4rem_center] bg-[length:0.8rem_0.8rem] text-center"
                     >
                         <option value="ALL">Estado (Todos)</option>
                         <option value="aprobado">Aprobado</option>
@@ -196,7 +196,7 @@ const HistoryView = ({ onClose }) => {
             </div>
 
             {/* Filtros rápidos (Desktop - Pills) */}
-            <div className="hidden md:flex flex-wrap gap-6 items-start bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100/80 mb-8">
+            <div className="hidden md:flex flex-wrap gap-6 items-start bg-gray-50/50 dark:bg-zinc-950/20 p-6 rounded-[2rem] border border-gray-100/80 dark:border-zinc-800/80 mb-8">
                 {/* Cabecera de filtros con opción de limpiar */}
                 <div className="w-full flex items-center justify-between mb-2">
                     <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">Filtros activos</span>
@@ -232,7 +232,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     opFilter === op.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
                                 }`}
                             >
                                 {op.label}
@@ -255,7 +255,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     typeFilter === t.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
                                 }`}
                             >
                                 {t.label}
@@ -278,7 +278,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     statusFilter === s.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:text-gray-900'
+                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
                                 }`}
                             >
                                 {s.label}
@@ -306,17 +306,17 @@ const HistoryView = ({ onClose }) => {
                 </div>
             ) : loading ? (
                 <div className="flex flex-col items-center py-24">
-                    <div className="w-12 h-12 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin mb-4" />
-                    <p className="text-sm font-black uppercase tracking-widest text-gray-400">Cargando historial...</p>
+                    <div className="w-12 h-12 border-4 border-yellow-100 dark:border-yellow-950/20 border-t-yellow-500 rounded-full animate-spin mb-4" />
+                    <p className="text-sm font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">Cargando historial...</p>
                 </div>
             ) : filteredHistory.length === 0 ? (
-                <div className="bg-white rounded-[2.5rem] border border-dashed border-gray-200 p-16 text-center shadow-sm">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-zinc-800 p-16 text-center shadow-sm">
+                    <div className="w-20 h-20 bg-gray-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 border dark:border-zinc-800">
+                        <svg className="w-10 h-10 text-gray-300 dark:text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <p className="text-gray-500 font-bold text-lg">
+                    <p className="text-gray-500 dark:text-zinc-400 font-bold text-lg">
                         Non se atoparon resultados para os filtros activos.
                     </p>
                     {(searchTerm || opFilter !== 'ALL' || typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
@@ -336,10 +336,10 @@ const HistoryView = ({ onClose }) => {
             ) : (
                 <>
                     {/* Desktop Table View */}
-                    <div className="hidden md:block bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                    <div className="hidden md:block bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-xl overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
-                                <thead className="bg-gray-50/50 border-b border-gray-100">
+                                <thead className="bg-gray-50/50 dark:bg-zinc-950/20 border-b border-gray-100 dark:border-zinc-800">
                                     <tr>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Item</th>
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Acción</th>
@@ -349,7 +349,7 @@ const HistoryView = ({ onClose }) => {
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Usuarios</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-50">
+                                <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
                                     {filteredHistory.map(item => {
                                         const info = safeParse(item.comentario_cambio);
                                         const rowKey = `${item._type}-${item.ID}`;
@@ -359,7 +359,7 @@ const HistoryView = ({ onClose }) => {
                                             <React.Fragment key={rowKey}>
                                                 <tr 
                                                     onClick={() => setExpandedId(isExpanded ? null : rowKey)}
-                                                    className={`hover:bg-gray-50/80 transition-all cursor-pointer ${isExpanded ? 'bg-yellow-50/30 shadow-sm border-l-2 border-l-yellow-400' : 'border-l-2 border-l-transparent'}`}
+                                                    className={`hover:bg-gray-50/80 dark:hover:bg-zinc-800/40 transition-all cursor-pointer ${isExpanded ? 'bg-yellow-50/30 dark:bg-yellow-950/10 shadow-sm border-l-2 border-l-yellow-400' : 'border-l-2 border-l-transparent'}`}
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-start gap-3">
@@ -374,7 +374,7 @@ const HistoryView = ({ onClose }) => {
                                                                 }`}>
                                                                     {item._type === 'definicion' ? 'Definición' : 'Insight'}
                                                                 </span>
-                                                                <span className="text-sm font-bold text-gray-900 leading-tight truncate max-w-[180px]" title={info.titulo}>
+                                                                <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-tight truncate max-w-[180px]" title={info.titulo}>
                                                                     {info.titulo}
                                                                 </span>
                                                             </div>
@@ -397,16 +397,16 @@ const HistoryView = ({ onClose }) => {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
-                                                            <span className="text-[11px] text-gray-700 font-bold">
+                                                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
+                                                            <span className="text-[11px] text-gray-700 dark:text-zinc-300 font-bold">
                                                                 {formatDate(item.fecha_cambio)}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
-                                                            <span className="text-[11px] text-gray-700 font-bold">
+                                                            <span className="text-[10px] text-gray-400 dark:text-zinc-500 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
+                                                            <span className="text-[11px] text-gray-700 dark:text-zinc-300 font-bold">
                                                                 {formatDate(item.fecha_aprobacion)}
                                                             </span>
                                                         </div>
@@ -414,20 +414,20 @@ const HistoryView = ({ onClose }) => {
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Edi:</span>
-                                                                <span className="text-xs text-gray-600 font-bold">{item.editor}</span>
+                                                                <span className="text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase w-6">Edi:</span>
+                                                                <span className="text-xs text-gray-600 dark:text-zinc-300 font-bold">{item.editor}</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-[9px] font-bold text-gray-400 uppercase w-6">Apr:</span>
-                                                                <span className="text-xs text-gray-600 font-bold">{item.aprobador || 'Pendente'}</span>
+                                                                <span className="text-[9px] font-bold text-gray-400 dark:text-zinc-500 uppercase w-6">Apr:</span>
+                                                                <span className="text-xs text-gray-600 dark:text-zinc-300 font-bold">{item.aprobador || 'Pendente'}</span>
                                                             </div>
                                                         </div>
                                                     </td>
                                                 </tr>
                                                 {isExpanded && (
-                                                    <tr className="bg-gray-50/20 border-b border-gray-100/50">
+                                                    <tr className="bg-gray-50/20 dark:bg-zinc-950/10 border-b border-gray-100/50 dark:border-zinc-800/50">
                                                         <td colSpan="6" className="px-8 py-6">
-                                                            <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-sm flex flex-col md:flex-row gap-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                            <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col md:flex-row gap-6 animate-in slide-in-from-top-2 fade-in duration-200">
                                                                 {/* Columna Principal: Contido Editado */}
                                                                 <div className="flex-grow flex flex-col gap-4">
                                                                     <div className="flex items-center gap-2 text-gray-800">
@@ -439,15 +439,15 @@ const HistoryView = ({ onClose }) => {
                                                                     
                                                                     <div className="space-y-4">
                                                                         {info.raw.titulo && (
-                                                                            <div className="flex flex-col gap-1 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
+                                                                            <div className="flex flex-col gap-1 bg-gray-50/50 dark:bg-zinc-950/20 p-3 rounded-xl border border-gray-100/50 dark:border-zinc-800/50">
                                                                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Título / Termo</span>
-                                                                                <span className="text-sm font-bold text-gray-900 leading-snug">{info.raw.titulo}</span>
+                                                                                <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-snug">{info.raw.titulo}</span>
                                                                             </div>
                                                                         )}
                                                                         {(info.raw.insight || info.raw.definicion) && (
-                                                                            <div className="flex flex-col gap-1 bg-gray-50/50 p-4 rounded-xl border border-gray-100/50">
-                                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Texto de Versión</span>
-                                                                                <p className="text-sm text-gray-700 font-medium whitespace-pre-wrap leading-relaxed">
+                                                                            <div className="flex flex-col gap-1 bg-gray-50/50 dark:bg-zinc-950/20 p-4 rounded-xl border border-gray-100/50 dark:border-zinc-800/50">
+                                                                                <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-1">Texto de Versión</span>
+                                                                                <p className="text-sm text-gray-700 dark:text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed">
                                                                                     {info.raw.insight || info.raw.definicion}
                                                                                 </p>
                                                                             </div>
@@ -455,15 +455,15 @@ const HistoryView = ({ onClose }) => {
                                                                         {item._type === 'insight' && (info.raw.origen_informacion || info.raw.detalle_origen_informacion) && (
                                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                                                 {info.raw.origen_informacion && (
-                                                                                    <div className="flex flex-col gap-0.5 bg-gray-50/30 p-2.5 rounded-lg border border-gray-100/30">
-                                                                                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Fonte / Orixe</span>
-                                                                                        <span className="text-[11px] font-bold text-gray-800">{info.raw.origen_informacion}</span>
+                                                                                    <div className="flex flex-col gap-0.5 bg-gray-50/30 dark:bg-zinc-950/20 p-2.5 rounded-lg border border-gray-100/30 dark:border-zinc-800/50">
+                                                                                        <span className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none">Fonte / Orixe</span>
+                                                                                        <span className="text-[11px] font-bold text-gray-800 dark:text-zinc-200">{info.raw.origen_informacion}</span>
                                                                                     </div>
                                                                                 )}
                                                                                 {info.raw.detalle_origen_informacion && (
-                                                                                    <div className="flex flex-col gap-0.5 bg-gray-50/30 p-2.5 rounded-lg border border-gray-100/30">
-                                                                                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Detalle da Fonte</span>
-                                                                                        <span className="text-[11px] text-gray-600 italic font-medium">{info.raw.detalle_origen_informacion}</span>
+                                                                                    <div className="flex flex-col gap-0.5 bg-gray-50/30 dark:bg-zinc-950/20 p-2.5 rounded-lg border border-gray-100/30 dark:border-zinc-800/50">
+                                                                                        <span className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none">Detalle da Fonte</span>
+                                                                                        <span className="text-[11px] text-gray-600 dark:text-zinc-400 italic font-medium">{info.raw.detalle_origen_informacion}</span>
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -472,14 +472,14 @@ const HistoryView = ({ onClose }) => {
                                                                 </div>
 
                                                                 {/* Columna Lateral: Motivo */}
-                                                                <div className="md:w-80 shrink-0 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6">
-                                                                    <div className="flex items-center gap-2 text-gray-800">
+                                                                <div className="md:w-80 shrink-0 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-gray-100 dark:border-zinc-800 pt-6 md:pt-0 md:pl-6">
+                                                                    <div className="flex items-center gap-2 text-gray-800 dark:text-zinc-200">
                                                                         <svg className="w-4 h-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                         </svg>
-                                                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 font-mono">Motivo do Cambio</h4>
+                                                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">Motivo do Cambio</h4>
                                                                     </div>
-                                                                    <div className="bg-yellow-50/30 rounded-2xl p-4.5 border border-yellow-100/70 text-xs text-yellow-800 font-medium whitespace-pre-wrap leading-relaxed flex-grow">
+                                                                    <div className="bg-zinc-800/40 dark:bg-zinc-800/40 rounded-2xl p-4 border border-zinc-700/50 dark:border-zinc-700/50 text-xs text-zinc-300 dark:text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed flex-grow">
                                                                         {info.resumen}
                                                                     </div>
                                                                 </div>
@@ -506,8 +506,8 @@ const HistoryView = ({ onClose }) => {
                                 <div
                                     key={rowKey}
                                     onClick={() => setExpandedId(isExpanded ? null : rowKey)}
-                                    className={`bg-white rounded-[2rem] border transition-all cursor-pointer p-5 flex flex-col gap-4 shadow-sm hover:shadow-md ${
-                                        isExpanded ? 'border-yellow-400 ring-2 ring-yellow-400/20' : 'border-gray-100'
+                                    className={`bg-white dark:bg-zinc-900 rounded-[2rem] border dark:border-zinc-800 transition-all cursor-pointer p-5 flex flex-col gap-4 shadow-sm hover:shadow-md ${
+                                        isExpanded ? 'border-yellow-400 ring-2 ring-yellow-400/20 dark:border-yellow-500' : 'border-gray-100 dark:border-zinc-800'
                                     }`}
                                 >
                                     {/* Badges y Estado */}
@@ -545,30 +545,30 @@ const HistoryView = ({ onClose }) => {
                                     </div>
 
                                     {/* Fechas */}
-                                    <div className="grid grid-cols-2 gap-4 bg-gray-50/50 rounded-xl p-3 text-[11px]">
+                                    <div className="grid grid-cols-2 gap-4 bg-gray-50/50 dark:bg-zinc-800/30 rounded-xl p-3 text-[11px]">
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
-                                            <span className="text-gray-700 font-bold">
+                                            <span className="text-[9px] text-gray-400 dark:text-zinc-500 font-black uppercase tracking-tighter mb-0.5">Solicitude</span>
+                                            <span className="text-gray-700 dark:text-zinc-300 font-bold">
                                                 {formatDate(item.fecha_cambio)}
                                             </span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
-                                            <span className="text-gray-700 font-bold">
+                                            <span className="text-[9px] text-gray-400 dark:text-zinc-500 font-black uppercase tracking-tighter mb-0.5">Resolución</span>
+                                            <span className="text-gray-700 dark:text-zinc-300 font-bold">
                                                 {formatDate(item.fecha_aprobacion)}
                                             </span>
                                         </div>
                                     </div>
 
                                     {/* Usuarios */}
-                                    <div className="flex flex-wrap gap-2 items-center justify-between text-xs border-t border-gray-100 pt-3">
+                                    <div className="flex flex-wrap gap-2 items-center justify-between text-xs border-t border-gray-100 dark:border-zinc-800 pt-3">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[9px] font-black text-gray-400 uppercase">Editor:</span>
-                                            <span className="text-gray-600 font-bold">{item.editor}</span>
+                                            <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase">Editor:</span>
+                                            <span className="text-gray-600 dark:text-zinc-300 font-bold">{item.editor}</span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[9px] font-black text-gray-400 uppercase">Aprobador:</span>
-                                            <span className="text-gray-600 font-bold">{item.aprobador || 'Pendente'}</span>
+                                            <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase">Aprobador:</span>
+                                            <span className="text-gray-600 dark:text-zinc-300 font-bold">{item.aprobador || 'Pendente'}</span>
                                         </div>
                                     </div>
 
@@ -577,36 +577,36 @@ const HistoryView = ({ onClose }) => {
                                         <div className="flex flex-col gap-4 mt-2 pt-3 border-t border-dashed border-gray-100 animate-in slide-in-from-top-2 fade-in duration-200" onClick={(e) => e.stopPropagation()}>
                                             {/* Contenido principal editado */}
                                             <div className="flex flex-col gap-2.5">
-                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Contido Editado</span>
+                                                <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none">Contido Editado</span>
                                                 {info.raw.titulo && (
-                                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100/50 text-xs">
-                                                        <span className="text-[8px] font-black text-gray-400 uppercase block mb-0.5">Título / Termo</span>
-                                                        <strong className="text-gray-900 font-bold">{info.raw.titulo}</strong>
+                                                    <div className="bg-gray-50 dark:bg-zinc-800/40 p-3 rounded-xl border border-gray-100/50 dark:border-zinc-700/50 text-xs">
+                                                        <span className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase block mb-0.5">Título / Termo</span>
+                                                        <strong className="text-gray-900 dark:text-zinc-100 font-bold">{info.raw.titulo}</strong>
                                                     </div>
                                                 )}
                                                 {(info.raw.insight || info.raw.definicion) && (
-                                                    <div className="bg-gray-50 p-3.5 rounded-xl border border-gray-100/50 text-xs text-gray-700 leading-relaxed font-medium">
-                                                        <span className="text-[8px] font-black text-gray-400 uppercase block mb-1">Texto de Versión</span>
+                                                    <div className="bg-gray-50 dark:bg-zinc-800/40 p-3.5 rounded-xl border border-gray-100/50 dark:border-zinc-700/50 text-xs text-gray-700 dark:text-zinc-300 leading-relaxed font-medium">
+                                                        <span className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase block mb-1">Texto de Versión</span>
                                                         <p className="whitespace-pre-wrap">{info.raw.insight || info.raw.definicion}</p>
                                                     </div>
                                                 )}
-                                                {item._type === 'insight' && info.raw.origen_informacion && (
-                                                    <div className="bg-gray-50 p-3 rounded-xl border border-gray-100/50 text-xs">
-                                                        <span className="text-[8px] font-black text-gray-400 uppercase block mb-0.5">Orixe / Fonte</span>
-                                                        <span className="text-gray-800 font-semibold">{info.raw.origen_informacion}</span>
+                                                {info.raw.origen_informacion && (
+                                                    <div className="bg-gray-50 dark:bg-zinc-950/20 p-3 rounded-xl border border-gray-100/50 dark:border-zinc-800/50 text-xs">
+                                                        <span className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase block mb-0.5">Orixe / Fonte</span>
+                                                        <span className="text-gray-800 dark:text-zinc-200 font-semibold">{info.raw.origen_informacion}</span>
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* Motivo */}
                                             <div className="flex flex-col gap-1.5">
-                                                <div className="flex items-center gap-1.5 text-yellow-600">
+                                                <div className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-500">
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest">Motivo do Cambio</h4>
                                                 </div>
-                                                <div className="bg-yellow-50/20 rounded-xl p-3 border border-yellow-100 shadow-sm text-xs text-yellow-900 font-medium whitespace-pre-wrap leading-relaxed">
+                                                <div className="bg-zinc-800/40 rounded-xl p-3 border border-zinc-700/50 shadow-sm text-xs text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed">
                                                     {info.resumen}
                                                 </div>
                                             </div>

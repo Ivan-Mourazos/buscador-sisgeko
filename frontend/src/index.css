@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --sisgeko-gold: #8c6508;
   --sisgeko-gold-light: #b08d3e;
@@ -8,11 +10,22 @@
   --glass-dark: rgba(26, 26, 26, 0.9);
 }
 
+.dark {
+  --glass: rgba(24, 24, 27, 0.85);
+  --glass-dark: rgba(15, 15, 17, 0.95);
+}
+
 body {
   margin: 0;
   font-family: 'Outfit', 'Inter', system-ui, sans-serif;
   background: radial-gradient(circle at top right, #fdfbf7, #f3f4f6);
   min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+  background: radial-gradient(circle at top right, #1f1f23, #09090b);
+  background-color: #09090b;
 }
 
 /* Premium Animations */
@@ -37,6 +50,12 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .premium-glass {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
 .premium-modal-backdrop {
@@ -49,6 +68,11 @@ body {
   animation: backdropBlur 0.3s forwards;
 }
 
+.dark .premium-modal-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px) !important;
+}
+
 .premium-modal {
   background: white;
   border-radius: 24px;
@@ -59,6 +83,22 @@ body {
   animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   position: relative;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .premium-modal {
+  background: linear-gradient(135deg, #202023, #121214);
+  border: 1px solid #333338;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95), 0 0 50px rgba(234, 179, 8, 0.03);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .premium-toast-container {
@@ -90,7 +130,8 @@ body {
 
 .premium-button-gold {
   background: linear-gradient(135deg, var(--sisgeko-gold), var(--sisgeko-gold-light));
-  color: white;
+  color: black;
+  font-weight: 900;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(140, 101, 8, 0.3);
 }
@@ -114,4 +155,26 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover { 
   background: rgba(140, 101, 8, 0.4); 
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(234, 179, 8, 0.2);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(234, 179, 8, 0.4);
+}
+
+/* Dark Mode Contrast Overrides for low-contrast grays */
+.dark .dark\:text-zinc-550,
+.dark .dark\:text-zinc-500,
+.dark .text-gray-400,
+.dark .text-zinc-550,
+.dark .text-zinc-500 {
+  color: #a1a1aa !important; /* zinc-400 */
+}
+
+.dark .dark\:text-zinc-400,
+.dark .text-gray-500,
+.dark .text-zinc-400 {
+  color: #d4d4d8 !important; /* zinc-300 */
 }

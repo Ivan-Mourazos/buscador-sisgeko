@@ -144,8 +144,8 @@ const runDailyNotificationNow = async () => {
  * Inicializa el planificador de node-cron.
  */
 const initScheduler = () => {
-    // Configurable por .env (por defecto: todos los días a las 08:00 AM)
-    const cronSchedule = process.env.SMTP_CRON_SCHEDULE || '0 8 * * *';
+    // Configurable por .env (por defecto: de lunes a viernes a las 08:00 AM)
+    const cronSchedule = process.env.SMTP_CRON_SCHEDULE || '0 8 * * 1-5';
     
     console.log(`[SCHEDULER] Programando notificaciones de tarefas. Cron: "${cronSchedule}"`);
     
