@@ -9,6 +9,7 @@ import PendingTasksView from './components/PendingTasksView';
 import HistoryView from './components/HistoryView';
 import ActivityLogView from './components/ActivityLogView';
 import ConfirmModal from './components/ConfirmModal';
+import Chatbot from './components/Chatbot';
 
 function App() {
 
@@ -723,6 +724,8 @@ function App() {
       />
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
       <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveItem} onDelete={handleDeleteItem} initialData={editingItem} />
+
+      <Chatbot />
 
       <button 
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 

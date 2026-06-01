@@ -952,6 +952,151 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Chatbot de Inteligencia Artificial (RAG)
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message, history = [] } = req.body;
+        if (!message) {
+            return res.status(400).json({ success: false, message: 'Falta o mensaje' });
+        }
+
+        const pool = await sql.connect(dbConfig);
+        
+        // 1. RAG - Buscar contexto relevante en la base de datos (por palabras clave)
+        const words = message.trim().split(/\s+/).filter(w => w.length > 2);
+        let contextParts = [];
+        
+        if (words.length > 0) {
+            let artQuery = `SELECT TOP 3 descripcion, codigo, denominacion_proveedor FROM articulos WHERE 1=1 `;
+            let insQuery = `SELECT TOP 3 titulo, insight FROM insights WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) `;
+            let defQuery = `SELECT TOP 3 titulo, definicion FROM definiciones WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) `;
+            
+            const request = pool.request();
+            words.forEach((w, i) => {
+                request.input(`cw${i}`, sql.NVarChar, `%${w}%`);
+                artQuery += ` AND (descripcion COLLATE Latin1_General_CI_AI LIKE @cw${i} OR codigo COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
+                insQuery += ` AND (insight COLLATE Latin1_General_CI_AI LIKE @cw${i} OR titulo COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
+                defQuery += ` AND (titulo COLLATE Latin1_General_CI_AI LIKE @cw${i} OR definicion COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
+            });
+            
+            try {
+                const [artRes, insRes, defRes] = await Promise.all([
+                    request.query(artQuery),
+                    request.query(insQuery),
+                    request.query(defQuery)
+                ]);
+                
+                artRes.recordset.forEach(a => {
+                    contextParts.push(`Artículo: ${a.descripcion} [Código: ${a.codigo}] (Proveedor: ${a.denominacion_proveedor || 'N/A'})`);
+                });
+                insRes.recordset.forEach(i => {
+                    contextParts.push(`Insight: ${i.titulo} - "${i.insight}"`);
+                });
+                defRes.recordset.forEach(d => {
+                    contextParts.push(`Definición de ${d.titulo}: ${d.definicion}`);
+                });
+            } catch (err) {
+                console.error("Error al buscar contexto para chat RAG:", err.message);
+            }
+        }
+        
+        const contextText = contextParts.length > 0 
+            ? contextParts.join('\n\n')
+            : "No se encontraron registros específicos en la base de datos de Sisgeko relacionados con esta pregunta.";
+
+        const aiUrl = process.env.AI_API_URL;
+        const aiKey = process.env.AI_API_KEY || 'ollama';
+        const aiModel = process.env.AI_MODEL_NAME || 'qwen2.5:0.5b';
+
+        if (aiUrl) {
+            try {
+                const messages = [
+                    {
+                        role: "system",
+                        content: `Eres SisgekoBot, el asistente de inteligencia artificial para Toldos Gómez S.L. 
+Tu objetivo es ayudar a los empleados a resolver dudas utilizando el conocimiento interno del sistema.
+Responde de forma clara, profesional y concisa (preferiblemente en gallego o castellano, según te pregunten).
+Si el contexto te da la respuesta, úsala. Si no la sabes, dilo amablemente.
+
+CONTEXTO DEL SISTEMA DE CONOCIMIENTO (SISGEKO):
+${contextText}`
+                    }
+                ];
+
+                const lastHistory = history.slice(-6);
+                lastHistory.forEach(msg => {
+                    messages.push({
+                        role: msg.sender === 'user' ? 'user' : 'assistant',
+                        content: msg.text
+                    });
+                });
+
+                messages.push({
+                    role: "user",
+                    content: message
+                });
+
+                const response = await fetch(`${aiUrl.replace(/\/$/, '')}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': aiKey ? `Bearer ${aiKey}` : ''
+                    },
+                    body: JSON.stringify({
+                        model: aiModel,
+                        messages: messages,
+                        temperature: 0.3,
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error en llamada API: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const reply = data.choices[0]?.message?.content || 'Non se puido xerar unha resposta.';
+                
+                return res.json({
+                    success: true,
+                    reply,
+                    context: contextParts
+                });
+
+            } catch (aiErr) {
+                console.error("Error al conectar con el servicio de IA:", aiErr.message);
+                return res.json({
+                    success: true,
+                    reply: `Non se puido conectar co modelo de IA (${aiModel}). Detalle do erro: ${aiErr.message}. 
+
+Pero atopei este contexto na base de datos para a túa pregunta:
+${contextParts.map(c => `• ${c}`).join('\n')}`,
+                    context: contextParts,
+                    error: aiErr.message
+                });
+            }
+        } else {
+            const fallbackReply = `Ola! Son o simulador de SisgekoBot. 
+
+Como aínda non configuraches a variable 'AI_API_URL' no ficheiro '.env', estou a funcionar en modo simulación. 
+
+Analicei a túa pregunta e recuperei este contexto da base de datos (RAG):
+${contextParts.length > 0 ? contextParts.map(c => `• ${c}`).join('\n') : "Non atopei rexistros relacionados na base de datos."}
+
+Cando conectes un modelo local (Ollama) o una API, responderei en lenguaxe natural usando esta información.`;
+
+            return res.json({
+                success: true,
+                reply: fallbackReply,
+                context: contextParts
+            });
+        }
+    } catch (error) {
+        console.error('Error en /api/chat:', error);
+        res.status(500).json({ success: false, message: 'Error interno del servidor en el chatbot' });
+    }
+});
+
 app.post('/api/logout', (req, res) => {
     res.clearCookie('auth_token').json({ success: true });
 });
