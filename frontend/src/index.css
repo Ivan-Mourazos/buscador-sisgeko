@@ -3,16 +3,16 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --sisgeko-gold: #8c6508;
-  --sisgeko-gold-light: #b08d3e;
-  --sisgeko-black: #1a1a1a;
-  --glass: rgba(255, 255, 255, 0.8);
-  --glass-dark: rgba(26, 26, 26, 0.9);
+  --sisgeko-gold: #d9a71e;
+  --sisgeko-gold-light: #f5c75d;
+  --sisgeko-black: #0b0b0f;
+  --glass: rgba(255, 255, 255, 0.85);
+  --glass-dark: rgba(15, 15, 20, 0.9);
 }
 
 .dark {
-  --glass: rgba(24, 24, 27, 0.85);
-  --glass-dark: rgba(15, 15, 17, 0.95);
+  --glass: rgba(15, 15, 20, 0.75);
+  --glass-dark: rgba(7, 7, 10, 0.95);
 }
 
 body {
@@ -24,8 +24,8 @@ body {
 }
 
 .dark body {
-  background: radial-gradient(circle at top right, #1f1f23, #09090b);
-  background-color: #09090b;
+  background: radial-gradient(circle at top right, #0f0f15, #030305);
+  background-color: #030305;
 }
 
 /* Premium Animations */

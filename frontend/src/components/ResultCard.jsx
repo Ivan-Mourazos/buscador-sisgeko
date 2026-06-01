@@ -33,7 +33,19 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
         }
     };
 
-    const cardClasses = "relative cursor-pointer bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 dark:border-zinc-800 hover:border-yellow-400 dark:hover:border-yellow-500 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2";
+    const getCardClasses = (type) => {
+        let borderAccent = " border-l-4 border-l-yellow-500 dark:border-l-yellow-500/80";
+        let glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(217,167,30,0.08)]";
+        
+        if (type === 'insight') {
+            borderAccent = " border-l-4 border-l-blue-500 dark:border-l-blue-500/80";
+            glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(59,130,246,0.08)]";
+        } else if (type === 'definicion') {
+            borderAccent = " border-l-4 border-l-emerald-500 dark:border-l-emerald-500/80";
+            glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(16,185,129,0.08)]";
+        }
+        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#1b1b26] dark:to-[#111116] p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 dark:border-white/[0.04] hover:border-yellow-400 dark:hover:border-yellow-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
+    };
 
     // Renderizado según el tipo
     switch (item._type) {
@@ -43,7 +55,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     onClick={onClick} 
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
-                    className={cardClasses}
+                    className={getCardClasses('articulo')}
                 >
                     <div className="flex justify-between items-start">
                         <div className="flex flex-col gap-1">
@@ -73,7 +85,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     onClick={onClick} 
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
-                    className={cardClasses}
+                    className={getCardClasses('insight')}
                 >
                     <div className="flex justify-between items-start">
                         <div className="flex flex-col">
@@ -116,23 +128,23 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     onClick={onClick} 
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
-                    className={cardClasses}
+                    className={getCardClasses('definicion')}
                 >
                     <div className="flex justify-between items-start">
                         <div className="flex flex-col gap-1">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400">Definición</span>
+                            <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Definición</span>
                             {item._isDraft && <Badge colorClass="bg-orange-50 text-orange-700 border-orange-200">Borrador pendente</Badge>}
                         </div>
                     </div>
                     <div className="min-h-[3rem]">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors line-clamp-2">
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-405 transition-colors line-clamp-2">
                             {item.titulo}
                         </h3>
                     </div>
                     {item.familias_lista && (
                         <div className="mt-3 pt-3 border-t border-gray-50 dark:border-zinc-800 flex items-center gap-2">
                             <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-tighter w-12 shrink-0">Familias</span>
-                            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase line-clamp-1">{item.familias_lista}</span>
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase line-clamp-1">{item.familias_lista}</span>
                         </div>
                     )}
                 </div>

@@ -649,9 +649,9 @@ function App() {
             ) : (
               <>
                 <div className="mb-8 flex items-center justify-between">
-                  <h2 className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">Resultados 
-                  {totalCount > 0 && <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[9px] font-black"> {totalCount} </span>}</h2>
-                  <div className="h-px flex-grow ml-4 bg-gray-100" />
+                  <h2 className="text-[11px] font-bold text-gray-400 dark:text-zinc-550 uppercase tracking-[0.2em] flex items-center gap-3">Resultados 
+                  {totalCount > 0 && <span className="bg-gray-100 dark:bg-[#15151e] text-gray-500 dark:text-yellow-450 px-2 py-0.5 rounded-full text-[9px] font-black border dark:border-zinc-800/80"> {totalCount} </span>}</h2>
+                  <div className="h-px flex-grow ml-4 bg-gray-100 dark:bg-zinc-800" />
                 </div>
 
                 {loading && displayResults.length === 0 ? (

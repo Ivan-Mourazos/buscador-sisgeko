@@ -61,7 +61,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
             type="text" 
             autoFocus
             placeholder="Que estás a buscar?"
-            className="w-full pl-6 md:pl-8 pr-24 md:pr-32 py-4 md:py-5 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-[2rem] shadow-2xl shadow-gray-200/60 dark:shadow-none focus:ring-4 focus:ring-yellow-50 focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 focus:shadow-yellow-100/50 transition-all outline-none text-base md:text-xl font-medium placeholder:text-gray-300 dark:placeholder:text-zinc-600 text-gray-900 dark:text-white group-hover:border-gray-200 dark:group-hover:border-zinc-700"
+            className="w-full pl-6 md:pl-8 pr-24 md:pr-32 py-4 md:py-5 bg-white dark:bg-[#0f0f14]/80 border border-gray-100 dark:border-zinc-800/60 rounded-[2rem] shadow-2xl shadow-gray-200/60 dark:shadow-none focus:ring-4 focus:ring-yellow-50 focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 focus:shadow-yellow-100/50 transition-all outline-none text-base md:text-xl font-medium placeholder:text-gray-300 dark:placeholder:text-zinc-600 text-gray-900 dark:text-white group-hover:border-gray-200 dark:group-hover:border-zinc-700"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />
@@ -87,7 +87,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
               key={cat.id}
               onClick={() => onSelect(cat.id)}
               style={{ animationDelay: `${idx * 150}ms` }}
-              className="group relative bg-white dark:bg-zinc-900 p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-zinc-800 hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
+              className="group relative bg-white dark:bg-[#0f0f14]/80 p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-zinc-800/60 hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
             >
               {/* Background Gradient on Hover */}
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />

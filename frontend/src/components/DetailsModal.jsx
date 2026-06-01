@@ -78,17 +78,17 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
             onClick={onClose}
         >
             <div 
-                className="bg-white dark:bg-zinc-900 w-full max-w-4xl max-h-[95vh] rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in zoom-in duration-300 ring-1 ring-black/5 dark:ring-zinc-700/80"
+                className="bg-white dark:bg-[#0c0c10] w-full max-w-4xl max-h-[95vh] rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in zoom-in duration-300 ring-1 ring-black/5 dark:ring-zinc-800/80"
                 onClick={handleModalClick}
             >
                 {/* Header - Más Aireado y Legible */}
-                <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-start bg-gray-50/50 dark:bg-zinc-950/30 backdrop-blur-xl gap-2">
+                <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-zinc-800/60 flex justify-between items-start bg-gray-50/50 dark:bg-[#0c0c10] backdrop-blur-xl gap-2">
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-col">
                             <span className={`text-[11px] font-black uppercase tracking-widest ${
                                 item._type === 'articulo' ? 'text-yellow-600 dark:text-yellow-500' :
                                 item._type === 'insight' ? 'text-blue-600 dark:text-blue-400' :
-                                'text-purple-600 dark:text-purple-400'
+                                'text-emerald-600 dark:text-emerald-400'
                             }`}>
                                 {item._type === 'articulo' ? 'Artigo' : item._type === 'insight' ? 'Insight' : 'Definición'}
                             </span>
@@ -99,14 +99,14 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                             )}
                             {item._type === 'definicion' && details?.familias_nombres && (
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                    <span className="px-2 py-0.5 bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/30 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                    <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30 rounded-lg text-[10px] font-bold uppercase tracking-wider">
                                         {details.familias_nombres}
                                     </span>
                                 </div>
                             )}
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white leading-tight pr-4">
-                            {item._type === 'articulo' ? item.descripcion : item.titulo}
+                             {item._type === 'articulo' ? item.descripcion : item.titulo}
                         </h2>
                         
                         {/* INFORMACIÓN CRÍTICA: Con más margen para evitar saturación */}
@@ -152,7 +152,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                 </div>
 
                 {/* Body - Mejorado con Scroll y Grids Claros */}
-                <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-grow bg-white dark:bg-zinc-900">
+                <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-grow bg-white dark:bg-[#0c0c10]">
                     <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
                         
                         {/* MINIATURAS DE IMAGENES (SOLO PARA ARTÍCULOS - LOS INSIGHTS VAN ABAJO CON EL ORIGEN) */}
@@ -160,7 +160,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                             <section className="animate-in fade-in slide-in-from-left-4 duration-500">
                                 <h3 className="text-xs font-black text-gray-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
                                     Recursos Gráficos
-                                    <span className="h-[1px] flex-grow bg-gray-100 dark:bg-zinc-800"></span>
+                                    <span className="h-[1px] flex-grow bg-gray-100 dark:bg-zinc-800/55"></span>
                                 </h3>
                                 
                                 <div className="flex flex-wrap gap-4">
@@ -185,32 +185,32 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                         {/* Contenido Principal */}
                         <div className="space-y-12">
                             {item._type === 'insight' && (
-                                <div className="p-8 bg-yellow-50/20 dark:bg-yellow-950/10 border border-yellow-100 dark:border-yellow-900/30 rounded-[2rem] relative overflow-hidden ring-1 ring-yellow-50 dark:ring-yellow-950/10">
-                                    <div className="absolute top-0 right-0 p-4 sm:p-6 text-blue-100/30 dark:text-blue-900/20">
+                                <div className="p-8 bg-yellow-50/20 dark:bg-gradient-to-r dark:from-yellow-950/30 dark:to-amber-950/20 border border-yellow-100 dark:border-yellow-500/20 rounded-[2rem] relative overflow-hidden ring-1 ring-yellow-50 dark:ring-yellow-950/10 shadow-[0_0_20px_rgba(217,167,30,0.05)]">
+                                    <div className="absolute top-0 right-0 p-4 sm:p-6 text-blue-100/30 dark:text-yellow-600/10">
                                         <svg className="w-16 h-16 sm:w-24 sm:h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H16.017C14.9124 8 14.017 7.10457 14.017 6V5C14.017 3.89543 14.9124 3 16.017 3H21.017C22.1216 3 23.017 3.89543 23.017 5V15C23.017 18.3137 20.3307 21 17.017 21H14.017ZM1 21L1 18C1 16.8954 1.89543 16 3 16H6C6.55228 16 7 15.5523 7 15V9C7 8.44772 6.55228 8 6 8H3C1.89543 8 1 7.10457 1 6V5C1 3.89543 1.89543 3 3 3H8C9.10457 3 10 3.89543 10 5V15C10 18.3137 7.31371 21 4 21H1ZM17.017 18C17.3942 18 17.7554 17.925 18.0833 17.7891C18.6477 17.5554 19.017 16.9852 19.017 16.3333V18H17.017Z" /></svg>
                                     </div>
-                                    <p className="text-gray-800 dark:text-zinc-200 text-lg sm:text-2xl font-semibold leading-relaxed relative z-10 italic">"{item.insight}"</p>
+                                    <p className="text-gray-800 dark:text-yellow-100 text-lg sm:text-2xl font-semibold leading-relaxed relative z-10 italic">"{item.insight}"</p>
                                 </div>
                             )}
 
                             {item._type === 'definicion' && (
                                 <div className="space-y-10">
-                                    <div className="p-6 sm:p-10 bg-amber-50/20 dark:bg-amber-950/10 rounded-[2rem] sm:rounded-[2.5rem] border border-amber-100 dark:border-amber-900/30 ring-1 ring-amber-50 dark:ring-amber-950/10 italic font-serif">
-                                        <p className="text-gray-800 dark:text-zinc-200 text-lg sm:text-2xl leading-relaxed">{details?.textoCompleto || item.definicion}</p>
+                                    <div className="p-6 sm:p-10 bg-amber-50/20 dark:bg-gradient-to-r dark:from-amber-950/25 dark:to-yellow-950/15 rounded-[2rem] sm:rounded-[2.5rem] border border-amber-100 dark:border-yellow-500/15 ring-1 ring-amber-50 dark:ring-amber-950/10 italic font-serif">
+                                        <p className="text-gray-800 dark:text-yellow-100 text-lg sm:text-2xl leading-relaxed">{details?.textoCompleto || item.definicion}</p>
                                     </div>
 
                                     {(details?.familias_nombres || details?.resumen_edicion || item?.resumen_edicion) && (
                                         <section className="animate-in fade-in slide-in-from-top-2 duration-500">
                                             <h3 className="text-xs font-black text-gray-400 dark:text-zinc-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-4">
-                                                <span className="w-8 h-[2px] bg-purple-500 rounded-full"></span>
+                                                <span className="w-8 h-[2px] bg-emerald-500 rounded-full"></span>
                                                 Detalles técnicos
                                             </h3>
-                                            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-zinc-800 overflow-hidden shadow-sm">
+                                            <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
                                                 <div className="divide-y divide-gray-50 dark:divide-zinc-800/50">
                                                     {details?.familias_nombres && (
                                                         <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors group">
                                                             <span className="sm:w-48 text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex-shrink-0 mb-1 sm:mb-0">Familias vinculadas</span>
-                                                            <span className="bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-purple-100/50 dark:border-purple-900/30">
+                                                            <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border border-emerald-100/50 dark:border-emerald-900/30">
                                                                 {details.familias_nombres}
                                                             </span>
                                                         </div>
@@ -247,7 +247,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                             </div>
                                             
                                             {details?.caracteristicas && details.caracteristicas.length > 0 ? (
-                                                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-zinc-800 overflow-hidden shadow-sm">
+                                                <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
                                                     <div className="divide-y divide-gray-50 dark:divide-zinc-800/50">
                                                         {details.caracteristicas.map((car, idx) => (
                                                             <div key={idx} className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors group">
@@ -300,8 +300,8 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                         <div 
                                                             key={idx} 
                                                             onClick={(e) => handleToggle(e, `ins-${idx}`)}
-                                                            className={`bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
-                                                                isExpanded ? 'border-blue-200 dark:border-blue-900 shadow-xl ring-1 ring-blue-50 dark:ring-blue-950/20' : 'border-gray-100 dark:border-zinc-800 hover:shadow-lg hover:border-blue-100 dark:hover:border-blue-900'
+                                                            className={`bg-white dark:bg-[#15151e]/80 border dark:border-white/[0.05] rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
+                                                                isExpanded ? 'border-blue-200 dark:border-blue-900 shadow-xl ring-1 ring-blue-50 dark:ring-blue-950/20' : 'border-gray-100 dark:border-zinc-850 hover:shadow-lg hover:border-blue-100 dark:hover:border-blue-900'
                                                             }`}
                                                         >
                                                             <div className="flex justify-between items-start gap-4">
@@ -327,7 +327,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                             
                                                             <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0'}`}>
                                                                 <div className="overflow-hidden">
-                                                                    <div className="bg-gray-50/50 dark:bg-zinc-950/30 rounded-2xl p-6 border border-gray-100/50 dark:border-zinc-800">
+                                                                    <div className="bg-gray-50/50 dark:bg-zinc-950/30 rounded-2xl p-6 border border-gray-100/50 dark:border-white/[0.05]">
                                                                         <p className="text-base text-gray-600 dark:text-zinc-300 leading-relaxed">
                                                                             {ins.insight}
                                                                         </p>
@@ -352,7 +352,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     Detalles da fonte e recursos
                                                 </h3>
                                                 
-                                                <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-gray-100 dark:border-zinc-800 overflow-hidden shadow-sm">
+                                                <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
                                                     <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-50 dark:divide-zinc-800">
                                                          {/* PARTE IZQUIERDA: INFORMACIÓN EN LISTA (NUEVO DISEÑO) */}
                                                         <div className="flex-grow divide-y divide-gray-50 dark:divide-zinc-800/50">
@@ -384,7 +384,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                                 <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest text-center">Infografía / Captura</span>
                                                                 <div 
                                                                     onClick={() => setActiveImage(item.imagen)}
-                                                                    className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all shadow-lg w-full aspect-video bg-white dark:bg-zinc-900 ring-1 ring-black/5 dark:ring-zinc-800/80"
+                                                                    className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all shadow-lg w-full aspect-video bg-white dark:bg-[#15151e]/80 ring-1 ring-black/5 dark:ring-zinc-800/80"
                                                                 >
                                                                     <img 
                                                                         src={getImgUrl(item.imagen)} 
@@ -410,7 +410,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                             const desc = art.descripcion || art.DESCRIPCION || art.titulo || 'Artigo sen descrición';
                                                             const code = art.codigo || art.CODIGO;
                                                             return (
-                                                                <div key={idx} className="bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 dark:hover:border-yellow-900 group flex justify-between items-center">
+                                                                <div key={idx} className="bg-white dark:bg-[#15151e]/80 border border-gray-100 dark:border-white/[0.05] rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 dark:hover:border-yellow-900/40 group flex justify-between items-center">
                                                                     <div className="flex flex-col gap-1">
                                                                         <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">Artigo</span>
                                                                         <h4 className="text-base font-bold text-gray-900 dark:text-white">{desc}</h4>
@@ -436,7 +436,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     </h3>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {details.intenciones.map((int, i) => (
-                                                            <div key={i} className="flex gap-4 text-base text-gray-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-gray-100 dark:border-zinc-800 font-bold group shadow-sm hover:border-yellow-100 dark:hover:border-yellow-900 hover:shadow-md transition-all">
+                                                            <div key={i} className="flex gap-4 text-base text-gray-700 dark:text-zinc-350 bg-white dark:bg-[#15151e]/80 p-5 rounded-2xl border border-gray-100 dark:border-white/[0.05] font-bold group shadow-sm hover:border-yellow-100 dark:hover:border-yellow-900/40 hover:shadow-md transition-all">
                                                                 <div className="w-6 h-6 rounded-full bg-yellow-50 dark:bg-yellow-950/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shrink-0 text-xs font-black">?</div>
                                                                 {int}
                                                             </div>
