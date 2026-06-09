@@ -2,18 +2,18 @@ import React, { useState, useMemo } from 'react';
 
 const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, children }) => {
     return (
-        <div className={`select-none ${level > 0 ? 'ml-4 border-l border-gray-100 dark:border-zinc-800 pl-4' : ''}`}>
+        <div className={`select-none ${level > 0 ? 'ml-4 border-l border-gray-100 dark:border-[#252538] pl-4' : ''}`}>
             <div 
                 className={`flex items-center gap-2 py-2 px-2 rounded-xl transition-all ${
-                    onToggle ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-[#12121a]/60' : 'cursor-default'
+                    onToggle ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-[#1e1e2c]/70' : 'cursor-default'
                 } group ${level === 0 ? 'mt-2' : 'mt-0.5'}`}
                 onClick={onToggle}
             >
                 {/* Yellow Square Icon */}
                 <div className={`w-4 h-4 rounded-[4px] border-2 flex-shrink-0 transition-all ${
-                    isSelected 
-                    ? 'bg-yellow-500 border-yellow-500 shadow-sm dark:shadow-[0_0_8px_rgba(217,167,30,0.4)]' 
-                    : 'bg-white dark:bg-[#0f0f14] border-gray-200 dark:border-zinc-800 group-hover:border-yellow-300 dark:group-hover:border-yellow-500/80'
+                    isSelected
+                    ? 'bg-yellow-500 border-yellow-500 shadow-sm dark:shadow-[0_0_8px_rgba(217,167,30,0.4)]'
+                    : 'bg-white dark:bg-[#1a1a24] border-gray-200 dark:border-[#2a2a3a] group-hover:border-yellow-300 dark:group-hover:border-yellow-500/70'
                 }`}>
                     {isSelected && (
                         <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
@@ -32,7 +32,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border transition-all ${
                         isSelected 
                         ? 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-900/30' 
-                        : 'bg-gray-50 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 border-gray-100 dark:border-zinc-700 group-hover:bg-amber-50 dark:group-hover:bg-yellow-950/20 group-hover:text-amber-600 dark:group-hover:text-yellow-400 group-hover:border-amber-100 dark:group-hover:border-yellow-900/20'
+                        : 'bg-gray-50 dark:bg-[#1e1e2c] text-gray-500 dark:text-zinc-400 border-gray-100 dark:border-[#2a2a3a] group-hover:bg-amber-50 dark:group-hover:bg-yellow-950/20 group-hover:text-amber-600 dark:group-hover:text-yellow-400 group-hover:border-amber-100 dark:group-hover:border-yellow-900/20'
                     }`}>
                         {count}
                     </span>

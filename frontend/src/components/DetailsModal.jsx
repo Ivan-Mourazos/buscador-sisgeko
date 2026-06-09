@@ -129,7 +129,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {isEditable && item._type !== 'articulo' && (
+                        {isEditable && (
                             <button 
                                 onClick={() => onEdit(details || item)}
                                 className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-black uppercase tracking-widest text-gray-800 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-all active:scale-95 group"

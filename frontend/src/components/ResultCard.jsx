@@ -44,7 +44,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
             borderAccent = " border-l-4 border-l-emerald-500 dark:border-l-emerald-500/80";
             glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(16,185,129,0.08)]";
         }
-        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#1b1b26] dark:to-[#111116] p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 dark:border-white/[0.04] hover:border-yellow-400 dark:hover:border-yellow-500/30 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
+        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#1c1c28] dark:to-[#16161f] p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 dark:border-white/[0.07] hover:border-yellow-400 dark:hover:border-yellow-500/40 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
     };
 
     // Renderizado según el tipo
@@ -105,7 +105,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                             {item.titulo}
                         </h3>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-50 dark:border-zinc-800 flex flex-col gap-1.5">
+                    <div className="mt-3 pt-3 border-t border-gray-50 dark:border-white/[0.06] flex flex-col gap-1.5">
                         {item.tipo_origen_nombre && (
                             <div className="flex items-center gap-2">
                                 <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-tighter w-12">Orixe</span>
@@ -142,7 +142,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         </h3>
                     </div>
                     {item.familias_lista && (
-                        <div className="mt-3 pt-3 border-t border-gray-50 dark:border-zinc-800 flex items-center gap-2">
+                        <div className="mt-3 pt-3 border-t border-gray-50 dark:border-white/[0.06] flex items-center gap-2">
                             <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-tighter w-12 shrink-0">Familias</span>
                             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase line-clamp-1">{item.familias_lista}</span>
                         </div>

@@ -381,13 +381,17 @@ app.get('/api/form-options', async (req, res) => {
         const origins = await pool.request().query('SELECT id_tipo_origen, tipo_origen as label FROM tipo_origen ORDER BY tipo_origen');
         const fams = await pool.request().query('SELECT id_familia as value, codigo as label FROM familias ORDER BY codigo');
         const subs = await pool.request().query('SELECT DISTINCT subfamilia FROM articulos WHERE subfamilia IS NOT NULL ORDER BY subfamilia');
+        const chars = await pool.request().query('SELECT id_caracteristica, caracteristica, descripcion as descripcion_car FROM caracteristicas ORDER BY caracteristica');
+        const ins = await pool.request().query("SELECT id_insight, titulo FROM insights WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY titulo");
         res.json({
             success: true,
             articulos: arts.recordset,
+            insights: ins.recordset,
             procesos: procs.recordset,
             tipo_origen: origins.recordset.map(o => ({ value: o.id_tipo_origen, label: o.label })),
             familias: fams.recordset,
-            subfamilias: subs.recordset.map(s => ({ value: s.subfamilia, label: s.subfamilia }))
+            subfamilias: subs.recordset.map(s => ({ value: s.subfamilia, label: s.subfamilia })),
+            caracteristicas: chars.recordset
         });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao obter opcións', error: error.message });
@@ -402,7 +406,7 @@ app.get('/api/details', async (req, res) => {
         request.input('id', sql.Int, parseInt(id));
         let details = {};
         if (type === 'articulo') {
-            const valRes = await request.query(`SELECT c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios, v.norma FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
+            const valRes = await request.query(`SELECT v.id_caracteristica, c.caracteristica, c.descripcion as caracteristica_desc, v.valor, v.comentarios, v.norma, v.orden FROM valores v JOIN caracteristicas c ON v.id_caracteristica = c.id_caracteristica WHERE v.id_articulo = @id ORDER BY v.orden`);
             details.caracteristicas = valRes.recordset;
             
             // Obtener insights vinculados
@@ -586,26 +590,49 @@ app.get('/api/pending-tasks', async (req, res) => {
         const ins = await pool.request().query(qIns);
         const defs = await pool.request().query(qDefs);
         
+        let artsRecordset = [];
+        try {
+            const qArts = `
+                SELECT c.*, u.username as editor_nombre
+                FROM cambios_articulos c
+                JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario
+                WHERE (c.estado IS NULL OR c.estado LIKE '%pendiente%')
+                ORDER BY c.fecha_cambio DESC`;
+            const arts = await pool.request().query(qArts);
+            artsRecordset = arts.recordset;
+        } catch(_) {}
+
         const tasks = [
             ...defs.recordset.map(t => {
                 let data = {};
                 try { data = JSON.parse(t.comentario_cambio); } catch(e) {}
-                return { 
-                    ...t, 
-                    _type: 'definicion', 
+                return {
+                    ...t,
+                    _type: 'definicion',
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || 'Sen título',
                     editor: t.editor_nombre
                 };
-            }), 
+            }),
             ...ins.recordset.map(t => {
                 let data = {};
                 try { data = JSON.parse(t.comentario_cambio); } catch(e) {}
-                return { 
-                    ...t, 
-                    _type: 'insight', 
+                return {
+                    ...t,
+                    _type: 'insight',
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || data.insight || 'Sen título',
+                    editor: t.editor_nombre
+                };
+            }),
+            ...artsRecordset.map(t => {
+                let data = {};
+                try { data = JSON.parse(t.comentario_cambio); } catch(e) {}
+                return {
+                    ...t,
+                    _type: 'articulo',
+                    operation: data._operation || 'UPDATE',
+                    titulo: data.descripcion || data.titulo || 'Sen título',
                     editor: t.editor_nombre
                 };
             })
@@ -771,6 +798,112 @@ app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['e
     const { type, taskId } = req.params;
     const approverId = req.user.id;
 
+    // --- ARTIGO ---
+    if (type === 'articulo') {
+        try {
+            const pool = await sql.connect(dbConfig);
+            const changeRes = await pool.request()
+                .input('id', sql.Int, taskId)
+                .query(`SELECT * FROM cambios_articulos WHERE ID = @id`);
+            if (changeRes.recordset.length === 0) return res.status(404).json({ success: false, message: 'Cambio non atopado' });
+            const change = changeRes.recordset[0];
+            if (change.id_usuairo_cambio === approverId)
+                return res.status(403).json({ success: false, message: 'Non podes aprobar as túas propias edicións' });
+
+            const data = JSON.parse(change.comentario_cambio);
+            const transaction = new sql.Transaction(pool);
+            await transaction.begin();
+            try {
+                const req2 = new sql.Request(transaction);
+                if (data._operation === 'DELETE') {
+                    await req2.input('artId', sql.Int, change.id_articulo)
+                        .query(`DELETE FROM valores WHERE id_articulo = @artId; DELETE FROM articulos WHERE id_articulo = @artId`);
+                } else if (data._operation === 'UPDATE') {
+                    await req2
+                        .input('artId', sql.Int, change.id_articulo)
+                        .input('desc', sql.NVarChar, data.descripcion || '')
+                        .input('cod', sql.NVarChar, data.codigo || null)
+                        .input('famId', sql.Int, data.id_familia || null)
+                        .input('subfam', sql.NVarChar, data.subfamilia || null)
+                        .input('denProv', sql.NVarChar, data.denominacion_proveedor || null)
+                        .query(`UPDATE articulos SET descripcion=@desc, codigo=@cod, id_familia=@famId, subfamilia=@subfam, denominacion_proveedor=@denProv WHERE id_articulo=@artId`);
+                    // Reemplazar valores
+                    await new sql.Request(transaction).input('artId', sql.Int, change.id_articulo).query(`DELETE FROM valores WHERE id_articulo = @artId`);
+                    if (data.caracteristicas && data.caracteristicas.length > 0) {
+                        for (let i = 0; i < data.caracteristicas.length; i++) {
+                            const car = data.caracteristicas[i];
+                            if (!car.id_caracteristica) continue;
+                            await new sql.Request(transaction)
+                                .input('artId2', sql.Int, change.id_articulo)
+                                .input('carId', sql.Int, car.id_caracteristica)
+                                .input('val', sql.NVarChar, car.valor || '')
+                                .input('com', sql.NVarChar, car.comentarios || null)
+                                .input('nor', sql.NVarChar, car.norma || null)
+                                .input('ord', sql.Int, i + 1)
+                                .query(`INSERT INTO valores (id_articulo, id_caracteristica, valor, comentarios, norma, orden) VALUES (@artId2, @carId, @val, @com, @nor, @ord)`);
+                        }
+                    }
+                    // Reemplazar insights vinculados
+                    await new sql.Request(transaction).input('artId', sql.Int, change.id_articulo).query(`DELETE FROM rel_Insight_articulo WHERE id_articulo = @artId`);
+                    if (data.insights_vinculados && data.insights_vinculados.length > 0) {
+                        for (const insId of data.insights_vinculados) {
+                            await new sql.Request(transaction)
+                                .input('artId2', sql.Int, change.id_articulo)
+                                .input('insId', sql.Int, insId)
+                                .query(`INSERT INTO rel_Insight_articulo (id_articulo, id_insight) VALUES (@artId2, @insId)`);
+                        }
+                    }
+                } else {
+                    // CREATE
+                    const maxRes = await req2.query(`SELECT MAX(id_articulo) as maxId FROM articulos`);
+                    const newId = (maxRes.recordset[0].maxId || 0) + 1;
+                    await new sql.Request(transaction)
+                        .input('artId', sql.Int, newId)
+                        .input('desc', sql.NVarChar, data.descripcion || '')
+                        .input('cod', sql.NVarChar, data.codigo || null)
+                        .input('famId', sql.Int, data.id_familia || null)
+                        .input('subfam', sql.NVarChar, data.subfamilia || null)
+                        .input('denProv', sql.NVarChar, data.denominacion_proveedor || null)
+                        .query(`INSERT INTO articulos (id_articulo, descripcion, codigo, id_familia, subfamilia, denominacion_proveedor) VALUES (@artId, @desc, @cod, @famId, @subfam, @denProv)`);
+                    if (data.caracteristicas && data.caracteristicas.length > 0) {
+                        for (let i = 0; i < data.caracteristicas.length; i++) {
+                            const car = data.caracteristicas[i];
+                            if (!car.id_caracteristica) continue;
+                            await new sql.Request(transaction)
+                                .input('artId2', sql.Int, newId)
+                                .input('carId', sql.Int, car.id_caracteristica)
+                                .input('val', sql.NVarChar, car.valor || '')
+                                .input('com', sql.NVarChar, car.comentarios || null)
+                                .input('nor', sql.NVarChar, car.norma || null)
+                                .input('ord', sql.Int, i + 1)
+                                .query(`INSERT INTO valores (id_articulo, id_caracteristica, valor, comentarios, norma, orden) VALUES (@artId2, @carId, @val, @com, @nor, @ord)`);
+                        }
+                    }
+                    // Insertar insights vinculados
+                    if (data.insights_vinculados && data.insights_vinculados.length > 0) {
+                        for (const insId of data.insights_vinculados) {
+                            await new sql.Request(transaction)
+                                .input('artId2', sql.Int, newId)
+                                .input('insId', sql.Int, insId)
+                                .query(`INSERT INTO rel_Insight_articulo (id_articulo, id_insight) VALUES (@artId2, @insId)`);
+                        }
+                    }
+                }
+                await new sql.Request(transaction)
+                    .input('idC', sql.Int, taskId).input('appId', sql.Int, approverId)
+                    .query(`UPDATE cambios_articulos SET estado = 'APROBADO', fecha_aprobacion = GETDATE(), id_aprobador = @appId WHERE ID = @idC`);
+                await transaction.commit();
+                res.json({ success: true, message: 'Artigo aprobado con éxito.' });
+            } catch (err) {
+                await transaction.rollback();
+                throw err;
+            }
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Error: ' + error.message });
+        }
+        return;
+    }
+
     try {
         const pool = await sql.connect(dbConfig);
         const tableCambios = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
@@ -852,7 +985,7 @@ app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['ed
     const approverId = req.user.id;
     try {
         const pool = await sql.connect(dbConfig);
-        const table = type === 'insight' ? 'cambios_insights' : 'cambios_definiciones';
+        const table = type === 'insight' ? 'cambios_insights' : (type === 'articulo' ? 'cambios_articulos' : 'cambios_definiciones');
         
         // Obtenemos el registro actual para modificar el JSON en Node (más compatible que JSON_MODIFY)
         const currentRes = await pool.request()
@@ -887,8 +1020,40 @@ app.post('/api/pending-tasks/:type/:taskId/reject', authenticate, checkRole(['ed
 
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 const isLinux = process.platform === 'linux';
 const networkBase = process.env.IMAGE_PATH || (isLinux ? '/mnt/sisgeko' : '\\\\192.168.0.128\\Sisgeko');
+
+const uploadStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(networkBase, 'uploads');
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `${Date.now()}${ext}`);
+    }
+});
+const upload = multer({
+    storage: uploadStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (!file.mimetype.startsWith('image/')) return cb(new Error('Só se permiten imaxes.'));
+        cb(null, true);
+    }
+});
+
+app.post('/api/upload', authenticate, checkRole(['editor', 'admin']), (req, res) => {
+    upload.single('image')(req, res, (err) => {
+        if (err) return res.status(400).json({ success: false, message: err.message });
+        if (!req.file) return res.status(400).json({ success: false, message: 'Non se recibiu ningunha imaxe.' });
+        const relPath = isLinux
+            ? `uploads/${req.file.filename}`
+            : `uploads\\${req.file.filename}`;
+        res.json({ success: true, filename: relPath });
+    });
+});
 
 app.get('/api/images', (req, res) => {
     const { imgPath } = req.query;
@@ -1106,7 +1271,12 @@ app.get('/api/pending-count', async (req, res) => {
         const pool = await sql.connect(dbConfig);
         const ins = await pool.request().query("SELECT COUNT(*) as count FROM cambios_insights WHERE (estado IS NULL OR estado LIKE '%pendiente%')");
         const defs = await pool.request().query("SELECT COUNT(*) as count FROM cambios_definiciones WHERE (estado IS NULL OR estado LIKE '%pendiente%')");
-        const total = (ins.recordset[0]?.count || 0) + (defs.recordset[0]?.count || 0);
+        let artsCount = 0;
+        try {
+            const arts = await pool.request().query("SELECT COUNT(*) as count FROM cambios_articulos WHERE (estado IS NULL OR estado LIKE '%pendiente%')");
+            artsCount = arts.recordset[0]?.count || 0;
+        } catch(_) {}
+        const total = (ins.recordset[0]?.count || 0) + (defs.recordset[0]?.count || 0) + artsCount;
         res.json({ success: true, count: total });
     } catch (e) {
         res.json({ success: true, count: 0 });
@@ -1128,6 +1298,55 @@ if (fs.existsSync(distPath)) {
         res.send('<h1>Servidor API Sisgeko en funcionamiento</h1><p>Error: No se encontró la carpeta de la web (dist). Ejecute "npm run build" en el frontend.</p>');
     });
 }
+
+app.post('/api/articulos', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const data = req.body;
+    try {
+        const pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('id_usuario', sql.Int, req.user.id)
+            .input('fecha', sql.DateTime, new Date())
+            .input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }))
+            .query(`INSERT INTO cambios_articulos (fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@fecha, @id_usuario, @comentario)`);
+        res.json({ success: true, message: 'Novo artigo enviado para aprobación.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error: ' + error.message });
+    }
+});
+
+app.put('/api/articulos/:id', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const id = parseInt(req.params.id);
+    const data = req.body;
+    try {
+        const pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('id_articulo', sql.Int, id)
+            .input('id_usuario', sql.Int, req.user.id)
+            .input('fecha', sql.DateTime, new Date())
+            .input('comentario', sql.NVarChar, JSON.stringify({ ...data, id_articulo: id, _operation: 'UPDATE' }))
+            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, @fecha, @id_usuario, @comentario)`);
+        res.json({ success: true, message: 'Actualización de artigo enviada para aprobación.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error: ' + error.message });
+    }
+});
+
+app.delete('/api/articulos/:id', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const id = parseInt(req.params.id);
+    const { titulo } = req.query;
+    try {
+        const pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('id_articulo', sql.Int, id)
+            .input('id_usuario', sql.Int, req.user.id)
+            .input('fecha', sql.DateTime, new Date())
+            .input('comentario', sql.NVarChar, JSON.stringify({ id_articulo: id, titulo: titulo || '', _operation: 'DELETE' }))
+            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, @fecha, @id_usuario, @comentario)`);
+        res.json({ success: true, message: 'Solicitude de borrado de artigo enviada para aprobación.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error: ' + error.message });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor Sisgeko listo en puerto ${PORT}`);

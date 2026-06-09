@@ -129,7 +129,7 @@ const HistoryView = ({ onClose }) => {
                     placeholder="Buscar por título, autor, estado ou tipo de acción..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all shadow-sm group-hover:shadow-md font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-white dark:bg-[#1a1a26] border border-gray-200 dark:border-[#252538] rounded-2xl text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all shadow-sm group-hover:shadow-md font-medium"
                 />
                 {searchTerm && (
                     <button 
@@ -232,7 +232,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     opFilter === op.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
+                                        : 'bg-white dark:bg-[#1a1a26] text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-[#252538] hover:border-gray-300 dark:hover:border-zinc-600 hover:text-gray-900 dark:hover:text-zinc-200'
                                 }`}
                             >
                                 {op.label}
@@ -255,7 +255,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     typeFilter === t.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
+                                        : 'bg-white dark:bg-[#1a1a26] text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-[#252538] hover:border-gray-300 dark:hover:border-zinc-600 hover:text-gray-900 dark:hover:text-zinc-200'
                                 }`}
                             >
                                 {t.label}
@@ -278,7 +278,7 @@ const HistoryView = ({ onClose }) => {
                                 className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                                     statusFilter === s.key 
                                         ? 'bg-yellow-500 text-white border-yellow-500 shadow-md shadow-yellow-500/20' 
-                                        : 'bg-white dark:bg-zinc-900 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700 hover:text-gray-900 dark:hover:text-zinc-250'
+                                        : 'bg-white dark:bg-[#1a1a26] text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-[#252538] hover:border-gray-300 dark:hover:border-zinc-600 hover:text-gray-900 dark:hover:text-zinc-200'
                                 }`}
                             >
                                 {s.label}
@@ -336,7 +336,7 @@ const HistoryView = ({ onClose }) => {
             ) : (
                 <>
                     {/* Desktop Table View */}
-                    <div className="hidden md:block bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-gray-100 dark:border-zinc-800 shadow-xl overflow-hidden">
+                    <div className="hidden md:block bg-white dark:bg-[#13131c] rounded-[2.5rem] border border-gray-100 dark:border-[#1d1d2a] shadow-xl overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-gray-50/50 dark:bg-zinc-950/20 border-b border-gray-100 dark:border-zinc-800">
@@ -370,9 +370,13 @@ const HistoryView = ({ onClose }) => {
                                                             </div>
                                                             <div className="flex flex-col">
                                                                 <span className={`w-fit px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider mb-1 border ${
-                                                                    item._type === 'definicion' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                                                    item._type === 'definicion'
+                                                                        ? 'bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50'
+                                                                        : item._type === 'articulo'
+                                                                        ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-900/50'
+                                                                        : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50'
                                                                 }`}>
-                                                                    {item._type === 'definicion' ? 'Definición' : 'Insight'}
+                                                                    {item._type === 'definicion' ? 'Definición' : item._type === 'articulo' ? 'Artigo' : 'Insight'}
                                                                 </span>
                                                                 <span className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-tight truncate max-w-[180px]" title={info.titulo}>
                                                                     {info.titulo}
@@ -390,7 +394,9 @@ const HistoryView = ({ onClose }) => {
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
-                                                            item.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                                                            item.estado === 'aprobado'
+                                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50'
+                                                                : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50'
                                                         }`}>
                                                             {item.estado === 'aprobado' ? '✓ Aprobado' : '✕ Rexeitado'}
                                                         </span>
@@ -425,13 +431,13 @@ const HistoryView = ({ onClose }) => {
                                                     </td>
                                                 </tr>
                                                 {isExpanded && (
-                                                    <tr className="bg-gray-50/20 dark:bg-zinc-950/10 border-b border-gray-100/50 dark:border-zinc-800/50">
+                                                    <tr className="bg-yellow-50/5 dark:bg-[#0d0d14]/60 border-b border-gray-100/50 dark:border-[#1d1d2a]">
                                                         <td colSpan="6" className="px-8 py-6">
-                                                            <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col md:flex-row gap-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                            <div className="bg-gray-50/60 dark:bg-[#1c1c28] rounded-[2rem] border border-gray-100 dark:border-[#252538] p-6 shadow-sm flex flex-col md:flex-row gap-6 animate-in slide-in-from-top-2 fade-in duration-200">
                                                                 {/* Columna Principal: Contido Editado */}
                                                                 <div className="flex-grow flex flex-col gap-4">
-                                                                    <div className="flex items-center gap-2 text-gray-800">
-                                                                        <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <div className="flex items-center gap-2 text-gray-800 dark:text-zinc-200">
+                                                                        <svg className="w-4 h-4 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                         </svg>
                                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Detalle do Rexistro Editado</h4>
@@ -479,7 +485,7 @@ const HistoryView = ({ onClose }) => {
                                                                         </svg>
                                                                         <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">Motivo do Cambio</h4>
                                                                     </div>
-                                                                    <div className="bg-zinc-800/40 dark:bg-zinc-800/40 rounded-2xl p-4 border border-zinc-700/50 dark:border-zinc-700/50 text-xs text-zinc-300 dark:text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed flex-grow">
+                                                                    <div className="bg-gray-50 dark:bg-zinc-950/60 rounded-2xl p-4 border border-gray-100 dark:border-zinc-800/70 text-xs text-gray-700 dark:text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed flex-grow">
                                                                         {info.resumen}
                                                                     </div>
                                                                 </div>
@@ -506,17 +512,21 @@ const HistoryView = ({ onClose }) => {
                                 <div
                                     key={rowKey}
                                     onClick={() => setExpandedId(isExpanded ? null : rowKey)}
-                                    className={`bg-white dark:bg-zinc-900 rounded-[2rem] border dark:border-zinc-800 transition-all cursor-pointer p-5 flex flex-col gap-4 shadow-sm hover:shadow-md ${
-                                        isExpanded ? 'border-yellow-400 ring-2 ring-yellow-400/20 dark:border-yellow-500' : 'border-gray-100 dark:border-zinc-800'
+                                    className={`bg-white dark:bg-[#13131c] rounded-[2rem] border transition-all cursor-pointer p-5 flex flex-col gap-4 shadow-sm hover:shadow-md dark:hover:bg-[#16161f] ${
+                                        isExpanded ? 'border-yellow-400 ring-2 ring-yellow-400/20 dark:border-yellow-500/70 dark:bg-[#16161f]' : 'border-gray-100 dark:border-[#1d1d2a]'
                                     }`}
                                 >
                                     {/* Badges y Estado */}
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <div className="flex items-center gap-2">
                                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
-                                                item._type === 'definicion' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                                item._type === 'definicion'
+                                                    ? 'bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-900/50'
+                                                    : item._type === 'articulo'
+                                                    ? 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-900/50'
+                                                    : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50'
                                             }`}>
-                                                {item._type === 'definicion' ? 'Definición' : 'Insight'}
+                                                {item._type === 'definicion' ? 'Definición' : item._type === 'articulo' ? 'Artigo' : 'Insight'}
                                             </span>
                                             <span className={`text-[10px] font-black uppercase tracking-widest ${
                                                 info.operation === 'BORRADO' ? 'text-red-500' : 
@@ -526,7 +536,9 @@ const HistoryView = ({ onClose }) => {
                                             </span>
                                         </div>
                                         <span className={`px-2.5 py-0.5 rounded-xl text-[9px] font-black uppercase tracking-wider border ${
-                                            item.estado === 'aprobado' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-600 border-red-100'
+                                            item.estado === 'aprobado'
+                                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50'
+                                                : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50'
                                         }`}>
                                             {item.estado === 'aprobado' ? '✓ Aprobado' : '✕ Rexeitado'}
                                         </span>
@@ -534,7 +546,7 @@ const HistoryView = ({ onClose }) => {
 
                                     {/* Título y Flecha */}
                                     <div className="flex items-start justify-between gap-3">
-                                        <h3 className="text-sm font-bold text-gray-900 leading-tight">
+                                        <h3 className="text-sm font-bold text-gray-900 dark:text-zinc-100 leading-tight">
                                             {info.titulo}
                                         </h3>
                                         <div className={`mt-0.5 text-gray-400 transition-transform duration-300 flex-shrink-0 ${isExpanded ? 'rotate-90 text-yellow-500' : ''}`}>
@@ -606,7 +618,7 @@ const HistoryView = ({ onClose }) => {
                                                     </svg>
                                                     <h4 className="text-[10px] font-black uppercase tracking-widest">Motivo do Cambio</h4>
                                                 </div>
-                                                <div className="bg-zinc-800/40 rounded-xl p-3 border border-zinc-700/50 shadow-sm text-xs text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed">
+                                                <div className="bg-gray-50 dark:bg-zinc-950/60 rounded-xl p-3 border border-gray-100 dark:border-zinc-800/70 shadow-sm text-xs text-gray-700 dark:text-zinc-300 font-medium whitespace-pre-wrap leading-relaxed">
                                                     {info.resumen}
                                                 </div>
                                             </div>

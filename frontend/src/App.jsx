@@ -373,7 +373,7 @@ function App() {
 
   const handleDeleteItem = async (item) => {
     try {
-      const typeKey = item._type === 'definicion' ? 'definiciones' : 'insights';
+      const typeKey = item._type === 'definicion' ? 'definiciones' : item._type === 'articulo' ? 'articulos' : 'insights';
       const idKey = item._type === 'definicion' ? 'id_definicion' : `id_${item._type}`;
       const id = item[idKey];
       
@@ -415,10 +415,10 @@ function App() {
   const displayResults = results;
 
   return (
-    <div className="min-h-screen bg-gray-50/30 dark:bg-transparent text-gray-800 dark:text-zinc-100 font-sans selection:bg-yellow-100 overflow-x-hidden">
-      <header className="bg-white dark:bg-zinc-900 border-b border-gray-100 dark:border-zinc-800 sticky top-0 z-50 shadow-sm transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50/30 dark:bg-transparent text-gray-800 dark:text-zinc-200 font-sans selection:bg-yellow-100 dark:selection:bg-yellow-900/40 overflow-x-hidden">
+      <header className="bg-white dark:bg-[#111119] border-b border-gray-100 dark:border-[#1d1d2a] sticky top-0 z-50 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.05)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
-          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 w-auto -my-4 md:-my-6 overflow-visible">
+          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 min-w-[148px] md:min-w-[180px] -my-4 md:-my-6 overflow-visible">
              <img 
                src="/Logosisgekotgm.png" 
                alt="SISGEKO" 
@@ -429,8 +429,8 @@ function App() {
           <form onSubmit={handleSearch} className={`w-full md:w-48 lg:w-72 xl:w-[28rem] order-3 md:order-2 md:ml-14 flex-grow md:flex-grow-0 relative z-20 group transition-all duration-700 min-w-0 ${showHero || ['pending', 'history'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
-              type="text" 
-              className="w-full pl-6 pr-14 py-2.5 md:py-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-full focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/30 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-[14px] md:text-[15px] text-gray-700 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-400"
+              type="text"
+              className="w-full pl-6 pr-14 py-2.5 md:py-3 bg-white dark:bg-[#1a1a26] border border-gray-200 dark:border-[#252538] rounded-full focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/30 focus:border-yellow-400 dark:focus:border-yellow-500/70 transition-all outline-none text-[14px] md:text-[15px] text-gray-700 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
               placeholder="Procurar termo..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -444,10 +444,10 @@ function App() {
             {/* Desktop Navigation Group */}
             <div className="hidden md:flex items-center gap-2 sm:gap-4">
               {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
-                <div className="flex items-center bg-gray-100/50 dark:bg-zinc-800/40 p-1 rounded-2xl border border-gray-200/50 dark:border-zinc-700/50 mr-2">
+                <div className="flex items-center bg-gray-100/50 dark:bg-[#1a1a26]/70 p-1 rounded-2xl border border-gray-200/50 dark:border-[#252538]/80 mr-2">
                   <button 
                     onClick={() => { setViewMode('results'); setCurrentView('pending'); }} 
-                    className={`relative px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'pending' ? 'bg-white dark:bg-zinc-800 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
+                    className={`relative px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'pending' ? 'bg-white dark:bg-[#252538] text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
                   >
                     Pendentes
                     {pendingCount > 0 && (
@@ -458,7 +458,7 @@ function App() {
                   </button>
                   <button 
                     onClick={() => { setViewMode('results'); setCurrentView('history'); }} 
-                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'history' ? 'bg-white dark:bg-zinc-800 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
+                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'history' ? 'bg-white dark:bg-[#252538] text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
                   >
                     Historial
                   </button>
@@ -468,7 +468,7 @@ function App() {
               {/* Theme Toggle Button (Desktop) */}
               <button 
                 onClick={() => setDarkMode(!darkMode)} 
-                className="p-2 sm:p-2.5 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all cursor-pointer flex-shrink-0"
+                className="p-2 sm:p-2.5 rounded-full bg-gray-100 dark:bg-[#1e1e2c] text-gray-600 dark:text-yellow-400/90 hover:bg-gray-200 dark:hover:bg-[#252538] transition-all cursor-pointer flex-shrink-0"
                 title={darkMode ? "Modo claro" : "Modo escuro"}
               >
                 {darkMode ? (
@@ -490,7 +490,7 @@ function App() {
                       <span>Novo</span>
                     </button>
                   )}
-                  <div className="flex items-center gap-2 border-l border-gray-100 dark:border-zinc-800 pl-2 sm:pl-4">
+                  <div className="flex items-center gap-2 border-l border-gray-100 dark:border-[#252538] pl-2 sm:pl-4">
                     <div className="flex flex-col items-end leading-none">
                       <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1">{user.rol || user.role}</span>
                       <span className="text-[11px] sm:text-xs font-bold text-gray-900 dark:text-zinc-100">{user.username || user.name || 'Usuario'}</span>
@@ -530,7 +530,7 @@ function App() {
 
         {/* Mobile Dropdown Menu Panel */}
         {showMobileMenu && (
-          <div className="md:hidden border-t border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl px-6 py-6 flex flex-col gap-6 animate-slide-down relative z-40">
+          <div className="md:hidden border-t border-gray-100 dark:border-[#1d1d2a] bg-white dark:bg-[#111119] shadow-xl px-6 py-6 flex flex-col gap-6 animate-slide-down relative z-40">
             {/* 1. Admin Tabs */}
             {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
               <div className="flex flex-col gap-2">
@@ -658,9 +658,9 @@ function App() {
                 {loading && displayResults.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 opacity-50"><div className="w-10 h-10 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin mb-4" /></div>
                 ) : displayResults.length === 0 ? (
-                  <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200 shadow-sm">
-                    <p className="text-gray-500 text-lg">Non se atoparon resultados.</p>
-                    <button onClick={clearAll} className="mt-4 text-yellow-600 font-bold hover:underline">Limpar filtros</button>
+                  <div className="bg-white dark:bg-[#13131c] rounded-3xl p-12 text-center border border-dashed border-gray-200 dark:border-zinc-800 shadow-sm">
+                    <p className="text-gray-500 dark:text-zinc-400 text-lg">Non se atoparon resultados.</p>
+                    <button onClick={clearAll} className="mt-4 text-yellow-600 dark:text-yellow-400 font-bold hover:underline">Limpar filtros</button>
                   </div>
                 ) : (
                   <div className="pb-20">
