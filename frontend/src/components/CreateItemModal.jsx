@@ -11,7 +11,7 @@ const InputField = ({ label, name, placeholder, type = "text", required = false,
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500"
+            className="w-full px-5 py-3 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500"
         />
     </div>
 );
@@ -26,7 +26,7 @@ const TextAreaField = ({ label, name, placeholder, required = false, value, onCh
             placeholder={placeholder}
             required={required}
             rows={3}
-            className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500 resize-none"
+            className="w-full px-5 py-3 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500 resize-none"
         />
     </div>
 );
@@ -87,7 +87,7 @@ const CustomSelect = ({ options, value, onChange, placeholder = 'Selecciona...',
                 type="button"
                 onClick={() => isOpen ? setIsOpen(false) : openDropdown()}
                 className={`w-full ${sizeBase} text-sm bg-gray-50 dark:bg-zinc-950/40 border transition-all outline-none cursor-pointer flex items-center justify-between gap-2 ${
-                    isOpen ? 'border-yellow-400 dark:border-yellow-500 ring-4 ring-yellow-50 dark:ring-yellow-950/20' : 'border-gray-200 dark:border-zinc-800'
+                    isOpen ? 'border-yellow-400 dark:border-yellow-500 ring-4 ring-yellow-50 dark:ring-yellow-950/20' : 'border-gray-200 dark:border-white/[0.10]'
                 } ${selectedLabel ? 'text-gray-700 dark:text-zinc-100' : 'text-gray-400 dark:text-zinc-500'}`}
             >
                 <span className="truncate text-left">{selectedLabel || placeholder}</span>
@@ -102,14 +102,14 @@ const CustomSelect = ({ options, value, onChange, placeholder = 'Selecciona...',
                     className="bg-white dark:bg-[#21212f] border border-gray-200 dark:border-white/[0.12] rounded-2xl shadow-2xl dark:shadow-[0_16px_50px_rgba(0,0,0,0.75)] overflow-hidden"
                 >
                     {searchable && (
-                        <div className="p-2 border-b border-gray-100 dark:border-zinc-800">
+                        <div className="p-2 border-b border-gray-100 dark:border-white/[0.10]">
                             <input
                                 type="text"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 placeholder="Buscar..."
                                 autoFocus
-                                className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-700 rounded-xl outline-none focus:border-yellow-400 dark:focus:border-yellow-500 text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                                className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-xl outline-none focus:border-yellow-400 dark:focus:border-yellow-500 text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                             />
                         </div>
                     )}
@@ -406,9 +406,9 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden border dark:border-zinc-700/80 transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
+            <div className="bg-white dark:bg-[#1a1a26] w-full max-w-2xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden border dark:border-white/[0.10] transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
                 {/* Header */}
-                <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-start sm:items-center bg-gray-50/50 dark:bg-zinc-950/20 gap-2">
+                <div className="px-5 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-white/[0.10] flex justify-between items-start sm:items-center bg-gray-50/50 dark:bg-zinc-950/20 gap-2">
                     <div>
                         <h2 className="text-xl font-black text-gray-900 dark:text-white">
                             {initialData
@@ -587,7 +587,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                         }}
                                                         className={`px-3 py-2 rounded-xl border text-[11px] font-bold transition-all ${isSelected
                                                                 ? 'bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20'
-                                                                : 'bg-gray-50 dark:bg-zinc-950/40 border-gray-200 dark:border-zinc-800 text-gray-500 dark:text-zinc-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-500 dark:hover:text-blue-400'
+                                                                : 'bg-gray-50 dark:bg-zinc-950/40 border-gray-200 dark:border-white/[0.10] text-gray-500 dark:text-zinc-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-500 dark:hover:text-blue-400'
                                                             }`}
                                                     >
                                                         {proc.nombre}
@@ -609,7 +609,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             {isUploading ? '...' : 'Subir'}
                                         </button>
                                         {(pendingImagePreview || formData.imagen) && (
-                                            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex-shrink-0 mb-1 shadow-sm group/img">
+                                            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 dark:border-white/[0.10] bg-gray-50 dark:bg-zinc-950/50 flex-shrink-0 mb-1 shadow-sm group/img">
                                                 <img
                                                     src={pendingImagePreview || getImgUrl(formData.imagen)}
                                                     alt="Preview"
@@ -725,7 +725,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 onChange={handleChange}
                                                 list="subfamilias-list"
                                                 placeholder="ex: Cofre"
-                                                className="w-full px-5 py-3 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500"
+                                                className="w-full px-5 py-3 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-2xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-350 dark:placeholder:text-zinc-500"
                                             />
                                             <datalist id="subfamilias-list">
                                                 {dbOptions.subfamilias.map(s => <option key={s.value} value={s.value} />)}
@@ -747,13 +747,13 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             </button>
                                         </div>
                                         {(formData.caracteristicas || []).length === 0 ? (
-                                            <p className="text-[12px] text-gray-400 dark:text-zinc-500 text-center py-4 bg-gray-50 dark:bg-zinc-950/20 rounded-2xl border border-dashed border-gray-200 dark:border-zinc-800">
+                                            <p className="text-[12px] text-gray-400 dark:text-zinc-500 text-center py-4 bg-gray-50 dark:bg-zinc-950/20 rounded-2xl border border-dashed border-gray-200 dark:border-white/[0.10]">
                                                 Sen características. Preme <strong>+ Engadir</strong> para incluír valores.
                                             </p>
                                         ) : (
                                             <div className="space-y-2">
                                                 {(formData.caracteristicas || []).map((car, idx) => (
-                                                    <div key={idx} className="flex gap-2 items-start bg-gray-50 dark:bg-zinc-950/30 p-3 rounded-2xl border border-gray-100 dark:border-zinc-800 animate-in zoom-in duration-150">
+                                                    <div key={idx} className="flex gap-2 items-start bg-gray-50 dark:bg-zinc-950/30 p-3 rounded-2xl border border-gray-100 dark:border-white/[0.10] animate-in zoom-in duration-150">
                                                         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                             <CustomSelect
                                                                 options={dbOptions.caracteristicas.map(c => ({ value: c.id_caracteristica, label: c.caracteristica }))}
@@ -767,21 +767,21 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                                 value={car.valor || ''}
                                                                 onChange={(e) => updateCaracteristica(idx, 'valor', e.target.value)}
                                                                 placeholder="Valor"
-                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                                                             />
                                                             <input
                                                                 type="text"
                                                                 value={car.comentarios || ''}
                                                                 onChange={(e) => updateCaracteristica(idx, 'comentarios', e.target.value)}
                                                                 placeholder="Comentarios (opcional)"
-                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                                                             />
                                                             <input
                                                                 type="text"
                                                                 value={car.norma || ''}
                                                                 onChange={(e) => updateCaracteristica(idx, 'norma', e.target.value)}
                                                                 placeholder="Norma (opcional)"
-                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-zinc-950/40 border border-gray-200 dark:border-zinc-800 rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
+                                                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#13131e] border border-gray-200 dark:border-white/[0.10] rounded-xl focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-sm text-gray-700 dark:text-zinc-100 placeholder:text-gray-400 dark:placeholder:text-zinc-500"
                                                             />
                                                         </div>
                                                         <button
@@ -865,7 +865,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                 />
 
                 {step === 2 && (
-                    <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 dark:border-zinc-800 flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 dark:bg-zinc-950/20 gap-4">
+                    <div className="px-5 sm:px-8 py-4 sm:py-6 border-t border-gray-100 dark:border-white/[0.10] flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center bg-gray-50/30 dark:bg-zinc-950/20 gap-4">
                         <div className="flex justify-center sm:justify-start items-center gap-4">
                             {!initialData && (
                                 <button
@@ -890,7 +890,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 value={deleteReason}
                                                 onChange={(e) => setDeleteReason(e.target.value)}
                                                 placeholder="Xustificación obrigat..."
-                                                className="w-full text-xs p-2 rounded-xl border border-red-200 dark:border-red-900/40 outline-none focus:border-red-400 resize-none h-16 bg-white dark:bg-zinc-900 text-gray-800 dark:text-zinc-100 placeholder-red-300 dark:placeholder-red-800/60"
+                                                className="w-full text-xs p-2 rounded-xl border border-red-200 dark:border-red-900/40 outline-none focus:border-red-400 resize-none h-16 bg-white dark:bg-[#13131e] text-gray-800 dark:text-zinc-100 placeholder-red-300 dark:placeholder-red-800/60"
                                             />
                                             <div className="flex gap-2">
                                                 <button
