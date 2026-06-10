@@ -1238,67 +1238,72 @@ app.post('/api/chat', async (req, res) => {
             : 'Non se atoparon rexistros na base de datos de Sisgeko relacionados con esta pregunta.';
 
         const aiUrl = process.env.AI_API_URL;
-        const aiKey = process.env.AI_API_KEY || 'ollama';
-        const aiModel = process.env.AI_MODEL_NAME || 'qwen2.5:7b';
+        const aiKey = process.env.AI_API_KEY;
+        const aiModel = process.env.AI_MODEL_NAME || 'qwen3:4b';
+        const aiType = process.env.AI_API_TYPE || 'ollama'; // 'ollama' | 'openai'
 
-        const systemPrompt = `Es SisgekoBot, el asistente de inteligencia artificial de Toldos Gómez S.L., integrado en Sisgeko (Sistema de Xestión do Coñecemento).
+        const systemPrompt = `Es SisgekoBot, asistente IA de Toldos Gómez S.L. en Sisgeko.
+Responde en el idioma de la pregunta (gallego o castellano). Sé breve y directo (máx. 3 párrafos).
+Usa solo la información del CONTEXTO. Si no hay datos suficientes, dilo y sugiere buscar en Sisgeko.
+No inventes códigos, precios ni datos técnicos. No uses markdown (# ni **). No repitas la pregunta.
 
-INSTRUCCIONES:
-- Responde siempre en el mismo idioma en que te hagan la pregunta (gallego o castellano).
-- Sé conciso y directo. Máximo 3-4 párrafos o una lista corta.
-- Usa la información del CONTEXTO para responder. Si el contexto es relevante, cítalo con naturalidad.
-- Si el CONTEXTO no contiene información suficiente, di claramente que no tienes esa información en la base de datos y sugiere buscar directamente en Sisgeko.
-- NUNCA inventes códigos de producto, precios, proveedores ni datos técnicos que no aparezcan en el CONTEXTO.
-- Para listas usa guiones (•). No uses formato markdown con # ni **.
-- No repitas la pregunta del usuario en tu respuesta.
-
-SOBRE SISGEKO:
-La base de datos contiene tres tipos de registros:
-- Artigos: productos y materiales con código, descripción, familia/subfamilia y proveedor.
-- Insights: conocimiento técnico de procesos internos, con referencia a procesos y fuente.
-- Definicións: glosario de términos técnicos de la empresa.
-
-CONTEXTO RECUPERADO DE LA BASE DE DATOS:
+CONTEXTO:
 ${contextText}`;
 
         if (aiUrl) {
             try {
                 const chatMessages = [{ role: 'system', content: systemPrompt }];
-
-                history.slice(-6).forEach(msg => {
-                    chatMessages.push({
-                        role: msg.sender === 'user' ? 'user' : 'assistant',
-                        content: msg.text
-                    });
+                history.slice(-4).forEach(msg => {
+                    chatMessages.push({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text });
                 });
                 chatMessages.push({ role: 'user', content: message });
 
-                const response = await fetch(`${aiUrl.replace(/\/$/, '')}/v1/chat/completions`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(aiKey && aiKey !== 'ollama' ? { 'Authorization': `Bearer ${aiKey}` } : {})
-                    },
-                    body: JSON.stringify({
-                        model: aiModel,
-                        messages: chatMessages,
-                        temperature: 0.3,
-                        max_tokens: 800,
-                        stream: false,
-                        think: false  // desactiva thinking tokens en qwen3 y modelos similares
-                    })
-                });
+                let reply = '';
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`API ${response.status}: ${errText.slice(0, 200)}`);
+                if (aiType === 'ollama') {
+                    // API nativa de Ollama — soporta think:false correctamente
+                    const response = await fetch(`${aiUrl.replace(/\/$/, '')}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: aiModel,
+                            messages: chatMessages,
+                            stream: false,
+                            think: false,
+                            options: { temperature: 0.3, num_predict: 500 }
+                        })
+                    });
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`Ollama ${response.status}: ${errText.slice(0, 200)}`);
+                    }
+                    const data = await response.json();
+                    reply = data.message?.content?.trim() || '';
+                } else {
+                    // API compatible con OpenAI (OpenAI, Azure, LM Studio…)
+                    const response = await fetch(`${aiUrl.replace(/\/$/, '')}/v1/chat/completions`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...(aiKey ? { 'Authorization': `Bearer ${aiKey}` } : {})
+                        },
+                        body: JSON.stringify({
+                            model: aiModel,
+                            messages: chatMessages,
+                            temperature: 0.3,
+                            max_tokens: 500,
+                            stream: false
+                        })
+                    });
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`API ${response.status}: ${errText.slice(0, 200)}`);
+                    }
+                    const data = await response.json();
+                    reply = data.choices?.[0]?.message?.content?.trim() || '';
                 }
 
-                const data = await response.json();
-                console.log('[chat] raw response:', JSON.stringify(data).slice(0, 300));
-
-                // Limpiar thinking tokens <think>...</think> por si el modelo los incluye en el content
-                let reply = data.choices?.[0]?.message?.content?.trim() || '';
+                // Eliminar thinking tokens por si acaso
                 reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
                 if (!reply) reply = 'Non se puido xerar unha resposta.';
 
@@ -1308,7 +1313,7 @@ ${contextText}`;
                 console.error('Error IA chat:', aiErr.message);
                 return res.json({
                     success: true,
-                    reply: `Non se puido conectar co modelo de IA (${aiModel}).\nErro: ${aiErr.message}\n\nContexto atopado na base de datos:\n${contextParts.length > 0 ? contextParts.join('\n') : '(ningún resultado)'}`,
+                    reply: `Non se puido conectar co modelo de IA (${aiModel}).\nErro: ${aiErr.message}`,
                     context: contextParts,
                     error: aiErr.message
                 });
