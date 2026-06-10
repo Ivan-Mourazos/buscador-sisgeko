@@ -1125,6 +1125,53 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// Extrae la respuesta real cuando el modelo incluye razonamiento interno previo (qwen3 thinking)
+function stripThinkingPreamble(text) {
+    if (!text) return text;
+
+    // Indicadores de que el texto empieza con razonamiento interno
+    const thinkingStarters = [
+        /^okay[,\s]/i, /^ok[,\s]/i, /^alright[,\s]/i, /^well[,\s]/i,
+        /^let me\b/i, /^first[,\s]/i, /^so[,\s]/i,
+        /^the user (is asking|asked|wants|said)/i,
+        /^i need to\b/i, /^i should\b/i, /^i'll\b/i,
+        /^looking at\b/i, /^checking\b/i, /^based on\b/i,
+    ];
+
+    const startsWithReasoning = thinkingStarters.some(r => r.test(text.trimStart()));
+    if (!startsWithReasoning) return text; // no hay razonamiento, devolver tal cual
+
+    // Separar en párrafos y buscar dónde termina el razonamiento
+    const paragraphs = text.split(/\n\n+/);
+    if (paragraphs.length <= 1) {
+        // Sin párrafos claros: buscar el último bloque que no parezca razonamiento
+        const lines = text.split('\n');
+        const answerLines = [];
+        let inAnswer = false;
+        for (const line of lines) {
+            const isReasoning = thinkingStarters.some(r => r.test(line.trim())) ||
+                /\bthe user\b|\bi need to\b|\blet me\b|\bso the answer\b|\bcheck(ing)? (the|if|whether)\b/i.test(line);
+            if (!isReasoning && line.trim().length > 20) inAnswer = true;
+            if (inAnswer) answerLines.push(line);
+        }
+        return answerLines.join('\n').trim() || text;
+    }
+
+    // Con párrafos: descartamos los que sean razonamiento y nos quedamos con los de respuesta
+    const answerParagraphs = [];
+    let foundAnswer = false;
+    for (const para of paragraphs) {
+        const isReasoning = thinkingStarters.some(r => r.test(para.trim())) ||
+            /\bthe user\b|\bi need to\b|\blet me\b|\bso the answer\b/i.test(para);
+        if (!isReasoning && para.trim().length > 10) {
+            foundAnswer = true;
+            answerParagraphs.push(para.trim());
+        }
+    }
+
+    return foundAnswer ? answerParagraphs.join('\n\n') : text;
+}
+
 // Chatbot de Inteligencia Artificial (RAG)
 app.post('/api/chat', async (req, res) => {
     try {
@@ -1309,8 +1356,15 @@ ${contextText}`;
                     reply = data.choices?.[0]?.message?.content?.trim() || '';
                 }
 
-                // Eliminar thinking tokens por si acaso
+                // 1. Eliminar bloques <think>...</think>
                 reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+                // 2. Si el modelo incluyó razonamiento interno (qwen3 sin thinking desactivado),
+                //    extraer solo la respuesta final que aparece tras el bloque de razonamiento.
+                //    El razonamiento siempre empieza en primera persona analizando la pregunta
+                //    y la respuesta real aparece como el último bloque diferenciado.
+                reply = stripThinkingPreamble(reply);
+
                 if (!reply) reply = 'Non se puido xerar unha resposta.';
 
                 return res.json({ success: true, reply, context: contextParts });
