@@ -1303,15 +1303,21 @@ app.post('/api/chat', async (req, res) => {
         const aiModel = process.env.AI_MODEL_NAME || 'qwen3:4b';
         const aiType = process.env.AI_API_TYPE || 'ollama'; // 'ollama' | 'openai'
 
-        // /no_think al inicio del system prompt: token oficial de Qwen3 para desactivar el razonamiento interno
-        const systemPrompt = `/no_think
-Es SisgekoBot, asistente IA de Toldos Gómez S.L. en Sisgeko.
-Responde en el idioma de la pregunta (gallego o castellano). Sé breve y directo (máx. 3 párrafos).
-Usa solo la información del CONTEXTO. Si no hay datos suficientes, dilo y sugiere buscar en Sisgeko.
-No inventes códigos, precios ni datos técnicos. No uses markdown (# ni **). No repitas la pregunta.
+        const systemPrompt = `Eres SisgekoBot, asistente de Toldos Gómez S.L.
+REGLAS ESTRICTAS:
+1. Responde SIEMPRE en el idioma de la pregunta (gallego o castellano). NUNCA en inglés.
+2. Escribe tu respuesta ÚNICAMENTE dentro de las etiquetas [RESPOSTA] y [/RESPOSTA].
+3. Sé breve (máx. 3 párrafos). Sin markdown (no uses # ni **).
+4. Usa solo datos del CONTEXTO. No inventes códigos ni precios.
+5. Si no hay info suficiente, dilo dentro de [RESPOSTA].
 
 CONTEXTO:
-${contextText}`;
+${contextText}
+
+Formato obligatorio de respuesta:
+[RESPOSTA]
+Tu respuesta aquí.
+[/RESPOSTA]`;
 
         if (aiUrl) {
             try {
@@ -1366,14 +1372,15 @@ ${contextText}`;
                     reply = data.choices?.[0]?.message?.content?.trim() || '';
                 }
 
-                // 1. Eliminar bloques <think>...</think>
-                reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-                // 2. Si el modelo incluyó razonamiento interno (qwen3 sin thinking desactivado),
-                //    extraer solo la respuesta final que aparece tras el bloque de razonamiento.
-                //    El razonamiento siempre empieza en primera persona analizando la pregunta
-                //    y la respuesta real aparece como el último bloque diferenciado.
-                reply = stripThinkingPreamble(reply);
+                // Extraer contenido entre [RESPOSTA]...[/RESPOSTA]
+                const tagMatch = reply.match(/\[RESPOSTA\]([\s\S]*?)\[\/RESPOSTA\]/i);
+                if (tagMatch) {
+                    reply = tagMatch[1].trim();
+                } else {
+                    // Fallback: limpiar thinking tags y aplicar filtro de idioma
+                    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                    reply = stripThinkingPreamble(reply);
+                }
 
                 if (!reply) reply = 'Non se puido xerar unha resposta.';
 
