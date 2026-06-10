@@ -1246,7 +1246,9 @@ app.post('/api/chat', async (req, res) => {
         const aiModel = process.env.AI_MODEL_NAME || 'qwen3:4b';
         const aiType = process.env.AI_API_TYPE || 'ollama'; // 'ollama' | 'openai'
 
-        const systemPrompt = `Es SisgekoBot, asistente IA de Toldos Gómez S.L. en Sisgeko.
+        // /no_think al inicio del system prompt: token oficial de Qwen3 para desactivar el razonamiento interno
+        const systemPrompt = `/no_think
+Es SisgekoBot, asistente IA de Toldos Gómez S.L. en Sisgeko.
 Responde en el idioma de la pregunta (gallego o castellano). Sé breve y directo (máx. 3 párrafos).
 Usa solo la información del CONTEXTO. Si no hay datos suficientes, dilo y sugiere buscar en Sisgeko.
 No inventes códigos, precios ni datos técnicos. No uses markdown (# ni **). No repitas la pregunta.
@@ -1260,12 +1262,12 @@ ${contextText}`;
                 history.slice(-4).forEach(msg => {
                     chatMessages.push({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text });
                 });
-                chatMessages.push({ role: 'user', content: message });
+                // /no_think también en el turno de usuario como refuerzo
+                chatMessages.push({ role: 'user', content: `/no_think\n${message}` });
 
                 let reply = '';
 
                 if (aiType === 'ollama') {
-                    // API nativa de Ollama — soporta think:false correctamente
                     const response = await fetch(`${aiUrl.replace(/\/$/, '')}/api/chat`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1274,7 +1276,7 @@ ${contextText}`;
                             messages: chatMessages,
                             stream: false,
                             think: false,
-                            options: { temperature: 0.3, num_predict: 500 }
+                            options: { temperature: 0.3, num_predict: 500, think: false }
                         })
                     });
                     if (!response.ok) {
