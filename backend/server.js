@@ -1134,135 +1134,186 @@ app.post('/api/chat', async (req, res) => {
         }
 
         const pool = await sql.connect(dbConfig);
-        
-        // 1. RAG - Buscar contexto relevante en la base de datos (por palabras clave)
-        const words = message.trim().split(/\s+/).filter(w => w.length > 2);
+
+        // 1. RAG — extraer palabras clave (sin stop words gallego/español)
+        const stopWords = new Set([
+            'que', 'cal', 'como', 'para', 'con', 'por', 'una', 'uno', 'uns', 'unhas',
+            'los', 'las', 'des', 'hai', 'ten', 'son', 'non', 'mais', 'pero', 'este',
+            'esta', 'estes', 'estas', 'ese', 'esa', 'iso', 'isto', 'ter', 'ser', 'foi',
+            'era', 'quen', 'seu', 'sua', 'sus', 'del', 'der', 'das', 'dos', 'nos', 'nas',
+            'the', 'and', 'not', 'are', 'was', 'has', 'have', 'can', 'will', 'from',
+        ]);
+        const keywords = message.trim()
+            .toLowerCase()
+            .split(/\s+/)
+            .map(w => w.replace(/[¿?¡!.,;:()]/g, ''))
+            .filter(w => w.length > 2 && !stopWords.has(w));
+
         let contextParts = [];
-        
-        if (words.length > 0) {
-            let artQuery = `SELECT TOP 3 descripcion, codigo, denominacion_proveedor FROM articulos WHERE 1=1 `;
-            let insQuery = `SELECT TOP 3 titulo, insight FROM insights WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) `;
-            let defQuery = `SELECT TOP 3 titulo, definicion FROM definiciones WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) `;
-            
-            const request = pool.request();
-            words.forEach((w, i) => {
-                request.input(`cw${i}`, sql.NVarChar, `%${w}%`);
-                artQuery += ` AND (descripcion COLLATE Latin1_General_CI_AI LIKE @cw${i} OR codigo COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
-                insQuery += ` AND (insight COLLATE Latin1_General_CI_AI LIKE @cw${i} OR titulo COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
-                defQuery += ` AND (titulo COLLATE Latin1_General_CI_AI LIKE @cw${i} OR definicion COLLATE Latin1_General_CI_AI LIKE @cw${i})`;
-            });
-            
+
+        if (keywords.length > 0) {
+            // Lógica OR: un registro vale si coincide con CUALQUIER palabra clave
+            // Cada query usa su propio request (requerido por mssql)
+            const buildOrCondition = (fields, words) =>
+                words.map((_, i) =>
+                    fields.map(f => `${f} COLLATE Latin1_General_CI_AI LIKE @kw${i}`).join(' OR ')
+                ).map(cond => `(${cond})`).join(' OR ');
+
+            const bindKeywords = (req) => {
+                keywords.forEach((w, i) => req.input(`kw${i}`, sql.NVarChar, `%${w}%`));
+            };
+
             try {
-                const [artRes, insRes, defRes] = await Promise.all([
-                    request.query(artQuery),
-                    request.query(insQuery),
-                    request.query(defQuery)
-                ]);
-                
-                artRes.recordset.forEach(a => {
-                    contextParts.push(`Artículo: ${a.descripcion} [Código: ${a.codigo}] (Proveedor: ${a.denominacion_proveedor || 'N/A'})`);
-                });
-                insRes.recordset.forEach(i => {
-                    contextParts.push(`Insight: ${i.titulo} - "${i.insight}"`);
-                });
-                defRes.recordset.forEach(d => {
-                    contextParts.push(`Definición de ${d.titulo}: ${d.definicion}`);
-                });
+                const rArt = pool.request();
+                bindKeywords(rArt);
+                const artCond = buildOrCondition(['descripcion', 'codigo', 'denominacion_proveedor'], keywords);
+                const artRes = await rArt.query(
+                    `SELECT TOP 5 descripcion, codigo, denominacion_proveedor,
+                            familia_nombre, subfamilia
+                     FROM articulos
+                     WHERE ${artCond}
+                     ORDER BY descripcion`
+                );
+
+                const rIns = pool.request();
+                bindKeywords(rIns);
+                const insCond = buildOrCondition(['titulo', 'insight'], keywords);
+                const insRes = await rIns.query(
+                    `SELECT TOP 5 titulo, insight, procesos_lista, tipo_origen_nombre, origen_informacion
+                     FROM insights
+                     WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL)
+                       AND (${insCond})
+                     ORDER BY titulo`
+                );
+
+                const rDef = pool.request();
+                bindKeywords(rDef);
+                const defCond = buildOrCondition(['titulo', 'definicion'], keywords);
+                const defRes = await rDef.query(
+                    `SELECT TOP 5 titulo, definicion, familias_lista
+                     FROM definiciones
+                     WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL)
+                       AND (${defCond})
+                     ORDER BY titulo`
+                );
+
+                if (artRes.recordset.length > 0) {
+                    contextParts.push('## ARTIGOS ENCONTRADOS');
+                    artRes.recordset.forEach(a => {
+                        let line = `• ${a.descripcion} (Código: ${a.codigo || 'N/A'})`;
+                        if (a.familia_nombre) line += ` | Familia: ${a.familia_nombre}`;
+                        if (a.subfamilia) line += ` > ${a.subfamilia}`;
+                        if (a.denominacion_proveedor) line += ` | Prov: ${a.denominacion_proveedor}`;
+                        contextParts.push(line);
+                    });
+                }
+
+                if (insRes.recordset.length > 0) {
+                    contextParts.push('## INSIGHTS / COÑECEMENTO TÉCNICO');
+                    insRes.recordset.forEach(ins => {
+                        let block = `• ${ins.titulo}`;
+                        if (ins.procesos_lista) block += ` [Proceso: ${ins.procesos_lista}]`;
+                        if (ins.tipo_origen_nombre) block += ` [Orixe: ${ins.tipo_origen_nombre}]`;
+                        block += `\n  "${ins.insight}"`;
+                        if (ins.origen_informacion) block += `\n  Ref: ${ins.origen_informacion}`;
+                        contextParts.push(block);
+                    });
+                }
+
+                if (defRes.recordset.length > 0) {
+                    contextParts.push('## DEFINICIÓNS');
+                    defRes.recordset.forEach(d => {
+                        let block = `• ${d.titulo}: ${d.definicion}`;
+                        if (d.familias_lista) block += ` [Familias: ${d.familias_lista}]`;
+                        contextParts.push(block);
+                    });
+                }
             } catch (err) {
-                console.error("Error al buscar contexto para chat RAG:", err.message);
+                console.error('Error RAG chat:', err.message);
             }
         }
-        
-        const contextText = contextParts.length > 0 
-            ? contextParts.join('\n\n')
-            : "No se encontraron registros específicos en la base de datos de Sisgeko relacionados con esta pregunta.";
+
+        const contextText = contextParts.length > 0
+            ? contextParts.join('\n')
+            : 'Non se atoparon rexistros na base de datos de Sisgeko relacionados con esta pregunta.';
 
         const aiUrl = process.env.AI_API_URL;
         const aiKey = process.env.AI_API_KEY || 'ollama';
-        const aiModel = process.env.AI_MODEL_NAME || 'qwen2.5:0.5b';
+        const aiModel = process.env.AI_MODEL_NAME || 'qwen2.5:7b';
+
+        const systemPrompt = `Es SisgekoBot, el asistente de inteligencia artificial de Toldos Gómez S.L., integrado en Sisgeko (Sistema de Xestión do Coñecemento).
+
+INSTRUCCIONES:
+- Responde siempre en el mismo idioma en que te hagan la pregunta (gallego o castellano).
+- Sé conciso y directo. Máximo 3-4 párrafos o una lista corta.
+- Usa la información del CONTEXTO para responder. Si el contexto es relevante, cítalo con naturalidad.
+- Si el CONTEXTO no contiene información suficiente, di claramente que no tienes esa información en la base de datos y sugiere buscar directamente en Sisgeko.
+- NUNCA inventes códigos de producto, precios, proveedores ni datos técnicos que no aparezcan en el CONTEXTO.
+- Para listas usa guiones (•). No uses formato markdown con # ni **.
+- No repitas la pregunta del usuario en tu respuesta.
+
+SOBRE SISGEKO:
+La base de datos contiene tres tipos de registros:
+- Artigos: productos y materiales con código, descripción, familia/subfamilia y proveedor.
+- Insights: conocimiento técnico de procesos internos, con referencia a procesos y fuente.
+- Definicións: glosario de términos técnicos de la empresa.
+
+CONTEXTO RECUPERADO DE LA BASE DE DATOS:
+${contextText}`;
 
         if (aiUrl) {
             try {
-                const messages = [
-                    {
-                        role: "system",
-                        content: `Eres SisgekoBot, el asistente de inteligencia artificial para Toldos Gómez S.L. 
-Tu objetivo es ayudar a los empleados a resolver dudas utilizando el conocimiento interno del sistema.
-Responde de forma clara, profesional y concisa (preferiblemente en gallego o castellano, según te pregunten).
-Si el contexto te da la respuesta, úsala. Si no la sabes, dilo amablemente.
+                const chatMessages = [{ role: 'system', content: systemPrompt }];
 
-CONTEXTO DEL SISTEMA DE CONOCIMIENTO (SISGEKO):
-${contextText}`
-                    }
-                ];
-
-                const lastHistory = history.slice(-6);
-                lastHistory.forEach(msg => {
-                    messages.push({
+                history.slice(-6).forEach(msg => {
+                    chatMessages.push({
                         role: msg.sender === 'user' ? 'user' : 'assistant',
                         content: msg.text
                     });
                 });
+                chatMessages.push({ role: 'user', content: message });
 
-                messages.push({
-                    role: "user",
-                    content: message
-                });
-
-                const response = await fetch(`${aiUrl.replace(/\/$/, '')}/chat/completions`, {
+                const response = await fetch(`${aiUrl.replace(/\/$/, '')}/v1/chat/completions`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': aiKey ? `Bearer ${aiKey}` : ''
+                        ...(aiKey && aiKey !== 'ollama' ? { 'Authorization': `Bearer ${aiKey}` } : {})
                     },
                     body: JSON.stringify({
                         model: aiModel,
-                        messages: messages,
+                        messages: chatMessages,
                         temperature: 0.3,
-                        max_tokens: 500
+                        max_tokens: 800,
+                        stream: false
                     })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Error en llamada API: ${response.status} ${response.statusText}`);
+                    const errText = await response.text();
+                    throw new Error(`API ${response.status}: ${errText.slice(0, 200)}`);
                 }
 
                 const data = await response.json();
-                const reply = data.choices[0]?.message?.content || 'Non se puido xerar unha resposta.';
-                
-                return res.json({
-                    success: true,
-                    reply,
-                    context: contextParts
-                });
+                const reply = data.choices?.[0]?.message?.content?.trim() || 'Non se puido xerar unha resposta.';
+
+                return res.json({ success: true, reply, context: contextParts });
 
             } catch (aiErr) {
-                console.error("Error al conectar con el servicio de IA:", aiErr.message);
+                console.error('Error IA chat:', aiErr.message);
                 return res.json({
                     success: true,
-                    reply: `Non se puido conectar co modelo de IA (${aiModel}). Detalle do erro: ${aiErr.message}. 
-
-Pero atopei este contexto na base de datos para a túa pregunta:
-${contextParts.map(c => `• ${c}`).join('\n')}`,
+                    reply: `Non se puido conectar co modelo de IA (${aiModel}).\nErro: ${aiErr.message}\n\nContexto atopado na base de datos:\n${contextParts.length > 0 ? contextParts.join('\n') : '(ningún resultado)'}`,
                     context: contextParts,
                     error: aiErr.message
                 });
             }
         } else {
-            const fallbackReply = `Ola! Son o simulador de SisgekoBot. 
+            // Modo simulación — muestra el contexto RAG directamente
+            const fallbackReply = contextParts.length > 0
+                ? `[Modo simulación — sen modelo IA]\n\nAtopei isto na base de datos para "${message}":\n\n${contextParts.join('\n')}\n\nCando se configure AI_API_URL no servidor, responderé en linguaxe natural usando este contexto.`
+                : `[Modo simulación — sen modelo IA]\n\nNon atopei rexistros en Sisgeko relacionados con "${message}".\n\nCando se configure AI_API_URL, o modelo de IA poderá responder preguntas xerais mesmo sen contexto da BD.`;
 
-Como aínda non configuraches a variable 'AI_API_URL' no ficheiro '.env', estou a funcionar en modo simulación. 
-
-Analicei a túa pregunta e recuperei este contexto da base de datos (RAG):
-${contextParts.length > 0 ? contextParts.map(c => `• ${c}`).join('\n') : "Non atopei rexistros relacionados na base de datos."}
-
-Cando conectes un modelo local (Ollama) o una API, responderei en lenguaxe natural usando esta información.`;
-
-            return res.json({
-                success: true,
-                reply: fallbackReply,
-                context: contextParts
-            });
+            return res.json({ success: true, reply: fallbackReply, context: contextParts });
         }
     } catch (error) {
         console.error('Error en /api/chat:', error);
