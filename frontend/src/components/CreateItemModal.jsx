@@ -188,7 +188,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
             if (data.success) {
                 setDbOptions({
                     articulos: (data.articulos || []).map(a => ({ ...a, descripcion: toTitleCase(a.descripcion) })),
-                    insights: data.insights || [],
+                    insights: (data.insights || []).map(i => ({ ...i, titulo: toTitleCase(i.titulo) })),
                     procesos: data.procesos || [],
                     tipo_origen: data.tipo_origen || [],
                     familias: (data.familias || []).map(f => ({ ...f, label: toTitleCase(f.label) })),
