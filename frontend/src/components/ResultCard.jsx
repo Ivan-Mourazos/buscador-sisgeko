@@ -101,8 +101,8 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         </div>
                     </div>
                     <div className="min-h-[3rem]">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors line-clamp-2">
-                            {item.titulo}
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors line-clamp-2 capitalize">
+                            {item.titulo?.toLowerCase()}
                         </h3>
                     </div>
                     <div className="mt-3 pt-3 border-t border-gray-50 dark:border-white/[0.06] flex flex-col gap-1.5">
@@ -137,8 +137,8 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         </div>
                     </div>
                     <div className="min-h-[3rem]">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-405 transition-colors line-clamp-2">
-                            {item.titulo}
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-405 transition-colors line-clamp-2 capitalize">
+                            {item.titulo?.toLowerCase()}
                         </h3>
                     </div>
                     {item.familias_lista && (
