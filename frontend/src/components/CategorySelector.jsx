@@ -61,7 +61,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
             type="text" 
             autoFocus
             placeholder="Que estás a buscar?"
-            className="w-full pl-6 md:pl-8 pr-24 md:pr-32 py-4 md:py-5 bg-white dark:bg-[#0f0f14]/80 border border-gray-100 dark:border-zinc-800/60 rounded-[2rem] shadow-2xl shadow-gray-200/60 dark:shadow-none focus:ring-4 focus:ring-yellow-50 focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 focus:shadow-yellow-100/50 transition-all outline-none text-base md:text-xl font-medium placeholder:text-gray-300 dark:placeholder:text-zinc-600 text-gray-900 dark:text-white group-hover:border-gray-200 dark:group-hover:border-zinc-700"
+            className="w-full pl-6 md:pl-8 pr-24 md:pr-32 py-4 md:py-5 bg-white dark:bg-[#21212f] border border-gray-100 dark:border-white/[0.12] rounded-[2rem] shadow-2xl shadow-gray-200/60 dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)] focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/20 focus:border-yellow-400 dark:focus:border-yellow-500 transition-all outline-none text-base md:text-xl font-medium placeholder:text-gray-300 dark:placeholder:text-zinc-500 text-gray-900 dark:text-white group-hover:border-gray-200 dark:group-hover:border-white/[0.18]"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
           />
@@ -87,20 +87,20 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
               key={cat.id}
               onClick={() => onSelect(cat.id)}
               style={{ animationDelay: `${idx * 150}ms` }}
-              className="group relative bg-white dark:bg-[#0f0f14]/80 p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-zinc-800/60 hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
+              className="group relative bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-[0_4px_28px_rgba(0,0,0,0.55)] border border-gray-100 dark:border-white/[0.12] hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
             >
               {/* Background Gradient on Hover */}
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
               
               {/* Count Badge - Always Visible */}
               <div className="absolute top-4 right-4 md:top-6 md:right-8 z-20">
-                <div className={`px-2 md:px-3 py-1 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100 dark:border-zinc-700 ${cat.textColor} text-[10px] md:text-[11px] font-black group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:scale-110 transition-all duration-300`}>
+                <div className={`px-2 md:px-3 py-1 bg-white/90 dark:bg-[#2a2a3e]/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-100 dark:border-white/[0.14] ${cat.textColor} text-[10px] md:text-[11px] font-black group-hover:bg-white dark:group-hover:bg-white/20 group-hover:scale-110 transition-all duration-300`}>
                   {count}
                 </div>
               </div>
 
               {/* Icon Circle */}
-              <div className={`shrink-0 relative z-10 w-16 h-16 md:w-24 md:h-24 ${cat.bgLight} dark:bg-zinc-800/80 rounded-2xl md:rounded-3xl flex items-center justify-center ${cat.textColor} md:mb-8 group-hover:bg-white/20 group-hover:text-white transition-all duration-500 transform md:group-hover:rotate-6 shadow-sm`}>
+              <div className={`shrink-0 relative z-10 w-16 h-16 md:w-24 md:h-24 ${cat.bgLight} dark:bg-[#2a2a3e] rounded-2xl md:rounded-3xl flex items-center justify-center ${cat.textColor} md:mb-8 group-hover:bg-white/20 group-hover:text-white transition-all duration-500 transform md:group-hover:rotate-6 shadow-sm dark:shadow-[0_2px_10px_rgba(0,0,0,0.4)]`}>
                 <div className="scale-75 md:scale-100">{cat.icon}</div>
               </div>
 
