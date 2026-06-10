@@ -239,6 +239,7 @@ function App() {
     };
     setResults([]);
     setLoading(true);
+    setFacets(prev => ({ ...prev, familias: [], subfamilias: [], procesos: [], tipo_origen: [] }));
     setFilters(newFilters);
     setViewMode('results');
     setCurrentView('search');
