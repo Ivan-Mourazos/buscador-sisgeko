@@ -68,6 +68,8 @@ function App() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
+    const favicon = document.querySelector("link[rel='icon']");
+    if (favicon) favicon.href = darkMode ? '/favicon_white.PNG' : '/favicon_black.PNG';
   }, [darkMode]);
 
   const showToast = (message, type = 'success') => {
@@ -419,10 +421,15 @@ function App() {
       <header className="bg-white dark:bg-[#111119] border-b border-gray-100 dark:border-[#1d1d2a] sticky top-0 z-50 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.05)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
           <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 min-w-[148px] md:min-w-[180px] -my-4 md:-my-6 overflow-visible">
-             <img 
-               src="/Logosisgekotgm.png" 
-               alt="SISGEKO" 
-               className="h-16 md:h-20 w-auto object-contain scale-[3.2] md:scale-[2.8] group-hover:scale-[3.4] md:group-hover:scale-[3.0] origin-left transition-all duration-300 ml-8 md:ml-4 dark:invert dark:hue-rotate-180 dark:brightness-115" 
+             <img
+               src="/logo_sisgeko_black.PNG"
+               alt="SISGEKO"
+               className="dark:hidden h-16 md:h-20 w-auto object-contain scale-[3.2] md:scale-[2.8] group-hover:scale-[3.4] md:group-hover:scale-[3.0] origin-left transition-all duration-300 ml-8 md:ml-4"
+             />
+             <img
+               src="/logo_sisgeko_white.PNG"
+               alt="SISGEKO"
+               className="hidden dark:block h-16 md:h-20 w-auto object-contain scale-[3.2] md:scale-[2.8] group-hover:scale-[3.4] md:group-hover:scale-[3.0] origin-left transition-all duration-300 ml-8 md:ml-4"
              />
           </div>
 
