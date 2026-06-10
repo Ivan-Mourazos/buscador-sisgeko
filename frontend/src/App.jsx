@@ -435,8 +435,8 @@ function App() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button type="submit" className="absolute right-1.5 top-1.5 p-2 bg-yellow-500 rounded-full text-black shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all cursor-pointer">
-              <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <button type="submit" className="absolute right-2 top-2 bottom-2 px-3.5 bg-yellow-500 rounded-full text-black shadow-lg shadow-yellow-500/20 hover:bg-yellow-600 active:scale-90 transition-all cursor-pointer flex items-center justify-center">
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </button>
           </form>
 
@@ -732,7 +732,7 @@ function App() {
         className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-[0_10px_25px_rgba(234,179,8,0.4)] transition-all z-[80] cursor-pointer hover:bg-yellow-600 hover:scale-110 active:scale-95 hover:shadow-[0_15px_35px_rgba(234,179,8,0.5)] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         title="Volver arriba"
       >
-        <svg className="w-6 h-6 text-black dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+        <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
       </button>
     </div>
   );
