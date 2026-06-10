@@ -1,5 +1,17 @@
 import React, { useRef } from 'react';
 
+export const SkeletonCard = () => (
+    <div className="bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 sm:p-5 rounded-2xl border border-gray-100 dark:border-white/[0.08] border-l-4 border-l-gray-200 dark:border-l-white/10 animate-pulse mb-2">
+        <div className="h-2.5 w-14 bg-gray-200 dark:bg-white/10 rounded-full mb-3" />
+        <div className="h-4 w-4/5 bg-gray-200 dark:bg-white/10 rounded-lg mb-2" />
+        <div className="h-4 w-3/5 bg-gray-200 dark:bg-white/10 rounded-lg mb-4" />
+        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-50 dark:border-white/[0.04]">
+            <div className="h-5 w-20 bg-gray-100 dark:bg-white/5 rounded-full" />
+            <div className="h-5 w-16 bg-gray-100 dark:bg-white/5 rounded-full" />
+        </div>
+    </div>
+);
+
 const Badge = ({ children, colorClass }) => {
     let darkClass = '';
     if (colorClass.includes('bg-orange-50')) {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import SidebarFilters from './components/SidebarFilters';
-import { ResultCard } from './components/ResultCard';
+import { ResultCard, SkeletonCard } from './components/ResultCard';
 import DetailsModal from './components/DetailsModal';
 import LoginModal from './components/LoginModal';
 import CreateItemModal from './components/CreateItemModal';
@@ -191,6 +191,7 @@ function App() {
     const controller = new AbortController();
     if (!append) {
       abortControllerRef.current = controller;
+      setResults([]); // limpiar inmediatamente para evitar flash de resultados anteriores
     }
 
     setLoading(true);
@@ -663,7 +664,9 @@ function App() {
                 </div>
 
                 {loading && displayResults.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 opacity-50"><div className="w-10 h-10 border-4 border-yellow-100 border-t-yellow-500 rounded-full animate-spin mb-4" /></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+                  </div>
                 ) : displayResults.length === 0 ? (
                   <div className="bg-white dark:bg-[#13131c] rounded-3xl p-12 text-center border border-dashed border-gray-200 dark:border-zinc-800 shadow-sm">
                     <p className="text-gray-500 dark:text-zinc-400 text-lg">Non se atoparon resultados.</p>
