@@ -64,8 +64,8 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         </div>
                     </div>
                     <div className="min-h-[3rem]">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors">
-                            {item.descripcion}
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors capitalize">
+                            {item.descripcion?.toLowerCase()}
                         </h3>
                         {item.codigo && (
                             <p className="text-sm font-mono text-gray-500 dark:text-zinc-400 mt-1">{item.codigo}</p>
