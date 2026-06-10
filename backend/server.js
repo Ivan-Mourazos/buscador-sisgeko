@@ -1125,51 +1125,38 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Extrae la respuesta real cuando el modelo incluye razonamiento interno previo (qwen3 thinking)
+// Extrae la respuesta real cuando qwen3 incluye razonamiento interno en inglés.
+// Estrategia: el razonamiento siempre está en inglés; la respuesta en español/gallego.
 function stripThinkingPreamble(text) {
     if (!text) return text;
 
-    // Indicadores de que el texto empieza con razonamiento interno
-    const thinkingStarters = [
-        /^okay[,\s]/i, /^ok[,\s]/i, /^alright[,\s]/i, /^well[,\s]/i,
-        /^let me\b/i, /^first[,\s]/i, /^so[,\s]/i,
-        /^the user (is asking|asked|wants|said)/i,
-        /^i need to\b/i, /^i should\b/i, /^i'll\b/i,
-        /^looking at\b/i, /^checking\b/i, /^based on\b/i,
-    ];
+    const paragraphs = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    if (paragraphs.length <= 1) return text;
 
-    const startsWithReasoning = thinkingStarters.some(r => r.test(text.trimStart()));
-    if (!startsWithReasoning) return text; // no hay razonamiento, devolver tal cual
+    // Detectar si un párrafo es razonamiento interno en inglés
+    const isEnglishReasoning = (para) => {
+        // Palabras/frases características del razonamiento en inglés
+        const englishPatterns = [
+            /\bthe user\b/i, /\bthe context\b/i, /\bthe answer\b/i,
+            /\bi need to\b/i, /\blet me\b/i, /\bi should\b/i, /\bi'll\b/i,
+            /\blooking at\b/i, /\bbased on\b/i, /\bit says that\b/i,
+            /\bcheck(ing)?\b.*\bcontext\b/i, /\bthe (insight|description|code)\b/i,
+            /\bso (the|i|we|my)\b/i, /\bmake sure\b/i, /\bthe instructions\b/i,
+            /^(okay|ok|alright|well|first|also|now|then|so)[,.\s]/i,
+            /^(in the|check|looking|based|also,|now,|then,)/i,
+            /\bwait[,.\s]/i, /\bhmm\b/i,
+        ];
+        // Si tiene acento español/gallego → no es inglés
+        const hasSpanishChars = /[áéíóúàèìòùñüãõâêîôûç]/i.test(para);
+        if (hasSpanishChars) return false;
+        return englishPatterns.some(r => r.test(para));
+    };
 
-    // Separar en párrafos y buscar dónde termina el razonamiento
-    const paragraphs = text.split(/\n\n+/);
-    if (paragraphs.length <= 1) {
-        // Sin párrafos claros: buscar el último bloque que no parezca razonamiento
-        const lines = text.split('\n');
-        const answerLines = [];
-        let inAnswer = false;
-        for (const line of lines) {
-            const isReasoning = thinkingStarters.some(r => r.test(line.trim())) ||
-                /\bthe user\b|\bi need to\b|\blet me\b|\bso the answer\b|\bcheck(ing)? (the|if|whether)\b/i.test(line);
-            if (!isReasoning && line.trim().length > 20) inAnswer = true;
-            if (inAnswer) answerLines.push(line);
-        }
-        return answerLines.join('\n').trim() || text;
-    }
+    const answerParagraphs = paragraphs.filter(p => !isEnglishReasoning(p));
 
-    // Con párrafos: descartamos los que sean razonamiento y nos quedamos con los de respuesta
-    const answerParagraphs = [];
-    let foundAnswer = false;
-    for (const para of paragraphs) {
-        const isReasoning = thinkingStarters.some(r => r.test(para.trim())) ||
-            /\bthe user\b|\bi need to\b|\blet me\b|\bso the answer\b/i.test(para);
-        if (!isReasoning && para.trim().length > 10) {
-            foundAnswer = true;
-            answerParagraphs.push(para.trim());
-        }
-    }
-
-    return foundAnswer ? answerParagraphs.join('\n\n') : text;
+    // Si filtramos demasiado, devolver el texto original
+    if (answerParagraphs.length === 0) return text;
+    return answerParagraphs.join('\n\n');
 }
 
 // Chatbot de Inteligencia Artificial (RAG)
