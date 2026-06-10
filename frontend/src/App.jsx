@@ -230,23 +230,22 @@ function App() {
   };
 
   const handleCategorySelect = (catId) => {
-    // Al cambiar de categoría principal, limpiamos los filtros específicos de otras categorías
-    const newFilters = { 
-      familias: [], 
-      subfamilias: [], 
-      procesos: [], 
-      tipo_origen: [], 
-      categories: [catId] 
+    const newFilters = {
+      familias: [],
+      subfamilias: [],
+      procesos: [],
+      tipo_origen: [],
+      categories: [catId]
     };
+    setResults([]);   // limpiar antes del debounce para evitar flash
     setFilters(newFilters);
     setViewMode('results');
     setCurrentView('search');
-    // fetchResults ahora se maneja por el useEffect de query/filters
   };
 
   const handleFilterChange = (newFilters) => {
+    setResults([]);
     setFilters(newFilters);
-    // fetchResults ahora se maneja por el useEffect de query/filters
   };
 
   const handleSaveItem = async (newItem) => {
