@@ -1135,21 +1135,44 @@ function stripThinkingPreamble(text) {
 
     // Detectar si un párrafo es razonamiento interno en inglés
     const isEnglishReasoning = (para) => {
-        // Palabras/frases características del razonamiento en inglés
-        const englishPatterns = [
-            /\bthe user\b/i, /\bthe context\b/i, /\bthe answer\b/i,
-            /\bi need to\b/i, /\blet me\b/i, /\bi should\b/i, /\bi'll\b/i,
-            /\blooking at\b/i, /\bbased on\b/i, /\bit says that\b/i,
-            /\bcheck(ing)?\b.*\bcontext\b/i, /\bthe (insight|description|code)\b/i,
-            /\bso (the|i|we|my)\b/i, /\bmake sure\b/i, /\bthe instructions\b/i,
+        // Extraer la primera oración para analizar el inicio del párrafo
+        const firstSentence = para.split(/[.!?]/)[0].trim();
+
+        // Patrones que indican razonamiento en inglés AL INICIO del párrafo
+        const englishStartPatterns = [
             /^(okay|ok|alright|well|first|also|now|then|so)[,.\s]/i,
-            /^(in the|check|looking|based|also,|now,|then,)/i,
-            /\bwait[,.\s]/i, /\bhmm\b/i,
+            /^(in the|check|looking at|based on|according to)/i,
+            /^the (user|context|answer|instructions|info|description|insight|code|design)\b/i,
+            /^(i need|i should|i'll|i must|let me)\b/i,
+            /^(so (the|i|it|we)|make sure|note that|keep in mind)/i,
+            /^(wait|hmm|actually)[,.\s]/i,
         ];
-        // Si tiene acento español/gallego → no es inglés
-        const hasSpanishChars = /[áéíóúàèìòùñüãõâêîôûç]/i.test(para);
-        if (hasSpanishChars) return false;
-        return englishPatterns.some(r => r.test(para));
+
+        // Patrones en cualquier parte que delatan razonamiento aunque el párrafo tenga tildes
+        const strongReasoningPatterns = [
+            /\bthe user is asking\b/i,
+            /\bthe context says\b/i,
+            /\bi need to (respond|answer|check|verify)\b/i,
+            /\bso (the answer|my answer|i should)\b/i,
+            /\b(facade|awning|dimensions|measurements)\b/i, // inglés técnico del razonamiento
+        ];
+
+        if (strongReasoningPatterns.some(r => r.test(para))) return true;
+        if (englishStartPatterns.some(r => r.test(firstSentence))) return true;
+
+        // Si NO tiene ni una palabra claramente española/gallega al inicio → sospechoso
+        const firstWords = firstSentence.split(/\s+/).slice(0, 4).join(' ');
+        const startsSpanish = /^[A-ZÁÉÍÓÚÑÜ][a-záéíóúñü]/.test(para) &&
+            /[áéíóúñü]/.test(firstWords);
+
+        // Párrafo largo en inglés sin tildes al inicio
+        if (!startsSpanish && para.length > 80 && !/[áéíóúñü]/.test(firstWords)) {
+            const englishWords = (para.match(/\b(the|is|are|was|were|it|this|that|with|from|has|have|its|and|for|but|not|can|will|so|as|at|on|in|of)\b/gi) || []).length;
+            const wordCount = para.split(/\s+/).length;
+            if (englishWords / wordCount > 0.15) return true; // >15% palabras inglesas funcionales
+        }
+
+        return false;
     };
 
     const answerParagraphs = paragraphs.filter(p => !isEnglishReasoning(p));
