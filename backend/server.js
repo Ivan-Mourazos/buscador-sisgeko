@@ -1125,63 +1125,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Extrae la respuesta real cuando qwen3 incluye razonamiento interno en inglés.
-// Estrategia: el razonamiento siempre está en inglés; la respuesta en español/gallego.
-function stripThinkingPreamble(text) {
-    if (!text) return text;
-
-    const paragraphs = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-    if (paragraphs.length <= 1) return text;
-
-    // Detectar si un párrafo es razonamiento interno en inglés
-    const isEnglishReasoning = (para) => {
-        // Extraer la primera oración para analizar el inicio del párrafo
-        const firstSentence = para.split(/[.!?]/)[0].trim();
-
-        // Patrones que indican razonamiento en inglés AL INICIO del párrafo
-        const englishStartPatterns = [
-            /^(okay|ok|alright|well|first|also|now|then|so)[,.\s]/i,
-            /^(in the|check|looking at|based on|according to)/i,
-            /^the (user|context|answer|instructions|info|description|insight|code|design)\b/i,
-            /^(i need|i should|i'll|i must|let me)\b/i,
-            /^(so (the|i|it|we)|make sure|note that|keep in mind)/i,
-            /^(wait|hmm|actually)[,.\s]/i,
-        ];
-
-        // Patrones en cualquier parte que delatan razonamiento aunque el párrafo tenga tildes
-        const strongReasoningPatterns = [
-            /\bthe user is asking\b/i,
-            /\bthe context says\b/i,
-            /\bi need to (respond|answer|check|verify)\b/i,
-            /\bso (the answer|my answer|i should)\b/i,
-            /\b(facade|awning|dimensions|measurements)\b/i, // inglés técnico del razonamiento
-        ];
-
-        if (strongReasoningPatterns.some(r => r.test(para))) return true;
-        if (englishStartPatterns.some(r => r.test(firstSentence))) return true;
-
-        // Si NO tiene ni una palabra claramente española/gallega al inicio → sospechoso
-        const firstWords = firstSentence.split(/\s+/).slice(0, 4).join(' ');
-        const startsSpanish = /^[A-ZÁÉÍÓÚÑÜ][a-záéíóúñü]/.test(para) &&
-            /[áéíóúñü]/.test(firstWords);
-
-        // Párrafo largo en inglés sin tildes al inicio
-        if (!startsSpanish && para.length > 80 && !/[áéíóúñü]/.test(firstWords)) {
-            const englishWords = (para.match(/\b(the|is|are|was|were|it|this|that|with|from|has|have|its|and|for|but|not|can|will|so|as|at|on|in|of)\b/gi) || []).length;
-            const wordCount = para.split(/\s+/).length;
-            if (englishWords / wordCount > 0.15) return true; // >15% palabras inglesas funcionales
-        }
-
-        return false;
-    };
-
-    const answerParagraphs = paragraphs.filter(p => !isEnglishReasoning(p));
-
-    // Si filtramos demasiado, devolver el texto original
-    if (answerParagraphs.length === 0) return text;
-    return answerParagraphs.join('\n\n');
-}
-
 // Chatbot de Inteligencia Artificial (RAG)
 app.post('/api/chat', async (req, res) => {
     try {
@@ -1322,17 +1265,25 @@ ${contextText}`;
                 let reply = '';
 
                 if (aiType === 'ollama') {
-                    const response = await fetch(`${aiUrl.replace(/\/$/, '')}/api/chat`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: aiModel,
-                            messages: chatMessages,
-                            stream: false,
-                            think: false,
-                            options: { temperature: 0.3, num_predict: 500, think: false }
-                        })
-                    });
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 45000);
+                    let response;
+                    try {
+                        response = await fetch(`${aiUrl.replace(/\/$/, '')}/api/chat`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            signal: controller.signal,
+                            body: JSON.stringify({
+                                model: aiModel,
+                                messages: chatMessages,
+                                stream: false,
+                                think: false,
+                                options: { temperature: 0.3, num_predict: 400 }
+                            })
+                        });
+                    } finally {
+                        clearTimeout(timeout);
+                    }
                     if (!response.ok) {
                         const errText = await response.text();
                         throw new Error(`Ollama ${response.status}: ${errText.slice(0, 200)}`);
@@ -1372,9 +1323,12 @@ ${contextText}`;
 
             } catch (aiErr) {
                 console.error('Error IA chat:', aiErr.message);
+                const isTimeout = aiErr.name === 'AbortError';
                 return res.json({
                     success: true,
-                    reply: `Non se puido conectar co modelo de IA (${aiModel}).\nErro: ${aiErr.message}`,
+                    reply: isTimeout
+                        ? `O modelo tardou demasiado en responder (>45s). Proba cunha pregunta máis curta ou comproba que Ollama está activo.`
+                        : `Non se puido conectar co modelo de IA (${aiModel}).\nErro: ${aiErr.message}`,
                     context: contextParts,
                     error: aiErr.message
                 });
