@@ -44,7 +44,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
             borderAccent = " border-l-4 border-l-emerald-500 dark:border-l-emerald-500/80";
             glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(16,185,129,0.08)]";
         }
-        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#1c1c28] dark:to-[#16161f] p-4 sm:p-5 rounded-2xl shadow-md border border-gray-200 dark:border-white/[0.07] hover:border-yellow-400 dark:hover:border-yellow-500/40 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
+        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 sm:p-5 rounded-2xl shadow-md dark:shadow-[0_3px_16px_rgba(0,0,0,0.55)] border border-gray-200 dark:border-white/[0.12] hover:border-yellow-400 dark:hover:border-yellow-500/40 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
     };
 
     // Renderizado según el tipo
@@ -88,13 +88,13 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                     className={getCardClasses('insight')}
                 >
                     <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col gap-1.5">
                             <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Insight</span>
                                 {item._isDraft && <Badge colorClass="bg-orange-50 text-orange-700 border-orange-200">Borrador pendente</Badge>}
                             </div>
                             {item.procesos_lista && (
-                                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-purple-500 dark:text-purple-400 mt-1">
+                                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-purple-500 dark:text-purple-400 border-l-2 border-purple-400/40 pl-2">
                                     {item.procesos_lista}
                                 </span>
                             )}
@@ -115,7 +115,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
                         {item.origen_informacion && (
                             <div className="flex items-start gap-2">
                                 <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-tighter w-12 shrink-0 mt-0.5">Ref</span>
-                                <span className="text-[10px] text-gray-500 dark:text-zinc-400 italic line-clamp-1">{item.origen_informacion}</span>
+                                <span className="text-[10px] text-gray-500 dark:text-zinc-400 italic line-clamp-1 capitalize">{item.origen_informacion?.toLowerCase()}</span>
                             </div>
                         )}
                     </div>
