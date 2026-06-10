@@ -16,7 +16,7 @@ const TreeItem = ({ item, label, count, isSelected, level = 0, onToggle, childre
                     : 'bg-white dark:bg-[#1a1a24] border-gray-200 dark:border-[#2a2a3a] group-hover:border-yellow-300 dark:group-hover:border-yellow-500/70'
                 }`}>
                     {isSelected && (
-                        <svg className="w-full h-full text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
+                        <svg className="w-full h-full text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4">
                             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                     )}
