@@ -54,7 +54,6 @@ const Chatbot = () => {
         'Cal é o proceso comercial?'
     ];
 
-    // Bloquear scroll del fondo cuando el chat está abierto en móvil
     useEffect(() => {
         const isMobile = window.innerWidth < 640;
         if (isOpen && isMobile) {
@@ -124,7 +123,7 @@ const Chatbot = () => {
         }
     };
 
-    const ChatHeader = () => (
+    const header = (
         <div className="px-5 py-4 border-b border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-[#21212f] flex justify-between items-center flex-shrink-0">
             <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-yellow-500 flex items-center justify-center text-black shadow-lg shadow-yellow-500/20">
@@ -151,7 +150,7 @@ const Chatbot = () => {
         </div>
     );
 
-    const ChatBody = () => (
+    const body = (
         <div className="flex-grow p-4 overflow-y-auto custom-scrollbar space-y-3">
             {messages.map(msg => <MessageBubble key={msg.id} msg={msg} />)}
             {loading && (
@@ -167,7 +166,7 @@ const Chatbot = () => {
         </div>
     );
 
-    const ChatQuickQ = () => messages.length === 1 ? (
+    const quickQ = messages.length === 1 ? (
         <div className="px-4 pb-2 flex flex-wrap gap-1.5 flex-shrink-0">
             {quickQuestions.map((q, idx) => (
                 <button
@@ -181,7 +180,7 @@ const Chatbot = () => {
         </div>
     ) : null;
 
-    const ChatInput = () => (
+    const footer = (
         <div className="p-3 border-t border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-[#1a1a26]/80 flex gap-2 flex-shrink-0">
             <input
                 ref={inputRef}
@@ -210,21 +209,18 @@ const Chatbot = () => {
             {/* MÓVIL: bottom sheet con backdrop */}
             {isOpen && (
                 <>
-                    {/* Backdrop */}
                     <div
                         className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[88]"
                         onClick={() => setIsOpen(false)}
                     />
-                    {/* Bottom sheet */}
                     <div className="sm:hidden fixed inset-x-0 bottom-0 z-[89] flex flex-col bg-white dark:bg-[#1a1a26] rounded-t-[2rem] shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300" style={{ height: '88dvh' }}>
-                        {/* Handle */}
                         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
                             <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-white/20" />
                         </div>
-                        <ChatHeader />
-                        <ChatBody />
-                        <ChatQuickQ />
-                        <ChatInput />
+                        {header}
+                        {body}
+                        {quickQ}
+                        {footer}
                     </div>
                 </>
             )}
@@ -233,15 +229,14 @@ const Chatbot = () => {
             <div className="fixed bottom-5 right-5 sm:bottom-24 sm:right-8 z-[90] font-sans">
                 {isOpen && (
                     <div className="hidden sm:flex w-[410px] h-[520px] bg-white/95 dark:bg-[#1a1a26]/95 backdrop-blur-xl border border-gray-200 dark:border-white/[0.12] rounded-[2rem] shadow-2xl overflow-hidden flex-col mb-4 animate-in slide-in-from-bottom-5 duration-300 ring-1 ring-black/5">
-                        <ChatHeader />
-                        <ChatBody />
-                        <ChatQuickQ />
-                        <ChatInput />
+                        {header}
+                        {body}
+                        {quickQ}
+                        {footer}
                     </div>
                 )}
 
-                {/* Toggle Button */}
-                <div className="flex justify-end">
+                <div className={`flex justify-end ${isOpen ? 'hidden sm:flex' : 'flex'}`}>
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="p-4 bg-yellow-500 text-black rounded-full shadow-[0_10px_25px_rgba(234,179,8,0.4)] hover:bg-yellow-600 hover:scale-110 active:scale-95 hover:shadow-[0_15px_35px_rgba(234,179,8,0.5)] transition-all cursor-pointer flex items-center justify-center"
