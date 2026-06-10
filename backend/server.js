@@ -465,9 +465,8 @@ app.post('/api/definiciones', authenticate, checkRole(['editor', 'admin']), asyn
         const request = pool.request();
         request.input('id_definicion', sql.Int, 0);
         request.input('id_usuario', sql.Int, req.user.id);
-        request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Cambio enviado para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar cambio', error: error.message });
@@ -482,9 +481,8 @@ app.put('/api/definiciones/:groupId', authenticate, checkRole(['editor', 'admin'
         const request = pool.request();
         request.input('id_definicion', sql.Int, groupId);
         request.input('id_usuario', sql.Int, req.user.id);
-        request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
-        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, @fecha, @id_usuario, @comentario)`);
+        await request.query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_definicion, GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar actualización', error: error.message });
@@ -498,12 +496,11 @@ app.post('/api/insights', authenticate, checkRole(['editor', 'admin']), async (r
         const pool = await sql.connect(dbConfig);
         const request = pool.request();
         request.input('id_usuario', sql.Int, req.user.id);
-        request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }));
-        
+
         // NO inclurimos id_insight porque al ser 0 fallaría la FK
-        const query = `INSERT INTO cambios_insights (fecha_cambio, id_usuairo_cambio, comentario_cambio) 
-                       VALUES (@fecha, @id_usuario, @comentario)`;
+        const query = `INSERT INTO cambios_insights (fecha_cambio, id_usuairo_cambio, comentario_cambio)
+                       VALUES (GETDATE(), @id_usuario, @comentario)`;
         
         console.log("EJECUTANDO QUERY DINÁMICO (CREACIÓN):", query);
         await request.query(query);
@@ -522,9 +519,8 @@ app.put('/api/insights/:groupId', authenticate, checkRole(['editor', 'admin']), 
         const request = pool.request();
         request.input('id_insight', sql.Int, groupId);
         request.input('id_usuario', sql.Int, req.user.id);
-        request.input('fecha', sql.DateTime, new Date());
         request.input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'UPDATE' }));
-        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, @fecha, @id_usuario, @comentario)`);
+        await request.query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_insight, GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización de Insight enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error ao enviar actualización: ' + error.message });
@@ -540,10 +536,9 @@ app.delete('/api/definiciones/:id', authenticate, checkRole(['editor', 'admin'])
 
         await request
             .input('id_def', sql.Int, id)
-            .input('fecha', sql.DateTime, new Date())
             .input('id_usuario', sql.Int, req.user.id)
             .input('comentario', sql.NVarChar, comentario)
-            .query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_def, @fecha, @id_usuario, @comentario)`);
+            .query(`INSERT INTO cambios_definiciones (id_definicion, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_def, GETDATE(), @id_usuario, @comentario)`);
         
         res.json({ success: true, message: 'Solicitude de eliminación enviada a aprobación.' });
     } catch (error) {
@@ -560,10 +555,9 @@ app.delete('/api/insights/:id', authenticate, checkRole(['editor', 'admin']), as
 
         await request
             .input('id_ins', sql.Int, id)
-            .input('fecha', sql.DateTime, new Date())
             .input('id_usuario', sql.Int, req.user.id)
             .input('comentario', sql.NVarChar, comentario)
-            .query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_ins, @fecha, @id_usuario, @comentario)`);
+            .query(`INSERT INTO cambios_insights (id_insight, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_ins, GETDATE(), @id_usuario, @comentario)`);
             
         res.json({ success: true, message: 'Solicitude de eliminación enviada a aprobación.' });
     } catch (error) {
@@ -1305,9 +1299,8 @@ app.post('/api/articulos', authenticate, checkRole(['editor', 'admin']), async (
         const pool = await sql.connect(dbConfig);
         await pool.request()
             .input('id_usuario', sql.Int, req.user.id)
-            .input('fecha', sql.DateTime, new Date())
             .input('comentario', sql.NVarChar, JSON.stringify({ ...data, _operation: 'CREATE' }))
-            .query(`INSERT INTO cambios_articulos (fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@fecha, @id_usuario, @comentario)`);
+            .query(`INSERT INTO cambios_articulos (fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Novo artigo enviado para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error: ' + error.message });
@@ -1322,9 +1315,8 @@ app.put('/api/articulos/:id', authenticate, checkRole(['editor', 'admin']), asyn
         await pool.request()
             .input('id_articulo', sql.Int, id)
             .input('id_usuario', sql.Int, req.user.id)
-            .input('fecha', sql.DateTime, new Date())
             .input('comentario', sql.NVarChar, JSON.stringify({ ...data, id_articulo: id, _operation: 'UPDATE' }))
-            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, @fecha, @id_usuario, @comentario)`);
+            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Actualización de artigo enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error: ' + error.message });
@@ -1339,9 +1331,8 @@ app.delete('/api/articulos/:id', authenticate, checkRole(['editor', 'admin']), a
         await pool.request()
             .input('id_articulo', sql.Int, id)
             .input('id_usuario', sql.Int, req.user.id)
-            .input('fecha', sql.DateTime, new Date())
             .input('comentario', sql.NVarChar, JSON.stringify({ id_articulo: id, titulo: titulo || '', _operation: 'DELETE' }))
-            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, @fecha, @id_usuario, @comentario)`);
+            .query(`INSERT INTO cambios_articulos (id_articulo, fecha_cambio, id_usuairo_cambio, comentario_cambio) VALUES (@id_articulo, GETDATE(), @id_usuario, @comentario)`);
         res.json({ success: true, message: 'Solicitude de borrado de artigo enviada para aprobación.' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error: ' + error.message });
