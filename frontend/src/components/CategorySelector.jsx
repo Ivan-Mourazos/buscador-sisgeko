@@ -77,7 +77,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
         </form>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-sm md:max-w-none mx-auto w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 max-w-sm md:max-w-none mx-auto w-full">
         {categories.map((cat, idx) => {
           const catFacet = facets?.categories?.find(c => c.id === cat.id);
           const count = catFacet?.count || 0;
@@ -87,7 +87,7 @@ const CategorySelector = ({ onSelect, query, onQueryChange, onSearch, facets }) 
               key={cat.id}
               onClick={() => onSelect(cat.id)}
               style={{ animationDelay: `${idx * 150}ms` }}
-              className="group relative bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-[0_4px_28px_rgba(0,0,0,0.55)] border border-gray-100 dark:border-white/[0.12] hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
+              className="group relative bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-[0_4px_28px_rgba(0,0,0,0.55)] border border-gray-100 dark:border-white/[0.07] hover:border-transparent dark:hover:border-transparent transition-all duration-500 hover:-translate-y-1 md:hover:-translate-y-2 hover:shadow-2xl overflow-hidden flex flex-row md:flex-col items-center text-left md:text-center animate-slide-up cursor-pointer gap-4 md:gap-0"
             >
               {/* Background Gradient on Hover */}
               <div className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
