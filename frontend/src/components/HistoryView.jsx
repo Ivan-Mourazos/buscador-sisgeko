@@ -189,6 +189,7 @@ const HistoryView = ({ onClose }) => {
                         <option value="ALL">Tipo (Todos)</option>
                         <option value="definicion">Definición</option>
                         <option value="insight">Insight</option>
+                        <option value="articulo">Artigo</option>
                     </select>
 
                     <select
@@ -255,7 +256,8 @@ const HistoryView = ({ onClose }) => {
                         {[
                             { key: 'ALL', label: 'Todos' },
                             { key: 'definicion', label: 'Definición' },
-                            { key: 'insight', label: 'Insight' }
+                            { key: 'insight', label: 'Insight' },
+                            { key: 'articulo', label: 'Artigo' }
                         ].map(t => (
                             <button
                                 key={t.key}

@@ -703,9 +703,15 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
                       LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
                       WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
         
-        const qInsCambios = `SELECT c.ID, c.id_insight as origId, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, LOWER(c.estado) as estado, u.username as editor, a.username as aprobador, 'insight' as _type 
-                      FROM cambios_insights c 
-                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario 
+        const qInsCambios = `SELECT c.ID, c.id_insight as origId, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, LOWER(c.estado) as estado, u.username as editor, a.username as aprobador, 'insight' as _type
+                      FROM cambios_insights c
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario
+                      LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
+                      WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
+
+        const qArtCambios = `SELECT c.ID, c.id_articulo as origId, c.comentario_cambio, c.fecha_cambio, c.fecha_aprobacion, LOWER(c.estado) as estado, u.username as editor, a.username as aprobador, 'articulo' as _type
+                      FROM cambios_articulos c
+                      JOIN usuarios u ON c.id_usuairo_cambio = u.id_usuario
                       LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
                       WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
 
@@ -726,9 +732,11 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
 
         const defsC = await pool.request().query(qDefCambios);
         const insC = await pool.request().query(qInsCambios);
+        let artsC = { recordset: [] };
+        try { artsC = await pool.request().query(qArtCambios); } catch(_) {}
         const defsM = await pool.request().query(qDefMaster);
         const insM = await pool.request().query(qInsMaster);
-        
+
         // Mapear maestros para que tengan el mismo formato JSON que los cambios
         const masterHistory = [...defsM.recordset, ...insM.recordset].map(row => ({
             ...row,
@@ -740,7 +748,7 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
             })
         }));
 
-        const history = [...defsC.recordset, ...insC.recordset, ...masterHistory]
+        const history = [...defsC.recordset, ...insC.recordset, ...artsC.recordset, ...masterHistory]
                       .sort((a, b) => {
                           const dateA = a.fecha_aprobacion ? new Date(a.fecha_aprobacion) : new Date(0);
                           const dateB = b.fecha_aprobacion ? new Date(b.fecha_aprobacion) : new Date(0);
