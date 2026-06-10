@@ -420,16 +420,16 @@ function App() {
     <div className="min-h-screen bg-gray-100/70 dark:bg-transparent text-gray-800 dark:text-zinc-200 font-sans selection:bg-yellow-100 dark:selection:bg-yellow-900/40 overflow-x-hidden">
       <header className="bg-white dark:bg-[#111119] border-b border-gray-100 dark:border-[#1d1d2a] sticky top-0 z-50 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.05)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
-          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 min-w-[148px] md:min-w-[180px] -my-4 md:-my-6 overflow-visible">
+          <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 -my-4 md:-my-5 overflow-visible">
              <img
                src="/logo_sisgeko_black.PNG"
                alt="SISGEKO"
-               className="dark:hidden h-16 md:h-20 w-auto object-contain scale-[3.2] md:scale-[2.8] group-hover:scale-[3.4] md:group-hover:scale-[3.0] origin-left transition-all duration-300 ml-8 md:ml-4"
+               className="dark:hidden h-16 md:h-20 w-auto object-contain group-hover:scale-105 group-hover:opacity-90 transition-all duration-300"
              />
              <img
                src="/logo_sisgeko_white.PNG"
                alt="SISGEKO"
-               className="hidden dark:block h-16 md:h-20 w-auto object-contain scale-[3.2] md:scale-[2.8] group-hover:scale-[3.4] md:group-hover:scale-[3.0] origin-left transition-all duration-300 ml-8 md:ml-4"
+               className="hidden dark:block h-16 md:h-20 w-auto object-contain group-hover:scale-105 group-hover:opacity-90 transition-all duration-300"
              />
           </div>
 
@@ -736,7 +736,7 @@ function App() {
 
       <button 
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-        className={`fixed bottom-8 right-8 p-4 bg-yellow-500 text-white rounded-full shadow-[0_10px_25px_rgba(234,179,8,0.4)] transition-all z-[80] cursor-pointer hover:bg-yellow-600 hover:scale-110 active:scale-95 hover:shadow-[0_15px_35px_rgba(234,179,8,0.5)] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed bottom-5 left-5 sm:bottom-8 sm:left-auto sm:right-8 p-4 bg-yellow-500 text-white rounded-full shadow-[0_10px_25px_rgba(234,179,8,0.4)] transition-all z-[80] cursor-pointer hover:bg-yellow-600 hover:scale-110 active:scale-95 hover:shadow-[0_15px_35px_rgba(234,179,8,0.5)] ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         title="Volver arriba"
       >
         <svg className="w-6 h-6 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
