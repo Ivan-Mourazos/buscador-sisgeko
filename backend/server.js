@@ -1178,24 +1178,27 @@ app.post('/api/chat', async (req, res) => {
 
                 const rIns = pool.request();
                 bindKeywords(rIns);
-                const insCond = buildOrCondition(['titulo', 'insight'], keywords);
+                const insCond = buildOrCondition(['i.titulo', 'i.insight'], keywords);
                 const insRes = await rIns.query(
-                    `SELECT TOP 5 titulo, insight, procesos_lista, tipo_origen_nombre, origen_informacion
-                     FROM insights
-                     WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL)
+                    `SELECT TOP 5 i.titulo, i.insight, i.origen_informacion,
+                            (SELECT tipo_origen FROM tipo_origen WHERE id_tipo_origen = i.id_tipo_origen) AS tipo_origen_nombre,
+                            ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip JOIN procesos p ON rip.id_proceso = p.id_proceso WHERE rip.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') AS procesos_lista
+                     FROM insights i
+                     WHERE (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
                        AND (${insCond})
-                     ORDER BY titulo`
+                     ORDER BY i.titulo`
                 );
 
                 const rDef = pool.request();
                 bindKeywords(rDef);
-                const defCond = buildOrCondition(['titulo', 'definicion'], keywords);
+                const defCond = buildOrCondition(['d.titulo', 'd.definicion'], keywords);
                 const defRes = await rDef.query(
-                    `SELECT TOP 5 titulo, definicion, familias_lista
-                     FROM definiciones
-                     WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL)
+                    `SELECT TOP 5 d.titulo, d.definicion,
+                            ISNULL(STUFF((SELECT ', ' + f.codigo FROM rel_definicion_familia rdf JOIN familias f ON rdf.id_familia = f.id_familia WHERE rdf.id_definicion = d.id_definicion FOR XML PATH('')), 1, 2, ''), '') AS familias_lista
+                     FROM definiciones d
+                     WHERE (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
                        AND (${defCond})
-                     ORDER BY titulo`
+                     ORDER BY d.titulo`
                 );
 
                 if (artRes.recordset.length > 0) {
