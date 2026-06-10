@@ -1284,7 +1284,8 @@ ${contextText}`;
                         messages: chatMessages,
                         temperature: 0.3,
                         max_tokens: 800,
-                        stream: false
+                        stream: false,
+                        think: false  // desactiva thinking tokens en qwen3 y modelos similares
                     })
                 });
 
@@ -1294,7 +1295,12 @@ ${contextText}`;
                 }
 
                 const data = await response.json();
-                const reply = data.choices?.[0]?.message?.content?.trim() || 'Non se puido xerar unha resposta.';
+                console.log('[chat] raw response:', JSON.stringify(data).slice(0, 300));
+
+                // Limpiar thinking tokens <think>...</think> por si el modelo los incluye en el content
+                let reply = data.choices?.[0]?.message?.content?.trim() || '';
+                reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                if (!reply) reply = 'Non se puido xerar unha resposta.';
 
                 return res.json({ success: true, reply, context: contextParts });
 
