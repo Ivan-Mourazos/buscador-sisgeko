@@ -78,11 +78,11 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
             onClick={onClose}
         >
             <div 
-                className="bg-white dark:bg-[#0c0c10] w-full max-w-4xl max-h-[95vh] rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in zoom-in duration-300 ring-1 ring-black/5 dark:ring-zinc-800/80"
+                className="bg-white dark:bg-[#1a1a26] w-full max-w-4xl max-h-[95vh] rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden animate-in zoom-in duration-300 ring-1 ring-black/5 dark:ring-white/[0.08]"
                 onClick={handleModalClick}
             >
                 {/* Header - Más Aireado y Legible */}
-                <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-zinc-800/60 flex justify-between items-start bg-gray-50/50 dark:bg-[#0c0c10] backdrop-blur-xl gap-2">
+                <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-gray-100 dark:border-white/[0.08] flex justify-between items-start bg-gray-50/50 dark:bg-[#1a1a26] backdrop-blur-xl gap-2">
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-col">
                             <span className={`text-[11px] font-black uppercase tracking-widest ${
@@ -152,7 +152,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                 </div>
 
                 {/* Body - Mejorado con Scroll y Grids Claros */}
-                <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-grow bg-white dark:bg-[#0c0c10]">
+                <div className="p-4 sm:p-8 overflow-y-auto custom-scrollbar flex-grow bg-white dark:bg-[#1a1a26]">
                     <div className="max-w-4xl mx-auto space-y-8 sm:space-y-10">
                         
                         {/* MINIATURAS DE IMAGENES (SOLO PARA ARTÍCULOS - LOS INSIGHTS VAN ABAJO CON EL ORIGEN) */}
@@ -205,7 +205,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                 <span className="w-8 h-[2px] bg-emerald-500 rounded-full"></span>
                                                 Detalles técnicos
                                             </h3>
-                                            <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
+                                            <div className="bg-white dark:bg-[#21212f] rounded-3xl border border-gray-100 dark:border-white/[0.10] overflow-hidden shadow-sm">
                                                 <div className="divide-y divide-gray-50 dark:divide-zinc-800/50">
                                                     {details?.familias_nombres && (
                                                         <div className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors group">
@@ -247,7 +247,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                             </div>
                                             
                                             {details?.caracteristicas && details.caracteristicas.length > 0 ? (
-                                                <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
+                                                <div className="bg-white dark:bg-[#21212f] rounded-3xl border border-gray-100 dark:border-white/[0.10] overflow-hidden shadow-sm">
                                                     <div className="divide-y divide-gray-50 dark:divide-zinc-800/50">
                                                         {details.caracteristicas.map((car, idx) => (
                                                             <div key={idx} className="flex flex-col sm:flex-row p-4 sm:p-5 hover:bg-gray-50/50 dark:hover:bg-zinc-800/40 transition-colors group">
@@ -300,7 +300,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                         <div 
                                                             key={idx} 
                                                             onClick={(e) => handleToggle(e, `ins-${idx}`)}
-                                                            className={`bg-white dark:bg-[#15151e]/80 border dark:border-white/[0.05] rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
+                                                            className={`bg-white dark:bg-[#21212f] border dark:border-white/[0.10] rounded-[2rem] p-6 sm:p-8 transition-all cursor-pointer group ${
                                                                 isExpanded ? 'border-blue-200 dark:border-blue-900 shadow-xl ring-1 ring-blue-50 dark:ring-blue-950/20' : 'border-gray-100 dark:border-zinc-850 hover:shadow-lg hover:border-blue-100 dark:hover:border-blue-900'
                                                             }`}
                                                         >
@@ -327,7 +327,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                             
                                                             <div className={`grid transition-all duration-500 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0'}`}>
                                                                 <div className="overflow-hidden">
-                                                                    <div className="bg-gray-50/50 dark:bg-zinc-950/30 rounded-2xl p-6 border border-gray-100/50 dark:border-white/[0.05]">
+                                                                    <div className="bg-gray-50/50 dark:bg-zinc-950/30 rounded-2xl p-6 border border-gray-100/50 dark:border-white/[0.10]">
                                                                         <p className="text-base text-gray-600 dark:text-zinc-300 leading-relaxed">
                                                                             {ins.insight}
                                                                         </p>
@@ -352,7 +352,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     Detalles da fonte e recursos
                                                 </h3>
                                                 
-                                                <div className="bg-white dark:bg-[#15151e]/80 rounded-3xl border border-gray-100 dark:border-white/[0.05] overflow-hidden shadow-sm">
+                                                <div className="bg-white dark:bg-[#21212f] rounded-3xl border border-gray-100 dark:border-white/[0.10] overflow-hidden shadow-sm">
                                                     <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-gray-50 dark:divide-zinc-800">
                                                          {/* PARTE IZQUIERDA: INFORMACIÓN EN LISTA (NUEVO DISEÑO) */}
                                                         <div className="flex-grow divide-y divide-gray-50 dark:divide-zinc-800/50">
@@ -384,7 +384,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                                 <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest text-center">Infografía / Captura</span>
                                                                 <div 
                                                                     onClick={() => setActiveImage(item.imagen)}
-                                                                    className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all shadow-lg w-full aspect-video bg-white dark:bg-[#15151e]/80 ring-1 ring-black/5 dark:ring-zinc-800/80"
+                                                                    className="relative group cursor-zoom-in overflow-hidden rounded-2xl border-2 border-white dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-all shadow-lg w-full aspect-video bg-white dark:bg-[#21212f] ring-1 ring-black/5 dark:ring-zinc-800/80"
                                                                 >
                                                                     <img 
                                                                         src={getImgUrl(item.imagen)} 
@@ -410,7 +410,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                             const desc = art.descripcion || art.DESCRIPCION || art.titulo || 'Artigo sen descrición';
                                                             const code = art.codigo || art.CODIGO;
                                                             return (
-                                                                <div key={idx} className="bg-white dark:bg-[#15151e]/80 border border-gray-100 dark:border-white/[0.05] rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 dark:hover:border-yellow-900/40 group flex justify-between items-center">
+                                                                <div key={idx} className="bg-white dark:bg-[#21212f] border border-gray-100 dark:border-white/[0.10] rounded-2xl p-5 hover:shadow-lg transition-all hover:border-yellow-100 dark:hover:border-yellow-900/40 group flex justify-between items-center">
                                                                     <div className="flex flex-col gap-1">
                                                                         <span className="text-[10px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-widest">Artigo</span>
                                                                         <h4 className="text-base font-bold text-gray-900 dark:text-white">{desc}</h4>
@@ -436,7 +436,7 @@ const DetailsModal = ({ isOpen, onClose, item, details, loading, isEditable, onE
                                                     </h3>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {details.intenciones.map((int, i) => (
-                                                            <div key={i} className="flex gap-4 text-base text-gray-700 dark:text-zinc-350 bg-white dark:bg-[#15151e]/80 p-5 rounded-2xl border border-gray-100 dark:border-white/[0.05] font-bold group shadow-sm hover:border-yellow-100 dark:hover:border-yellow-900/40 hover:shadow-md transition-all">
+                                                            <div key={i} className="flex gap-4 text-base text-gray-700 dark:text-zinc-350 bg-white dark:bg-[#21212f] p-5 rounded-2xl border border-gray-100 dark:border-white/[0.10] font-bold group shadow-sm hover:border-yellow-100 dark:hover:border-yellow-900/40 hover:shadow-md transition-all">
                                                                 <div className="w-6 h-6 rounded-full bg-yellow-50 dark:bg-yellow-950/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center shrink-0 text-xs font-black">?</div>
                                                                 {int}
                                                             </div>

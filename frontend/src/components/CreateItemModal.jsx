@@ -99,7 +99,7 @@ const CustomSelect = ({ options, value, onChange, placeholder = 'Selecciona...',
                 <div
                     ref={dropdownRef}
                     style={dropdownStyle}
-                    className="bg-white dark:bg-[#1c1c28] border border-gray-200 dark:border-zinc-700 rounded-2xl shadow-2xl dark:shadow-[0_16px_50px_rgba(0,0,0,0.75)] overflow-hidden"
+                    className="bg-white dark:bg-[#21212f] border border-gray-200 dark:border-white/[0.12] rounded-2xl shadow-2xl dark:shadow-[0_16px_50px_rgba(0,0,0,0.75)] overflow-hidden"
                 >
                     {searchable && (
                         <div className="p-2 border-b border-gray-100 dark:border-zinc-800">
