@@ -502,7 +502,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                                 const art = dbOptions.articulos.find(a => a.id_articulo === artId);
                                                 return (
                                                     <div key={artId} className="flex items-center gap-2 bg-yellow-50 dark:bg-yellow-950/20 px-3 py-1.5 rounded-xl border border-yellow-100 dark:border-yellow-900/30 shadow-sm animate-in zoom-in duration-200">
-                                                        <span className="text-[11px] font-bold text-yellow-700 dark:text-yellow-400">{art?.descripcion || `ID: ${artId}`}</span>
+                                                        <span className="text-[11px] font-bold text-yellow-700 dark:text-yellow-400 capitalize">{art?.descripcion?.toLowerCase() || `ID: ${artId}`}</span>
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -524,7 +524,7 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         <CustomSelect
                                             options={dbOptions.articulos
                                                 .filter(a => !(formData.articulos_vinculados || []).includes(a.id_articulo))
-                                                .map(a => ({ value: a.id_articulo, label: a.descripcion }))}
+                                                .map(a => ({ value: a.id_articulo, label: a.descripcion ? a.descripcion.toLowerCase().replace(/(?:^|\s)\S/g, c => c.toUpperCase()) : '' }))}
                                             value=""
                                             onChange={(val) => {
                                                 const id = parseInt(val);
