@@ -237,7 +237,8 @@ function App() {
       tipo_origen: [],
       categories: [catId]
     };
-    setResults([]);   // limpiar antes del debounce para evitar flash
+    setResults([]);
+    setLoading(true);
     setFilters(newFilters);
     setViewMode('results');
     setCurrentView('search');
@@ -245,6 +246,7 @@ function App() {
 
   const handleFilterChange = (newFilters) => {
     setResults([]);
+    setLoading(true);
     setFilters(newFilters);
   };
 
