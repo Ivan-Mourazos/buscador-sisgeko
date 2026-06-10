@@ -1303,21 +1303,13 @@ app.post('/api/chat', async (req, res) => {
         const aiModel = process.env.AI_MODEL_NAME || 'qwen3:4b';
         const aiType = process.env.AI_API_TYPE || 'ollama'; // 'ollama' | 'openai'
 
-        const systemPrompt = `Eres SisgekoBot, asistente de Toldos Gómez S.L.
-REGLAS ESTRICTAS:
-1. Responde SIEMPRE en el idioma de la pregunta (gallego o castellano). NUNCA en inglés.
-2. Escribe tu respuesta ÚNICAMENTE dentro de las etiquetas [RESPOSTA] y [/RESPOSTA].
-3. Sé breve (máx. 3 párrafos). Sin markdown (no uses # ni **).
-4. Usa solo datos del CONTEXTO. No inventes códigos ni precios.
-5. Si no hay info suficiente, dilo dentro de [RESPOSTA].
+        const systemPrompt = `Eres SisgekoBot, asistente IA de Toldos Gómez S.L. en Sisgeko.
+Responde en el idioma de la pregunta (gallego o castellano). Sé breve (máx. 3 párrafos).
+Usa solo la información del CONTEXTO. Si no hay datos suficientes, dilo y sugiere buscar en Sisgeko.
+No inventes códigos, precios ni datos técnicos. No uses markdown (# ni **).
 
 CONTEXTO:
-${contextText}
-
-Formato obligatorio de respuesta:
-[RESPOSTA]
-Tu respuesta aquí.
-[/RESPOSTA]`;
+${contextText}`;
 
         if (aiUrl) {
             try {
@@ -1325,8 +1317,7 @@ Tu respuesta aquí.
                 history.slice(-4).forEach(msg => {
                     chatMessages.push({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.text });
                 });
-                // /no_think también en el turno de usuario como refuerzo
-                chatMessages.push({ role: 'user', content: `/no_think\n${message}` });
+                chatMessages.push({ role: 'user', content: message });
 
                 let reply = '';
 
@@ -1372,15 +1363,8 @@ Tu respuesta aquí.
                     reply = data.choices?.[0]?.message?.content?.trim() || '';
                 }
 
-                // Extraer contenido entre [RESPOSTA]...[/RESPOSTA]
-                const tagMatch = reply.match(/\[RESPOSTA\]([\s\S]*?)\[\/RESPOSTA\]/i);
-                if (tagMatch) {
-                    reply = tagMatch[1].trim();
-                } else {
-                    // Fallback: limpiar thinking tags y aplicar filtro de idioma
-                    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                    reply = stripThinkingPreamble(reply);
-                }
+                // qwen3 envuelve su razonamiento en <think>...</think> — eliminarlo
+                reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
                 if (!reply) reply = 'Non se puido xerar unha resposta.';
 
