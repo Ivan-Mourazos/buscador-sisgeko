@@ -709,14 +709,20 @@ app.get('/api/history', authenticate, checkRole(['editor', 'admin']), async (req
                       LEFT JOIN usuarios a ON c.id_aprobador = a.id_usuario
                       WHERE c.estado IN ('APROBADO', 'RECHAZADO')`;
 
-        // 2. Históricos maestros (migrados)
+        // 2. Históricos maestros (migrados antes del workflow)
+        // Excluímos rexistros aprobados polo workflow (resumen_edicion = 'Aprobado por ...')
+        // xa que eses eventos xa están en cambios_definiciones / cambios_insights
         const qDefMaster = `SELECT id_definicion as ID, id_definicion as origId, titulo, definicion,
-                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type 
-                      FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
-        
+                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'definicion' as _type
+                      FROM definiciones WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''
+                      AND resumen_edicion NOT LIKE 'Aprobado por%'
+                      AND id_definicion NOT IN (SELECT DISTINCT id_definicion FROM cambios_definiciones WHERE estado = 'APROBADO' AND id_definicion > 0)`;
+
         const qInsMaster = `SELECT id_insight as ID, id_insight as origId, titulo, insight,
-                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type 
-                      FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''`;
+                      NULL as fecha_cambio, '2000-01-01' as fecha_aprobacion, 'aprobado' as estado, 'sistema' as editor, resumen_edicion as aprobador, 'insight' as _type
+                      FROM insights WHERE resumen_edicion IS NOT NULL AND resumen_edicion != ''
+                      AND resumen_edicion NOT LIKE 'Aprobado por%'
+                      AND id_insight NOT IN (SELECT DISTINCT id_insight FROM cambios_insights WHERE estado = 'APROBADO' AND id_insight > 0)`;
 
         const defsC = await pool.request().query(qDefCambios);
         const insC = await pool.request().query(qInsCambios);

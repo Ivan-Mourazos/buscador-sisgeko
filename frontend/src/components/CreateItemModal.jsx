@@ -607,13 +607,28 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                             {isUploading ? '...' : 'Subir'}
                                         </button>
                                         {(pendingImagePreview || formData.imagen) && (
-                                            <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex-shrink-0 mb-1 shadow-sm">
+                                            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950/50 flex-shrink-0 mb-1 shadow-sm group/img">
                                                 <img
                                                     src={pendingImagePreview || getImgUrl(formData.imagen)}
                                                     alt="Preview"
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => { e.target.style.display = 'none'; }}
                                                 />
+                                                <button
+                                                    type="button"
+                                                    title="Eliminar imaxe"
+                                                    onClick={() => {
+                                                        if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
+                                                        setPendingImageFile(null);
+                                                        setPendingImagePreview(null);
+                                                        setFormData(prev => ({ ...prev, imagen: '' }));
+                                                    }}
+                                                    className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 group-hover/img:opacity-100 transition-opacity cursor-pointer"
+                                                >
+                                                    <svg className="w-6 h-6 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                         )}
                                     </div>

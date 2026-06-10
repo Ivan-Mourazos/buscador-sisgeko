@@ -18,7 +18,15 @@ const HistoryView = ({ onClose }) => {
             if (!res.ok) throw new Error(`Status: ${res.status}`);
             const data = await res.json();
             if (data.success) {
-                setHistory(data.history);
+                // Deduplicar por clave composta: tipo + fonte (master/cambio) + ID
+                const seen = new Set();
+                const deduped = (data.history || []).filter(item => {
+                    const key = `${item._type}-${item.editor === 'sistema' ? 'master' : 'cambio'}-${item.ID}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+                setHistory(deduped);
             } else {
                 throw new Error(data.message || 'Erro descoñecido');
             }
@@ -352,7 +360,7 @@ const HistoryView = ({ onClose }) => {
                                 <tbody className="divide-y divide-gray-50 dark:divide-zinc-800">
                                     {filteredHistory.map(item => {
                                         const info = safeParse(item.comentario_cambio);
-                                        const rowKey = `${item._type}-${item.ID}`;
+                                        const rowKey = `${item._type}-${item.editor === 'sistema' ? 'master' : 'cambio'}-${item.ID}`;
                                         const isExpanded = expandedId === rowKey;
                                         
                                         return (
