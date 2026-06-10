@@ -415,7 +415,7 @@ function App() {
   const displayResults = results;
 
   return (
-    <div className="min-h-screen bg-gray-50/30 dark:bg-transparent text-gray-800 dark:text-zinc-200 font-sans selection:bg-yellow-100 dark:selection:bg-yellow-900/40 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-100/70 dark:bg-transparent text-gray-800 dark:text-zinc-200 font-sans selection:bg-yellow-100 dark:selection:bg-yellow-900/40 overflow-x-hidden">
       <header className="bg-white dark:bg-[#111119] border-b border-gray-100 dark:border-[#1d1d2a] sticky top-0 z-50 shadow-sm dark:shadow-[0_1px_0_rgba(255,255,255,0.05)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 md:py-5 flex flex-wrap md:flex-nowrap gap-4 md:gap-8 items-center justify-between">
           <div onClick={goHome} className="flex items-center justify-start cursor-pointer group order-1 flex-shrink-0 min-w-[148px] md:min-w-[180px] -my-4 md:-my-6 overflow-visible">
@@ -430,7 +430,7 @@ function App() {
             <input 
               ref={searchInputRef}
               type="text"
-              className="w-full pl-6 pr-14 py-2.5 md:py-3 bg-white dark:bg-[#1a1a26] border border-gray-200 dark:border-[#252538] rounded-full focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/30 focus:border-yellow-400 dark:focus:border-yellow-500/70 transition-all outline-none text-[14px] md:text-[15px] text-gray-700 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+              className="w-full pl-6 pr-14 py-3 md:py-3.5 bg-white dark:bg-[#1a1a26] border border-gray-300 dark:border-[#252538] rounded-full shadow-sm focus:ring-4 focus:ring-yellow-50 dark:focus:ring-yellow-950/30 focus:border-yellow-400 dark:focus:border-yellow-500/70 transition-all outline-none text-[14px] md:text-[15px] text-gray-700 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
               placeholder="Procurar termo..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -627,7 +627,7 @@ function App() {
       ) : (
         <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 flex flex-col lg:flex-row gap-8 lg:gap-12 items-start animate-sweep-in">
           {currentView === 'search' && (
-            <aside className="w-full lg:w-72 flex-shrink-0">
+            <aside className="w-full lg:w-72 flex-shrink-0 lg:border-r border-gray-200 dark:border-[#1d1d2a] lg:pr-8">
                <div className={`lg:block transition-all duration-300 animate-fade-in ${showMobileFilters ? 'block' : 'hidden'}`}>
                 <SidebarFilters facets={facets} filters={filters} onFilterChange={handleFilterChange} onClearAll={clearAll} hasActiveFilters={hasActiveFilters} results={results} />
               </div>

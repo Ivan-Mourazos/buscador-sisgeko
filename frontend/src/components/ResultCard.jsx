@@ -44,7 +44,7 @@ export const ResultCard = ({ item, onClick, onPrefetch }) => {
             borderAccent = " border-l-4 border-l-emerald-500 dark:border-l-emerald-500/80";
             glowAccent = " dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.6),_0_0_15px_rgba(16,185,129,0.08)]";
         }
-        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 sm:p-5 rounded-2xl shadow-md dark:shadow-[0_3px_16px_rgba(0,0,0,0.55)] border border-gray-200 dark:border-white/[0.12] hover:border-yellow-400 dark:hover:border-yellow-500/40 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-xl flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
+        return `relative cursor-pointer bg-white dark:bg-gradient-to-br dark:from-[#21212f] dark:to-[#1a1a26] p-4 sm:p-5 rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_3px_16px_rgba(0,0,0,0.55)] border border-gray-100 dark:border-white/[0.12] hover:border-yellow-400 dark:hover:border-yellow-500/40 hover:shadow-[0_6px_24px_rgba(0,0,0,0.12)] transition-all duration-300 transform hover:-translate-y-1 flex flex-col gap-2 sm:gap-3 group animate-fade-in mb-2${borderAccent}${glowAccent}`;
     };
 
     // Renderizado según el tipo
