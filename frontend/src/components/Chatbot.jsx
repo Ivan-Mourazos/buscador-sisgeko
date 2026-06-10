@@ -83,9 +83,9 @@ const Chatbot = () => {
         <div className="fixed bottom-24 right-8 z-[90] font-sans">
             {/* Chat Window */}
             {isOpen && (
-                <div className="w-[350px] sm:w-[400px] h-[500px] bg-white/95 dark:bg-[#0c0c10]/95 backdrop-blur-xl border border-gray-200 dark:border-white/[0.08] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col mb-4 animate-in slide-in-from-bottom-5 duration-300 ring-1 ring-black/5">
+                <div className="w-[350px] sm:w-[400px] h-[500px] bg-white/95 dark:bg-[#1a1a26]/95 backdrop-blur-xl border border-gray-200 dark:border-white/[0.12] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col mb-4 animate-in slide-in-from-bottom-5 duration-300 ring-1 ring-black/5">
                     {/* Header */}
-                    <div className="p-5 border-b border-gray-100 dark:border-zinc-800/60 bg-gray-50/50 dark:bg-[#15151e]/80 flex justify-between items-center">
+                    <div className="p-5 border-b border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-[#21212f] flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-yellow-500 flex items-center justify-center text-black font-black shadow-lg shadow-yellow-500/20">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,7 +120,7 @@ const Chatbot = () => {
                                 <div className={`max-w-[80%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm ${
                                     msg.sender === 'user' 
                                     ? 'bg-yellow-500 text-black font-semibold rounded-br-none' 
-                                    : 'bg-gray-100 dark:bg-[#15151e]/80 text-gray-800 dark:text-zinc-200 rounded-bl-none border border-gray-200/50 dark:border-white/[0.04]'
+                                    : 'bg-gray-100 dark:bg-[#21212f] text-gray-800 dark:text-zinc-200 rounded-bl-none border border-gray-200/50 dark:border-white/[0.10]'
                                 }`}>
                                     {msg.text.split('\n').map((line, i) => (
                                         <p key={i} className={i > 0 ? "mt-1.5" : ""}>{line}</p>
@@ -130,7 +130,7 @@ const Chatbot = () => {
                         ))}
                         {loading && (
                             <div className="flex justify-start">
-                                <div className="max-w-[80%] p-4 rounded-2xl rounded-bl-none bg-gray-100 dark:bg-[#15151e]/80 border border-gray-200/50 dark:border-white/[0.04] flex items-center gap-1.5">
+                                <div className="max-w-[80%] p-4 rounded-2xl rounded-bl-none bg-gray-100 dark:bg-[#21212f] border border-gray-200/50 dark:border-white/[0.10] flex items-center gap-1.5">
                                     <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                     <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                                     <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -156,10 +156,10 @@ const Chatbot = () => {
                     )}
 
                     {/* Input Footer */}
-                    <div className="p-4 border-t border-gray-100 dark:border-zinc-800/60 bg-gray-50/50 dark:bg-[#0c0c10]/80 flex gap-2">
+                    <div className="p-4 border-t border-gray-100 dark:border-white/[0.08] bg-gray-50/50 dark:bg-[#1a1a26]/80 flex gap-2">
                         <input 
                             type="text" 
-                            className="flex-grow px-4 py-2.5 bg-white dark:bg-[#15151e]/80 border border-gray-200 dark:border-zinc-800 rounded-xl focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all outline-none text-xs text-gray-800 dark:text-zinc-150 placeholder-gray-400 dark:placeholder-zinc-550"
+                            className="flex-grow px-4 py-2.5 bg-white dark:bg-[#21212f] border border-gray-200 dark:border-zinc-800 rounded-xl focus:ring-4 focus:ring-yellow-500/10 focus:border-yellow-500 transition-all outline-none text-xs text-gray-800 dark:text-zinc-150 placeholder-gray-400 dark:placeholder-zinc-550"
                             placeholder="Escribe a túa pregunta..."
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}

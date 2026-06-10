@@ -43,7 +43,7 @@ const LoginModal = ({ isOpen, onClose, onLogin }) => {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-3xl shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] border dark:border-zinc-700/80 overflow-hidden transform transition-all animate-scale-in">
+            <div className="bg-white dark:bg-[#21212f] w-full max-w-md rounded-3xl shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] border dark:border-white/[0.12] overflow-hidden transform transition-all animate-scale-in">
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-8">
                         <div>

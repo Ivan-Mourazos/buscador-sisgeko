@@ -54,7 +54,7 @@ const PendingTasksModal = ({ isOpen, onClose, onRefresh }) => {
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-[2rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] border dark:border-zinc-700/80">
+            <div className="bg-white dark:bg-[#1a1a26] w-full max-w-4xl rounded-[2rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col max-h-[85vh] border dark:border-white/[0.10]">
                 <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex justify-between items-center bg-gray-50/50 dark:bg-zinc-950/20">
                     <div>
                         <h2 className="text-xl font-black text-gray-900 dark:text-white leading-tight">Tarefas Pendentes</h2>
@@ -85,7 +85,7 @@ const PendingTasksModal = ({ isOpen, onClose, onRefresh }) => {
                     ) : (
                         <div className="space-y-4">
                             {tasks.map(task => (
-                                <div key={`${task._type}-${task.ID}`} className="group bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 p-5 rounded-3xl shadow-sm hover:shadow-md hover:border-yellow-200 dark:hover:border-yellow-500/30 transition-all flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                                <div key={`${task._type}-${task.ID}`} className="group bg-white dark:bg-[#21212f] border border-gray-100 dark:border-white/[0.10] p-5 rounded-3xl shadow-sm hover:shadow-md hover:border-yellow-200 dark:hover:border-yellow-500/30 transition-all flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                                     <div className="flex-grow">
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${

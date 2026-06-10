@@ -13,7 +13,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, confirmText
 
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-gray-900/40 dark:bg-black/75 backdrop-blur-[3px] animate-fade-in">
-            <div className="bg-white dark:bg-zinc-900 w-full max-w-sm rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden transform transition-all animate-scale-in border border-gray-100/50 dark:border-zinc-700">
+            <div className="bg-white dark:bg-[#21212f] w-full max-w-sm rounded-[2.5rem] shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden transform transition-all animate-scale-in border border-gray-100/50 dark:border-white/[0.12]">
                 <div className="p-8 text-center">
                     <div className={`w-16 h-16 mx-auto mb-6 rounded-3xl flex items-center justify-center shadow-sm ${bgClasses}`}>
                         {type === 'danger' ? (
