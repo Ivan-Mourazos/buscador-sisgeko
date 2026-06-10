@@ -1166,13 +1166,14 @@ app.post('/api/chat', async (req, res) => {
             try {
                 const rArt = pool.request();
                 bindKeywords(rArt);
-                const artCond = buildOrCondition(['descripcion', 'codigo', 'denominacion_proveedor'], keywords);
+                const artCond = buildOrCondition(['a.descripcion', 'a.codigo', 'a.denominacion_proveedor'], keywords);
                 const artRes = await rArt.query(
-                    `SELECT TOP 5 descripcion, codigo, denominacion_proveedor,
-                            familia_nombre, subfamilia
-                     FROM articulos
+                    `SELECT TOP 5 a.descripcion, a.codigo, a.denominacion_proveedor,
+                            f.codigo AS familia_nombre, a.subfamilia
+                     FROM articulos a
+                     LEFT JOIN familias f ON a.id_familia = f.id_familia
                      WHERE ${artCond}
-                     ORDER BY descripcion`
+                     ORDER BY a.descripcion`
                 );
 
                 const rIns = pool.request();
