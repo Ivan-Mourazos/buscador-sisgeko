@@ -382,7 +382,16 @@ app.get('/api/form-options', async (req, res) => {
         const fams = await pool.request().query('SELECT id_familia as value, codigo as label FROM familias ORDER BY codigo');
         const subs = await pool.request().query('SELECT DISTINCT subfamilia FROM articulos WHERE subfamilia IS NOT NULL ORDER BY subfamilia');
         const chars = await pool.request().query('SELECT id_caracteristica, caracteristica, descripcion as descripcion_car FROM caracteristicas ORDER BY caracteristica');
-        const ins = await pool.request().query("SELECT id_insight, titulo FROM insights WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL) ORDER BY titulo");
+        const ins = await pool.request().query(`
+            SELECT id_insight, titulo FROM insights
+            WHERE (activo = 1 OR activo IS NULL) AND (eliminado = 0 OR eliminado IS NULL)
+            AND version = (
+                SELECT MAX(version) FROM insights i2
+                WHERE i2.id_insight = insights.id_insight
+                AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL)
+            )
+            ORDER BY titulo
+        `);
         res.json({
             success: true,
             articulos: arts.recordset,
