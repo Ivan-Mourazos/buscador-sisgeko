@@ -1135,7 +1135,37 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Chatbot de Inteligencia Artificial (RAG)
+// Health check del servicio de IA
+app.get('/api/chat/health', async (req, res) => {
+    const aiUrl = process.env.AI_API_URL;
+    const aiType = process.env.AI_API_TYPE || 'ollama';
+
+    if (!aiUrl) {
+        return res.json({ ok: false, reason: 'AI_API_URL non configurado' });
+    }
+
+    try {
+        const checkUrl = aiType === 'ollama'
+            ? `${aiUrl.replace(/\/$/, '')}/api/tags`
+            : `${aiUrl.replace(/\/$/, '')}/v1/models`;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(checkUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+            return res.json({ ok: true });
+        } else {
+            return res.json({ ok: false, reason: `HTTP ${response.status}` });
+        }
+    } catch (err) {
+        return res.json({ ok: false, reason: err.message });
+    }
+});
+
 app.post('/api/chat', async (req, res) => {
+
     try {
         const { message, history = [] } = req.body;
         if (!message) {
