@@ -376,7 +376,7 @@ app.post('/api/search', async (req, res) => {
 app.get('/api/form-options', async (req, res) => {
     try {
         const pool = await sql.connect(dbConfig);
-        const arts = await pool.request().query('SELECT id_articulo, descripcion FROM articulos ORDER BY descripcion');
+        const arts = await pool.request().query('SELECT id_articulo, descripcion, denominacion_proveedor, codigo, subfamilia FROM articulos ORDER BY descripcion');
         const procs = await pool.request().query('SELECT id_proceso, proceso as nombre FROM procesos ORDER BY proceso');
         const origins = await pool.request().query('SELECT id_tipo_origen, tipo_origen as label FROM tipo_origen ORDER BY tipo_origen');
         const fams = await pool.request().query('SELECT id_familia as value, codigo as label FROM familias ORDER BY codigo');

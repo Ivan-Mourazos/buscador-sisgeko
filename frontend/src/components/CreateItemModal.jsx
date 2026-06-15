@@ -526,7 +526,12 @@ const CreateItemModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => 
                                         <CustomSelect
                                             options={dbOptions.articulos
                                                 .filter(a => !(formData.articulos_vinculados || []).includes(a.id_articulo))
-                                                .map(a => ({ value: a.id_articulo, label: a.descripcion }))}
+                                                .map(a => ({
+                                                    value: a.id_articulo,
+                                                    label: a.denominacion_proveedor
+                                                        ? `${a.descripcion} · ${a.denominacion_proveedor}`
+                                                        : a.descripcion
+                                                }))}
                                             value=""
                                             onChange={(val) => {
                                                 const id = parseInt(val);
