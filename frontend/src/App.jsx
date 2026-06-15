@@ -737,7 +737,10 @@ function App() {
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
       <CreateItemModal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setEditingItem(null); }} onSave={handleSaveItem} onDelete={handleDeleteItem} initialData={editingItem} />
 
-      <Chatbot />
+      {/* Chatbot solo visible para admin/editor hasta que el servicio de IA esté estable */}
+      {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor') && (
+        <Chatbot />
+      )}
 
       <button 
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
