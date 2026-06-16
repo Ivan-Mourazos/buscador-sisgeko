@@ -605,6 +605,67 @@ app.get('/api/pending-tasks', async (req, res) => {
             artsRecordset = arts.recordset;
         } catch(_) {}
 
+        // ─── Cargar estado actual BD para comparación antes/después en UPDATEs ───
+
+        // Insights UPDATE
+        const insUpdateIds = ins.recordset
+            .filter(t => { try { return JSON.parse(t.comentario_cambio)._operation === 'UPDATE' && t.id_insight > 0; } catch(e) { return false; } })
+            .map(t => t.id_insight);
+        const currentInsMap = {};
+        if (insUpdateIds.length > 0) {
+            try {
+                const curRes = await pool.request().query(`
+                    SELECT i.id_insight, i.titulo, i.insight, i.origen_informacion, i.detalle_origen_informacion,
+                           t.tipo_origen as tipo_origen_nombre,
+                           ISNULL(STUFF((SELECT ', ' + p.proceso FROM rel_Insight_Proceso rip2 JOIN procesos p ON rip2.id_proceso = p.id_proceso WHERE rip2.id_insight = i.id_insight FOR XML PATH('')), 1, 2, ''), '') as procesos_lista
+                    FROM insights i
+                    LEFT JOIN tipo_origen t ON i.id_tipo_origen = t.id_tipo_origen
+                    WHERE i.id_insight IN (${insUpdateIds.join(',')})
+                    AND (i.activo = 1 OR i.activo IS NULL) AND (i.eliminado = 0 OR i.eliminado IS NULL)
+                    AND i.version = (SELECT MAX(version) FROM insights i2 WHERE i2.id_insight = i.id_insight AND (i2.activo = 1 OR i2.activo IS NULL) AND (i2.eliminado = 0 OR i2.eliminado IS NULL))
+                `);
+                curRes.recordset.forEach(r => { currentInsMap[r.id_insight] = r; });
+            } catch(_) {}
+        }
+
+        // Definiciones UPDATE
+        const defUpdateIds = defs.recordset
+            .filter(t => { try { return JSON.parse(t.comentario_cambio)._operation === 'UPDATE' && t.id_definicion > 0; } catch(e) { return false; } })
+            .map(t => t.id_definicion);
+        const currentDefMap = {};
+        if (defUpdateIds.length > 0) {
+            try {
+                const curRes = await pool.request().query(`
+                    SELECT d.id_definicion, d.titulo, d.definicion,
+                           ISNULL(STUFF((SELECT ', ' + f.codigo FROM rel_definicion_familia rdf2 JOIN familias f ON rdf2.id_familia = f.id_familia WHERE rdf2.id_definicion = d.id_definicion FOR XML PATH('')), 1, 2, ''), '') as familias_lista
+                    FROM definiciones d
+                    WHERE d.id_definicion IN (${defUpdateIds.join(',')})
+                    AND (d.activo = 1 OR d.activo IS NULL) AND (d.eliminado = 0 OR d.eliminado IS NULL)
+                    AND d.version = (SELECT MAX(version) FROM definiciones d2 WHERE d2.id_definicion = d.id_definicion AND (d2.activo = 1 OR d2.activo IS NULL) AND (d2.eliminado = 0 OR d2.eliminado IS NULL))
+                `);
+                curRes.recordset.forEach(r => { currentDefMap[r.id_definicion] = r; });
+            } catch(_) {}
+        }
+
+        // Artigos UPDATE
+        const artUpdateIds = artsRecordset
+            .filter(t => { try { return JSON.parse(t.comentario_cambio)._operation === 'UPDATE' && t.id_articulo > 0; } catch(e) { return false; } })
+            .map(t => t.id_articulo);
+        const currentArtMap = {};
+        if (artUpdateIds.length > 0) {
+            try {
+                const curRes = await pool.request().query(`
+                    SELECT a.id_articulo, a.descripcion, a.codigo, a.denominacion_proveedor, a.subfamilia,
+                           f.codigo as familia_codigo, f.descripcion as familia_descripcion
+                    FROM articulos a
+                    LEFT JOIN familias f ON a.id_familia = f.id_familia
+                    WHERE a.id_articulo IN (${artUpdateIds.join(',')})
+                `);
+                curRes.recordset.forEach(r => { currentArtMap[r.id_articulo] = r; });
+            } catch(_) {}
+        }
+
+        // ─── Montar tareas con _newData y _current ───
         const tasks = [
             ...defs.recordset.map(t => {
                 let data = {};
@@ -614,7 +675,9 @@ app.get('/api/pending-tasks', async (req, res) => {
                     _type: 'definicion',
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || 'Sen título',
-                    editor: t.editor_nombre
+                    editor: t.editor_nombre,
+                    _newData: data,
+                    _current: data._operation === 'UPDATE' ? (currentDefMap[t.id_definicion] || null) : null
                 };
             }),
             ...ins.recordset.map(t => {
@@ -625,7 +688,9 @@ app.get('/api/pending-tasks', async (req, res) => {
                     _type: 'insight',
                     operation: data._operation || 'UPDATE',
                     titulo: data.titulo || data.insight || 'Sen título',
-                    editor: t.editor_nombre
+                    editor: t.editor_nombre,
+                    _newData: data,
+                    _current: data._operation === 'UPDATE' ? (currentInsMap[t.id_insight] || null) : null
                 };
             }),
             ...artsRecordset.map(t => {
@@ -636,7 +701,9 @@ app.get('/api/pending-tasks', async (req, res) => {
                     _type: 'articulo',
                     operation: data._operation || 'UPDATE',
                     titulo: data.descripcion || data.titulo || 'Sen título',
-                    editor: t.editor_nombre
+                    editor: t.editor_nombre,
+                    _newData: data,
+                    _current: data._operation === 'UPDATE' ? (currentArtMap[t.id_articulo] || null) : null
                 };
             })
         ].sort((a, b) => new Date(b.fecha_cambio) - new Date(a.fecha_cambio));
