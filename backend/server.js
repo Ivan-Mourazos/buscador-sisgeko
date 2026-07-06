@@ -939,16 +939,16 @@ app.post('/api/pending-tasks/:type/:taskId/approve', authenticate, checkRole(['e
                     }
                 } else {
                     // CREATE
-                    const maxRes = await req2.query(`SELECT MAX(id_articulo) as maxId FROM articulos`);
-                    const newId = (maxRes.recordset[0].maxId || 0) + 1;
-                    await new sql.Request(transaction)
-                        .input('artId', sql.Int, newId)
+                    const insertRes = await new sql.Request(transaction)
                         .input('desc', sql.NVarChar, data.descripcion || '')
                         .input('cod', sql.NVarChar, data.codigo || null)
                         .input('famId', sql.Int, data.id_familia || null)
                         .input('subfam', sql.NVarChar, data.subfamilia || null)
                         .input('denProv', sql.NVarChar, data.denominacion_proveedor || null)
-                        .query(`INSERT INTO articulos (id_articulo, descripcion, codigo, id_familia, subfamilia, denominacion_proveedor) VALUES (@artId, @desc, @cod, @famId, @subfam, @denProv)`);
+                        .query(`INSERT INTO articulos (descripcion, codigo, id_familia, subfamilia, denominacion_proveedor)
+                                OUTPUT INSERTED.id_articulo
+                                VALUES (@desc, @cod, @famId, @subfam, @denProv)`);
+                    const newId = insertRes.recordset[0].id_articulo;
                     if (data.caracteristicas && data.caracteristicas.length > 0) {
                         for (let i = 0; i < data.caracteristicas.length; i++) {
                             const car = data.caracteristicas[i];
