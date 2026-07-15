@@ -8,8 +8,37 @@ import CategorySelector from './components/CategorySelector';
 import PendingTasksView from './components/PendingTasksView';
 import HistoryView from './components/HistoryView';
 import ActivityLogView from './components/ActivityLogView';
+import UsageStatsView from './components/UsageStatsView';
 import ConfirmModal from './components/ConfirmModal';
 import Chatbot from './components/Chatbot';
+
+const createAnonymousId = () => {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+};
+
+const getUsageHeaders = () => {
+  let visitorId = localStorage.getItem('sisgeko_visitor_id');
+  let sessionId = sessionStorage.getItem('sisgeko_session_id');
+  if (!visitorId) {
+    visitorId = createAnonymousId();
+    localStorage.setItem('sisgeko_visitor_id', visitorId);
+  }
+  if (!sessionId) {
+    sessionId = createAnonymousId();
+    sessionStorage.setItem('sisgeko_session_id', sessionId);
+  }
+  return { 'X-Sisgeko-Visitor': visitorId, 'X-Sisgeko-Session': sessionId };
+};
+
+const trackUsageEvent = (eventType) => {
+  fetch('/api/analytics/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getUsageHeaders() },
+    body: JSON.stringify({ eventType }),
+    keepalive: true
+  }).catch(() => {});
+};
 
 function App() {
 
@@ -42,7 +71,7 @@ function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [viewMode, setViewMode] = useState('hero');
-  const [currentView, setCurrentView] = useState('search'); // 'search', 'pending', 'history'
+  const [currentView, setCurrentView] = useState('search'); // 'search', 'pending', 'history', 'stats'
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -83,6 +112,11 @@ function App() {
 
   // Validar sesión
   useEffect(() => {
+    if (!sessionStorage.getItem('sisgeko_page_view_tracked')) {
+      sessionStorage.setItem('sisgeko_page_view_tracked', '1');
+      trackUsageEvent('page_view');
+    }
+
     const checkSession = async () => {
       try {
         const res = await fetch('/api/me');
@@ -212,6 +246,8 @@ function App() {
         setFacets(data.facets);
         setTotalCount(data.total);
         setError(null);
+        const hasSearchCriteria = q.trim() !== '' || Object.values(f).some(value => Array.isArray(value) && value.length > 0);
+        if (!append && offset === 0 && hasSearchCriteria) trackUsageEvent('search');
       }
     } catch (err) {
       if (err.name === 'AbortError') return;
@@ -349,6 +385,7 @@ function App() {
     const type = item._type === 'definicion' ? 'definicion' : item._type;
     const id = item.id_articulo || item.id_insight || item.id_definicion;
     if (!id) return;
+    trackUsageEvent('detail_view');
 
     const cacheKey = `${type}-${id}`;
     if (detailsCache.current.has(cacheKey)) {
@@ -436,7 +473,7 @@ function App() {
              />
           </div>
 
-          <form onSubmit={handleSearch} className={`w-full md:w-48 lg:w-72 xl:w-[28rem] order-3 md:order-2 md:ml-14 flex-grow md:flex-grow-0 relative z-20 group transition-all duration-700 min-w-0 ${showHero || ['pending', 'history'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
+          <form onSubmit={handleSearch} className={`w-full md:w-48 lg:w-72 xl:w-[28rem] order-3 md:order-2 md:ml-14 flex-grow md:flex-grow-0 relative z-20 group transition-all duration-700 min-w-0 ${showHero || ['pending', 'history', 'stats'].includes(currentView) ? 'hidden md:block opacity-0 scale-95 pointer-events-none -translate-y-2' : 'block opacity-100 scale-100 translate-y-0 mt-5 md:mt-0'}`}>
             <input 
               ref={searchInputRef}
               type="text"
@@ -471,6 +508,12 @@ function App() {
                     className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'history' ? 'bg-white dark:bg-[#252538] text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
                   >
                     Historial
+                  </button>
+                  <button
+                    onClick={() => { setViewMode('results'); setCurrentView('stats'); }}
+                    className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all cursor-pointer ${currentView === 'stats' ? 'bg-white dark:bg-[#252538] text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300'}`}
+                  >
+                    Uso
                   </button>
                 </div>
               )}
@@ -545,7 +588,7 @@ function App() {
             {user && (user.rol === 'admin' || user.rol === 'editor' || user.role === 'admin' || user.role === 'editor' || user.username === 'ivan') && (
               <div className="flex flex-col gap-2">
                 <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest pl-1">Administración</span>
-                <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-zinc-800/40 p-1.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
+                <div className="grid grid-cols-3 gap-2 bg-gray-50 dark:bg-zinc-800/40 p-1.5 rounded-2xl border border-gray-100 dark:border-zinc-800">
                   <button 
                     onClick={() => { setViewMode('results'); setCurrentView('pending'); setShowMobileMenu(false); }} 
                     className={`relative py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-center cursor-pointer ${currentView === 'pending' ? 'bg-white dark:bg-zinc-800 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500'}`}
@@ -562,6 +605,12 @@ function App() {
                     className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-center cursor-pointer ${currentView === 'history' ? 'bg-white dark:bg-zinc-800 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500'}`}
                   >
                     Historial
+                  </button>
+                  <button
+                    onClick={() => { setViewMode('results'); setCurrentView('stats'); setShowMobileMenu(false); }}
+                    className={`py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-center cursor-pointer ${currentView === 'stats' ? 'bg-white dark:bg-zinc-800 text-yellow-600 dark:text-yellow-400 shadow-sm' : 'text-gray-400 dark:text-zinc-500'}`}
+                  >
+                    Uso
                   </button>
                 </div>
               </div>
@@ -657,6 +706,8 @@ function App() {
               <ActivityLogView onClose={() => setCurrentView('search')} />
             ) : currentView === 'history' ? (
               <HistoryView onClose={() => setCurrentView('search')} />
+            ) : currentView === 'stats' ? (
+              <UsageStatsView onClose={() => setCurrentView('search')} />
             ) : (
               <>
                 <div className="mb-8 flex items-center justify-between">

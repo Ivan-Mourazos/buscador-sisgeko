@@ -65,6 +65,75 @@ sql.connect(dbConfig).then(() => {
     console.error('La conexión a la base de datos falló.', err.message);
 });
 
+// Analítica interna mínima. No se guardan IPs, búsquedas ni fichas concretas.
+const ANALYTICS_EVENT_TYPES = new Set(['page_view', 'search', 'detail_view']);
+let analyticsTableReady = false;
+let analyticsInitPromise = null;
+
+const sanitizeAnalyticsId = (value) => {
+    if (typeof value !== 'string' || !/^[a-zA-Z0-9_-]{1,64}$/.test(value)) return null;
+    return value;
+};
+
+async function ensureAnalyticsTable() {
+    if (analyticsTableReady) return true;
+    if (analyticsInitPromise) return analyticsInitPromise;
+
+    analyticsInitPromise = (async () => {
+        try {
+            const pool = await sql.connect(dbConfig);
+            await pool.request().query(`
+                IF OBJECT_ID('dbo.usage_events', 'U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.usage_events (
+                        id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        event_type NVARCHAR(32) NOT NULL,
+                        visitor_id VARCHAR(64) NULL,
+                        session_id VARCHAR(64) NULL,
+                        created_at DATETIME2(0) NOT NULL
+                            CONSTRAINT DF_usage_events_created_at DEFAULT SYSUTCDATETIME()
+                    );
+                    CREATE INDEX IX_usage_events_created_at
+                        ON dbo.usage_events(created_at);
+                    CREATE INDEX IX_usage_events_type_date
+                        ON dbo.usage_events(event_type, created_at);
+                END
+            `);
+            analyticsTableReady = true;
+            return true;
+        } catch (error) {
+            console.error('No se pudo preparar la analítica de uso:', error.message);
+            return false;
+        } finally {
+            analyticsInitPromise = null;
+        }
+    })();
+
+    return analyticsInitPromise;
+}
+
+async function recordUsageEvent(eventType, req) {
+    if (!ANALYTICS_EVENT_TYPES.has(eventType) || !(await ensureAnalyticsTable())) return false;
+
+    const visitorId = sanitizeAnalyticsId(req.get('X-Sisgeko-Visitor'));
+    const sessionId = sanitizeAnalyticsId(req.get('X-Sisgeko-Session'));
+    try {
+        const pool = await sql.connect(dbConfig);
+        await pool.request()
+            .input('eventType', sql.NVarChar(32), eventType)
+            .input('visitorId', sql.VarChar(64), visitorId)
+            .input('sessionId', sql.VarChar(64), sessionId)
+            .query(`
+                INSERT INTO dbo.usage_events (event_type, visitor_id, session_id)
+                VALUES (@eventType, @visitorId, @sessionId)
+            `);
+        return true;
+    } catch (error) {
+        console.error('No se pudo registrar un evento de uso:', error.message);
+        return false;
+    }
+}
+
 // Helper seguro para el IN (soporta números e strings)
 const buildInClause = (arr) => arr.map(x => {
     const num = Number(x);
@@ -1167,6 +1236,76 @@ app.get('/api/me', authenticate, (req, res) => {
 });
 
 
+
+// Registro anónimo de uso. El tipo está limitado a una lista cerrada.
+app.post('/api/analytics/events', async (req, res) => {
+    const { eventType } = req.body || {};
+    if (!ANALYTICS_EVENT_TYPES.has(eventType)) {
+        return res.status(400).json({ success: false, message: 'Evento non válido' });
+    }
+
+    const recorded = await recordUsageEvent(eventType, req);
+    res.status(recorded ? 202 : 503).json({ success: recorded });
+});
+
+// Resumen agregado para el panel privado de administración.
+app.get('/api/analytics/stats', authenticate, checkRole(['editor', 'admin']), async (req, res) => {
+    const requestedDays = Number.parseInt(req.query.days, 10);
+    const days = [7, 30, 90].includes(requestedDays) ? requestedDays : 30;
+
+    try {
+        if (!(await ensureAnalyticsTable())) {
+            return res.status(503).json({ success: false, message: 'A analítica non está dispoñible' });
+        }
+
+        const pool = await sql.connect(dbConfig);
+        const [summaryResult, dailyResult] = await Promise.all([
+            pool.request().input('days', sql.Int, days).query(`
+                SELECT
+                    SUM(CASE WHEN event_type = 'page_view' THEN 1 ELSE 0 END) AS visits,
+                    COUNT(DISTINCT CASE WHEN event_type = 'page_view' THEN visitor_id END) AS visitors,
+                    COUNT(DISTINCT CASE WHEN event_type = 'page_view' THEN session_id END) AS sessions,
+                    SUM(CASE WHEN event_type = 'search' THEN 1 ELSE 0 END) AS searches,
+                    SUM(CASE WHEN event_type = 'detail_view' THEN 1 ELSE 0 END) AS detail_views
+                FROM dbo.usage_events
+                WHERE created_at >= DATEADD(DAY, 1 - @days, CONVERT(date, SYSUTCDATETIME()))
+            `),
+            pool.request().input('days', sql.Int, days).query(`
+                SELECT
+                    CONVERT(varchar(10), created_at, 23) AS [date],
+                    SUM(CASE WHEN event_type = 'page_view' THEN 1 ELSE 0 END) AS visits,
+                    SUM(CASE WHEN event_type = 'search' THEN 1 ELSE 0 END) AS searches,
+                    SUM(CASE WHEN event_type = 'detail_view' THEN 1 ELSE 0 END) AS detail_views
+                FROM dbo.usage_events
+                WHERE created_at >= DATEADD(DAY, 1 - @days, CONVERT(date, SYSUTCDATETIME()))
+                GROUP BY CONVERT(varchar(10), created_at, 23)
+                ORDER BY [date]
+            `)
+        ]);
+
+        const summary = summaryResult.recordset[0] || {};
+        res.json({
+            success: true,
+            days,
+            summary: {
+                visits: Number(summary.visits) || 0,
+                visitors: Number(summary.visitors) || 0,
+                sessions: Number(summary.sessions) || 0,
+                searches: Number(summary.searches) || 0,
+                detailViews: Number(summary.detail_views) || 0
+            },
+            daily: dailyResult.recordset.map(row => ({
+                date: row.date,
+                visits: Number(row.visits) || 0,
+                searches: Number(row.searches) || 0,
+                detailViews: Number(row.detail_views) || 0
+            }))
+        });
+    } catch (error) {
+        console.error('Error al consultar estadísticas de uso:', error.message);
+        res.status(500).json({ success: false, message: 'Erro ao obter as estatísticas' });
+    }
+});
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;

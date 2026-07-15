@@ -68,6 +68,25 @@ pm2 save
 # -----------------------------------------------
 ```
 
+### Panel de estatísticas de uso
+
+O panel crea automaticamente a táboa `usage_events` no primeiro acceso. Se o
+usuario configurado en `DB_USER` non ten permiso para crear táboas, un
+administrador de SQL Server debe executar previamente o script
+`backend/analytics.sql`.
+
+Despois de actualizar o proxecto, recompilar o frontend e reiniciar PM2:
+
+```powershell
+cd frontend
+npm run build
+cd ../backend
+pm2 restart sisgeko-search
+```
+
+As estatísticas comezan a rexistrarse desde ese momento; non recuperan visitas
+anteriores. O acceso ao panel está limitado aos roles `admin` e `editor`.
+
 ### Opción B: Como Servicio del Sistema
 - **Windows**: Pueden usar [NSSM](https://nssm.cc/) para convertir `node server.js` en un Servicio de Windows (se inicia solo, sin login).
 - **Linux**: Crear un archivo de servicio en `systemd` (`/etc/systemd/system/sisgeko.service`).
