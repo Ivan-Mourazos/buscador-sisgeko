@@ -3,7 +3,7 @@
 Esta guía detalla los pasos para desplegar la aplicación en un entorno de servidor profesional.
 
 ## Requisitos Previos
-- Node.js v18+ instalado.
+- Node.js **v20.19+ (ou v22.12+)** instalado — requisito de Vite 8; con versións inferiores `pnpm build` falla.
 - SQL Server accesible y configurado.
 
 ## 1. Configuración Inicial

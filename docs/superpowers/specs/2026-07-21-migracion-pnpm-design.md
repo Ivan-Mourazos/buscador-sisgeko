@@ -52,7 +52,7 @@ allowBuilds:
   bcrypt: true
 ```
 
-`bcrypt` es un módulo nativo. pnpm **bloquea por defecto** los scripts de build (`node-gyp-build`/`node-pre-gyp`) de las dependencias; en pnpm 11 un build no aprobado hace **fallar** el install (`ERR_PNPM_IGNORED_BUILDS`). La aprobación se declara con `allowBuilds: { bcrypt: true }` en `pnpm-workspace.yaml` (en pnpm 11 esta clave **reemplaza** a la antigua `onlyBuiltDependencies` de pnpm 10; `onlyBuiltDependencies` es ignorada silenciosamente por pnpm 11.3.0). Declararlo así hace que la compilación del binario ocurra también en el servidor **sin prompts interactivos**. Como `packageManager` fija pnpm 11.3.0 en local y servidor, `allowBuilds` es la clave efectiva en ambos.
+`bcrypt` es un módulo nativo. pnpm **bloquea por defecto** los scripts de build (`node-gyp-build`/`node-pre-gyp`) de las dependencias; en pnpm 11 un build no aprobado hace **fallar** el install (`ERR_PNPM_IGNORED_BUILDS`). La aprobación se declara con `allowBuilds: { bcrypt: true }` en `pnpm-workspace.yaml` (en pnpm 11 esta clave **reemplaza** a la antigua `onlyBuiltDependencies` de pnpm 10; pnpm 11.3.0 no honra `onlyBuiltDependencies` como aprobación, por lo que el build de `bcrypt` queda bloqueado). Declararlo así hace que la compilación del binario ocurra también en el servidor **sin prompts interactivos**. Como `packageManager` fija pnpm 11.3.0 en local y servidor, `allowBuilds` es la clave efectiva en ambos.
 
 ### 3.2 `package.json` raíz (modificado)
 
@@ -97,7 +97,7 @@ Requisito documentado para `bcrypt` en Linux (por si necesita compilar en lugar 
 
 Punto crítico del proyecto: el `pnpm-lock.yaml` se genera en Windows pero debe instalar sin fallos en Linux.
 
-- **Binarios por plataforma en el lockfile.** Vite 8 usa Rollup + esbuild, que traen binarios nativos como dependencias opcionales por plataforma. A diferencia de npm (que causaba el error `Cannot find module @rollup/rollup-linux-x64-gnu`), **pnpm registra en el lockfile las variantes de todas las plataformas**. Un lockfile generado en Windows instala correctamente en Linux. → Riesgo resuelto por diseño.
+- **Binarios por plataforma en el lockfile.** Vite 8 usa **Rolldown** (además de `lightningcss` y `@tailwindcss/oxide`), que traen binarios nativos como dependencias opcionales por plataforma. A diferencia de npm (cuyo bug omitía las variantes no coincidentes y provocaba errores del tipo `Cannot find module @rolldown/binding-linux-x64-gnu`), **pnpm registra en el lockfile las variantes de todas las plataformas**. Un lockfile generado en Windows instala correctamente en Linux. → Riesgo resuelto por diseño.
 - **`bcrypt` se resuelve por plataforma en el servidor.** El binario nativo no se arrastra desde Windows; el servidor ejecuta su propio `pnpm install` y obtiene el binario Linux (prebuilt o compilado con el toolchain de 3.4).
 - **Misma versión de pnpm en ambos lados** vía `packageManager` + `corepack enable` → sin diferencias de resolución.
 - **`--frozen-lockfile` en producción** → falla ruidosamente si el lockfile no cuadra, en vez de mutarlo silenciosamente.
@@ -117,7 +117,7 @@ Fallback documentado (no esperado): si algún paquete dependiera de "phantom dep
 
 **Servidor (Linux) — criterio de "hecho":**
 
-5. `corepack enable` → `pnpm install --frozen-lockfile` sin errores (bcrypt OK, binarios Linux de Rollup/esbuild OK) → `pnpm build` genera `dist` → `pm2 restart sisgeko-search` → la web responde.
+5. `corepack enable` → `pnpm install --frozen-lockfile` sin errores (bcrypt OK, binarios Linux de Rolldown/lightningcss/oxide OK) → `pnpm build` genera `dist` → `pm2 restart sisgeko-search` → la web responde.
 
 ---
 

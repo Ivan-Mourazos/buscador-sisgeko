@@ -15,7 +15,7 @@
 - **Un solo lockfile:** al final debe existir únicamente `pnpm-lock.yaml` en la raíz; ningún `package-lock.json` en el repo.
 - **Nombres de paquetes del workspace (usar en `--filter`):** frontend = `buscador-sisgeko-frontend`; backend = `buscador-sisgeko-backend`.
 - **Producción Linux:** instalación reproducible con `pnpm install --frozen-lockfile`; PM2 sin cambios (`node server.js`).
-- **Multiplataforma:** el lockfile se genera en Windows pero debe instalar en Linux; pnpm registra los binarios opcionales de todas las plataformas (Rollup/esbuild), por lo que es portable.
+- **Multiplataforma:** el lockfile se genera en Windows pero debe instalar en Linux; pnpm registra los binarios opcionales de todas las plataformas (Rolldown, lightningcss, @tailwindcss/oxide, bcrypt), por lo que es portable.
 - **Rama de trabajo:** `migracion-pnpm` (ya creada).
 
 ---
@@ -310,7 +310,7 @@ Run (bash):
 ```bash
 pnpm install --frozen-lockfile
 ```
-Expected: termina `Done` sin error. Si falla por `bcrypt` (falta de toolchain): `sudo apt-get install -y build-essential python3 make g++` y reintentar. No debe fallar por binarios de Rollup/esbuild (el lockfile ya incluye las variantes Linux).
+Expected: termina `Done` sin error. Si falla por `bcrypt` (falta de toolchain): `sudo apt-get install -y build-essential python3 make g++` y reintentar (nota: bcrypt 6 trae prebuilds linux-x64 glibc+musl, así que normalmente no compila). No debe fallar por binarios de Rolldown/lightningcss/oxide (el lockfile ya incluye las variantes Linux).
 
 - [ ] **Step 4: Verificar `bcrypt` en Linux**
 
@@ -347,5 +347,5 @@ Runbook de validación en servidor; no genera cambios en el repo.
 
 ## Notas de fallback (no esperadas)
 
-- **Build de `bcrypt` bloqueado (`ERR_PNPM_IGNORED_BUILDS`):** confirmar que `pnpm-workspace.yaml` usa `allowBuilds: { bcrypt: true }` (pnpm 11). Si se ejecutara con pnpm 10, esa versión usa `onlyBuiltDependencies: [bcrypt]` en su lugar. Alternativa interactiva: `pnpm approve-builds`.
+- **Build de `bcrypt` bloqueado (`ERR_PNPM_IGNORED_BUILDS`):** confirmar que `pnpm-workspace.yaml` usa `allowBuilds: { bcrypt: true }` (pnpm 11). Si se ejecutara con pnpm 10, esa versión usa `onlyBuiltDependencies: [bcrypt]` en su lugar. Alternativa interactiva: `pnpm approve-builds` (interactivo y muta `pnpm-workspace.yaml`; **no apto** para CI/despliegue no interactivo — en el servidor usar siempre `allowBuilds`).
 - **Phantom dependencies por `node_modules` estricto:** crear `.npmrc` en la raíz con `shamefully-hoist=true` y reinstalar. (Vite/React/Express/mssql no lo requieren; usar solo si un módulo falla al resolverse.)

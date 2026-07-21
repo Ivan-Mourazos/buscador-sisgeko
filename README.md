@@ -35,7 +35,7 @@ O **Buscador Sisgeko** é unha plataforma administrativa e de consulta deseñada
 ## 🚀 Instalación e Configuración
 
 ### 1. Requisitos Previos
-*   [Node.js](https://nodejs.org/) (v20 recomendada).
+*   [Node.js](https://nodejs.org/) **v20.19+ ou v22.12+** (requisito de Vite 8).
 *   Conexión á VPN ou rede local de Toldos Gómez (necesario para SQL Server e imaxes).
 
 ### 2. Configuración Inicial
