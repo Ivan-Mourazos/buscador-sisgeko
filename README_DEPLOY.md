@@ -52,9 +52,10 @@ Para que la aplicación no se cierre al salir de la sesión SSH o cerrar la cons
 ### Opción A: Usar PM2 (Recomendado para Node.js)
 PM2 es un gestor de procesos que mantiene la app viva en segundo plano y la reinicia si falla.
 
-```powershell
-# Instalar PM2 globalmente
-pnpm add -g pm2
+```bash
+# Instalar PM2 globalmente (herramienta de sistema, independiente del proyecto).
+# Se usa npm porque viene con Node y no requiere `pnpm setup` previo.
+npm install -g pm2
 
 # Iniciar la aplicación
 cd backend
