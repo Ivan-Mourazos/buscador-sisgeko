@@ -4,14 +4,14 @@
 
 **Goal:** Migrar `buscador-sisgeko` de npm (3 lockfiles) a un workspace pnpm unificado que funcione en desarrollo local (Windows) y en el servidor de producción Linux.
 
-**Architecture:** Un `pnpm-workspace.yaml` en la raíz engloba `backend/` y `frontend/`. Un único `pnpm install` instala ambos con un solo `pnpm-lock.yaml`. El `bcrypt` nativo se compila mediante `onlyBuiltDependencies`. Los scripts raíz orquestan con `--filter`. Documentación y despliegue PM2 se actualizan a pnpm.
+**Architecture:** Un `pnpm-workspace.yaml` en la raíz engloba `backend/` y `frontend/`. Un único `pnpm install` instala ambos con un solo `pnpm-lock.yaml`. El `bcrypt` nativo se compila mediante `allowBuilds` (clave de pnpm 11; reemplaza a `onlyBuiltDependencies` de pnpm 10). Los scripts raíz orquestan con `--filter`. Documentación y despliegue PM2 se actualizan a pnpm.
 
 **Tech Stack:** pnpm 11.3.0, corepack, Node 20+, Vite 8 / React 19 (frontend), Express 5 / mssql / bcrypt (backend), PM2 (servidor Linux).
 
 ## Global Constraints
 
 - **Gestor de paquetes:** pnpm 11.3.0, fijado con `"packageManager": "pnpm@11.3.0"` + corepack. No volver a usar npm para instalar.
-- **`bcrypt` es módulo nativo:** debe declararse en `onlyBuiltDependencies`, o pnpm ignora su build y el backend falla al arrancar.
+- **`bcrypt` es módulo nativo:** debe aprobarse su build con `allowBuilds: { bcrypt: true }` en `pnpm-workspace.yaml` (clave de pnpm 11; `onlyBuiltDependencies` de pnpm 10 es ignorada por pnpm 11.3.0). Sin ella, el install falla con `ERR_PNPM_IGNORED_BUILDS`.
 - **Un solo lockfile:** al final debe existir únicamente `pnpm-lock.yaml` en la raíz; ningún `package-lock.json` en el repo.
 - **Nombres de paquetes del workspace (usar en `--filter`):** frontend = `buscador-sisgeko-frontend`; backend = `buscador-sisgeko-backend`.
 - **Producción Linux:** instalación reproducible con `pnpm install --frozen-lockfile`; PM2 sin cambios (`node server.js`).
@@ -63,8 +63,10 @@ Create `pnpm-workspace.yaml`:
 packages:
   - backend
   - frontend
-onlyBuiltDependencies:
-  - bcrypt
+# pnpm 11 aprueba los builds nativos con `allowBuilds` (reemplaza a
+# `onlyBuiltDependencies` de pnpm 10). Necesario para compilar `bcrypt`.
+allowBuilds:
+  bcrypt: true
 ```
 
 - [ ] **Step 5: Actualizar `package.json` (raíz)**
@@ -95,7 +97,7 @@ Run (PowerShell):
 ```powershell
 pnpm install
 ```
-Expected: termina con `Done`; **no** aparece un aviso `Ignored build scripts: bcrypt` (si aparece, `onlyBuiltDependencies` no está aplicándose — revisar Step 4). Se crea/actualiza `pnpm-lock.yaml` y aparecen `node_modules` en raíz, `backend/` y `frontend/`.
+Expected: termina con `Done` y ejecuta el build de `bcrypt` (`node-gyp-build`); **no** debe fallar con `ERR_PNPM_IGNORED_BUILDS` ni mostrar `Ignored build scripts: bcrypt` (si ocurre, `allowBuilds` no está aplicándose — revisar Step 4). Se crea/actualiza `pnpm-lock.yaml` y aparecen `node_modules` en raíz, `backend/` y `frontend/`.
 
 - [ ] **Step 7: Verificar que `bcrypt` quedó compilado y cargable**
 
@@ -343,5 +345,5 @@ Runbook de validación en servidor; no genera cambios en el repo.
 
 ## Notas de fallback (no esperadas)
 
-- **`onlyBuiltDependencies` no reconocido en `pnpm-workspace.yaml`:** mover la clave a `package.json` raíz como `"pnpm": { "onlyBuiltDependencies": ["bcrypt"] }` y reinstalar.
+- **Build de `bcrypt` bloqueado (`ERR_PNPM_IGNORED_BUILDS`):** confirmar que `pnpm-workspace.yaml` usa `allowBuilds: { bcrypt: true }` (pnpm 11). Si se ejecutara con pnpm 10, esa versión usa `onlyBuiltDependencies: [bcrypt]` en su lugar. Alternativa interactiva: `pnpm approve-builds`.
 - **Phantom dependencies por `node_modules` estricto:** crear `.npmrc` en la raíz con `shamefully-hoist=true` y reinstalar. (Vite/React/Express/mssql no lo requieren; usar solo si un módulo falla al resolverse.)

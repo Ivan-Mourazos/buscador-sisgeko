@@ -48,11 +48,11 @@ Entorno:
 packages:
   - backend
   - frontend
-onlyBuiltDependencies:
-  - bcrypt
+allowBuilds:
+  bcrypt: true
 ```
 
-`bcrypt` es un módulo nativo. pnpm 10+ **bloquea por defecto** los scripts de build (`postinstall`/`node-pre-gyp`) de las dependencias. Sin declararlo en `onlyBuiltDependencies`, `bcrypt` se instalaría sin su binario y el backend fallaría al arrancar. Declararlo explícitamente hace que la compilación/descarga del binario ocurra también en el servidor **sin prompts interactivos**.
+`bcrypt` es un módulo nativo. pnpm **bloquea por defecto** los scripts de build (`node-gyp-build`/`node-pre-gyp`) de las dependencias; en pnpm 11 un build no aprobado hace **fallar** el install (`ERR_PNPM_IGNORED_BUILDS`). La aprobación se declara con `allowBuilds: { bcrypt: true }` en `pnpm-workspace.yaml` (en pnpm 11 esta clave **reemplaza** a la antigua `onlyBuiltDependencies` de pnpm 10; `onlyBuiltDependencies` es ignorada silenciosamente por pnpm 11.3.0). Declararlo así hace que la compilación del binario ocurra también en el servidor **sin prompts interactivos**. Como `packageManager` fija pnpm 11.3.0 en local y servidor, `allowBuilds` es la clave efectiva en ambos.
 
 ### 3.2 `package.json` raíz (modificado)
 
