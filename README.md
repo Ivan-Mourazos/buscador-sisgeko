@@ -35,13 +35,13 @@ O **Buscador Sisgeko** é unha plataforma administrativa e de consulta deseñada
 ## 🚀 Instalación e Configuración
 
 ### 1. Requisitos Previos
-*   [Node.js](https://nodejs.org/) (v20 recomendada).
+*   [Node.js](https://nodejs.org/) **v20.19+ ou v22.12+** (requisito de Vite 8).
 *   Conexión á VPN ou rede local de Toldos Gómez (necesario para SQL Server e imaxes).
 
 ### 2. Configuración Inicial
 Desde a raíz do proxecto, instala todas as dependencias necesarias:
 ```bash
-npm run install:all
+pnpm install
 ```
 
 ### 3. Variables de Contorno
@@ -57,12 +57,12 @@ Abre **dúas terminais** e executa os seguintes comandos:
 
 **Terminal 1 (Backend):**
 ```bash
-npm run dev:backend
+pnpm dev:backend
 ```
 
 **Terminal 2 (Frontend):**
 ```bash
-npm run dev:frontend
+pnpm dev:frontend
 ```
 
 O buscador estará accesible en `http://localhost:5173/` (Vite redirecciona as chamadas de API automaticamente ao porto `5000`).

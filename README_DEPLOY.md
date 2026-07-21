@@ -3,21 +3,27 @@
 Esta guía detalla los pasos para desplegar la aplicación en un entorno de servidor profesional.
 
 ## Requisitos Previos
-- Node.js v18+ instalado.
+- Node.js **v20.19+ (ou v22.12+)** instalado — requisito de Vite 8; con versións inferiores `pnpm build` falla.
 - SQL Server accesible y configurado.
 
 ## 1. Configuración Inicial
-Desde la raíz del proyecto, instalar las dependencias de ambas partes:
 
-```powershell
-# En la carpeta backend
-cd backend
-npm install
+Activar pnpm en el servidor (usa la versión fijada en `packageManager`):
 
-# En la carpeta frontend
-cd ../frontend
-npm install
+```bash
+corepack enable
+# Alternativa si corepack no está disponible: npm i -g pnpm@11.3.0
 ```
+
+Instalar todas las dependencias del workspace desde la raíz, de forma reproducible:
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+> **Nota (bcrypt en Linux):** si el servidor necesita compilar el binario nativo
+> en lugar de descargar un prebuilt, instalar antes el toolchain:
+> `sudo apt-get install -y build-essential python3 make g++`.
 
 ## 2. Variables de Entorno
 Crear un archivo `.env` en la carpeta `/backend` con los siguientes parámetros:
@@ -31,12 +37,13 @@ DB_NAME=nombre_de_la_db
 ```
 
 ## 3. Generar la Web (Build)
-Para que el servidor pueda servir la interfaz web, es necesario compilarla:
 
-```powershell
-cd /frontend
-npm run build
+Compilar el frontend desde la raíz del proyecto:
+
+```bash
+pnpm build
 ```
+
 Esto creará la carpeta `frontend/dist`.
 
 ## 4. Ejecución Permanente (Sin Consola Activa)
@@ -45,8 +52,9 @@ Para que la aplicación no se cierre al salir de la sesión SSH o cerrar la cons
 ### Opción A: Usar PM2 (Recomendado para Node.js)
 PM2 es un gestor de procesos que mantiene la app viva en segundo plano y la reinicia si falla.
 
-```powershell
-# Instalar PM2 globalmente
+```bash
+# Instalar PM2 globalmente (herramienta de sistema, independiente del proyecto).
+# Se usa npm porque viene con Node y no requiere `pnpm setup` previo.
 npm install -g pm2
 
 # Iniciar la aplicación
@@ -77,10 +85,8 @@ administrador de SQL Server debe executar previamente o script
 
 Despois de actualizar o proxecto, recompilar o frontend e reiniciar PM2:
 
-```powershell
-cd frontend
-npm run build
-cd ../backend
+```bash
+pnpm build
 pm2 restart sisgeko-search
 ```
 

@@ -1,0 +1,7 @@
+packages:
+  - backend
+  - frontend
+# pnpm 11 aprueba los scripts de build nativos con `allowBuilds` (reemplaza a
+# `onlyBuiltDependencies` de pnpm 10). Necesario para compilar `bcrypt`.
+allowBuilds:
+  bcrypt: true
