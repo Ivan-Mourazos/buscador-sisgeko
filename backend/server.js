@@ -1625,7 +1625,7 @@ if (fs.existsSync(distPath)) {
     });
 } else {
     app.get('/', (req, res) => {
-        res.send('<h1>Servidor API Sisgeko en funcionamiento</h1><p>Error: No se encontró la carpeta de la web (dist). Ejecute "npm run build" en el frontend.</p>');
+        res.send('<h1>Servidor API Sisgeko en funcionamiento</h1><p>Error: No se encontró la carpeta de la web (dist). Ejecute "pnpm build" desde la raíz del proyecto.</p>');
     });
 }
 
