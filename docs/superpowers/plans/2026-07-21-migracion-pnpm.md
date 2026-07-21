@@ -83,7 +83,7 @@ Reemplazar el contenido completo de `package.json` por:
     "pnpm": ">=11"
   },
   "scripts": {
-    "dev:backend": "node backend/server.js",
+    "dev:backend": "pnpm --filter buscador-sisgeko-backend exec node server.js",
     "dev:frontend": "pnpm --filter buscador-sisgeko-frontend dev",
     "build": "pnpm --filter buscador-sisgeko-frontend build"
   }
@@ -158,7 +158,9 @@ Run (PowerShell):
 ```powershell
 pnpm dev:backend
 ```
-Expected: el proceso arranca y escucha (p. ej. mensaje de servidor en el puerto 5000). **No** debe fallar con errores de resolución de módulos (`Cannot find module 'express'`, `bcrypt`, etc.). Un error de conexión a SQL Server es aceptable aquí si no hay VPN — indica que el runtime cargó correctamente. Detener con `Ctrl+C`.
+Expected: el proceso corre con cwd = `backend/`, dotenv carga las variables de `backend/.env` (`injected env (18)`) y el servidor escucha (`🚀 Servidor Sisgeko listo en puerto 5000` + el scheduler node-cron). **No** debe fallar con errores de resolución de módulos (`Cannot find module 'express'`, `bcrypt`, etc.) ni con `JWT_SECRET not found`. Un error de conexión a SQL Server es aceptable aquí si no hay VPN — indica que el runtime cargó correctamente. Detener con `Ctrl+C`.
+
+> **Nota:** `dev:backend` usa `pnpm --filter ... exec node server.js` (no `node backend/server.js`) precisamente para que el cwd sea `backend/` y dotenv encuentre el `.env`.
 
 - [ ] **Step 4: (Sin commit)**
 

@@ -60,7 +60,7 @@ allowBuilds:
 - Añadir `"engines": { "node": ">=20", "pnpm": ">=11" }`.
 - Reescribir `scripts`:
   - Eliminar `install:all` (innecesario: `pnpm install` en la raíz instala ambos paquetes).
-  - `dev:backend`: `node backend/server.js` (sin cambio).
+  - `dev:backend`: `pnpm --filter buscador-sisgeko-backend exec node server.js` (ejecuta con cwd = `backend/`, simétrico con `dev:frontend`; así dotenv carga `backend/.env`. Corrige un fallo pre-existente por el que `node backend/server.js` desde la raíz no cargaba el `.env` y abortaba con `JWT_SECRET not found`).
   - `dev:frontend`: `pnpm --filter buscador-sisgeko-frontend dev`.
   - Nuevo `build`: `pnpm --filter buscador-sisgeko-frontend build`.
 

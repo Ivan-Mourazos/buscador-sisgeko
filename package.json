@@ -8,7 +8,7 @@
     "pnpm": ">=11"
   },
   "scripts": {
-    "dev:backend": "node backend/server.js",
+    "dev:backend": "pnpm --filter buscador-sisgeko-backend exec node server.js",
     "dev:frontend": "pnpm --filter buscador-sisgeko-frontend dev",
     "build": "pnpm --filter buscador-sisgeko-frontend build"
   }
